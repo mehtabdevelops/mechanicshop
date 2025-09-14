@@ -78,7 +78,7 @@ const About = () => {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #0a2540 0%, #1a4b78 100%)',
+      background: '#172554',
       color: 'white',
       fontFamily: 'Arial, sans-serif',
       padding: '2rem 0'
@@ -253,7 +253,7 @@ const About = () => {
               }}
               onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
               onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-              onClick={() => router.push('/services')}>
+              onClick={() => router.push('/Services')}>
                 Our Services
               </button>
               <button style={{
@@ -275,7 +275,7 @@ const About = () => {
                 e.currentTarget.style.background = 'transparent';
                 e.currentTarget.style.color = '#fbbf24';
               }}
-              onClick={() => router.push('/contact')}>
+              onClick={() => router.push('/Contactus')}>
                 Contact Us
               </button>
             </div>
@@ -287,7 +287,7 @@ const About = () => {
             border: '1px solid rgba(255, 255, 255, 0.1)'
           }}>
             <img 
-              src="https://images.unsplash.com/photo-1565689223838-a741089720a5?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
+              src="https://img.freepik.com/premium-photo/modern-car-car-service-lift_972478-89.jpg"
               alt="Our Workshop"
               style={{
                 width: '100%',
@@ -453,8 +453,8 @@ const About = () => {
             Book your appointment today!
           </p>
           <button style={{
-            background: 'linear-gradient(45deg, #fbbf24, #f59e0b)',
-            color: '#0a2540',
+            background: '#172554',
+            color: '#fbbf24',
             padding: '1.25rem 3rem',
             borderRadius: '50px',
             fontWeight: '600',
@@ -463,15 +463,7 @@ const About = () => {
             fontSize: '1.25rem',
             transition: 'all 0.3s ease'
           }}
-          onMouseOver={(e) => {
-            e.currentTarget.style.transform = 'translateY(-2px)';
-            e.currentTarget.style.boxShadow = '0 12px 25px rgba(251, 191, 36, 0.4)';
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = 'none';
-          }}
-          onClick={() => router.push('/appointment')}>
+          onClick={() => router.push('/Appointment')}>
             Book Your Appointment
           </button>
         </div>

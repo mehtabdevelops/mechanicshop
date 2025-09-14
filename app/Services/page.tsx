@@ -14,7 +14,7 @@ const Services = () => {
       description: 'Professional oil change service to keep your engine running smoothly and efficiently. Includes filter replacement and fluid check.',
       price: '$49.99',
       duration: '30 min',
-      image: 'https://images.unsplash.com/photo-1563720223880-4d93eef1f1c2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1170&q=80',
+      image: 'https://www.carkeys.co.uk/media/1083/oil_change.jpg?anchor=center&mode=crop&width=1200&height=800',
       features: ['Synthetic Oil', 'Filter Replacement', 'Fluid Check', '20-Point Inspection']
     },
     {
@@ -23,7 +23,7 @@ const Services = () => {
       description: 'Complete brake inspection and repair services for your safety on the road. Includes pad replacement and rotor resurfacing.',
       price: '$129.99',
       duration: '2 hours',
-      image: 'https://images.unsplash.com/photo-1493238792000-8113da705763?ixlib=rb-4.0.3&auto=format&fit=crop&w=1170&q=80',
+      image: 'https://edmorsecadillacbrandonservice.com/wp-content/uploads/2018/10/brakes.jpg',
       features: ['Brake Inspection', 'Pad Replacement', 'Rotor Resurfacing', 'Brake Fluid Check']
     },
     {
@@ -41,7 +41,7 @@ const Services = () => {
       description: 'Essential maintenance package including oil change, filter replacement, and basic safety inspection.',
       price: '$79.99',
       duration: '1 hour',
-      image: 'https://images.unsplash.com/photo-1549399542-7e7f1d6c72b2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1170&q=80',
+      image: 'https://www.worldofservice.in/wp-content/uploads/2016/01/car-service.jpg',
       features: ['Oil Change', 'Filter Replacement', 'Safety Inspection', 'Fluid Top-up']
     },
     {
@@ -50,7 +50,7 @@ const Services = () => {
       description: 'Comprehensive maintenance package covering all essential systems for optimal vehicle performance.',
       price: '$199.99',
       duration: '3 hours',
-      image: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1974&q=80',
+      image: 'https://mycarneedsa.com/assets/uploads/images/blog/6f67cc7a0a1341f213f2ab17a95f0ca5.jpg',
       features: ['Complete Inspection', 'Oil Change', 'Brake Check', 'Tire Service', 'AC Check']
     },
     {
@@ -59,7 +59,7 @@ const Services = () => {
       description: 'Professional AC system diagnosis and repair to keep you cool and comfortable on the road.',
       price: '$149.99',
       duration: '2 hours',
-      image: 'https://images.unsplash.com/photo-1553440569-bcc63803a83d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1170&q=80',
+      image: 'https://ictire.com/wp-content/uploads/2022/10/Car-Air-Conditioning-Repair-1024x643.webp',
       features: ['AC Diagnosis', 'Refrigerant Charge', 'Compressor Check', 'System Testing']
     },
     {
@@ -68,7 +68,7 @@ const Services = () => {
       description: 'Professional battery testing and replacement service to ensure reliable starting power.',
       price: '$89.99',
       duration: '30 min',
-      image: 'https://images.unsplash.com/photo-1603712610494-73e15278b647?ixlib=rb-4.0.3&auto=format&fit=crop&w=1170&q=80',
+      image: 'https://knowhow.napaonline.com/wp-content/uploads/2017/03/Replace_Battery1.jpg',
       features: ['Battery Testing', 'Replacement', 'Terminal Cleaning', 'Charging System Check']
     },
     {
@@ -77,7 +77,7 @@ const Services = () => {
       description: 'Routine maintenance service to keep your vehicle in top condition and prevent future issues.',
       price: '$99.99',
       duration: '1.5 hours',
-      image: 'https://images.unsplash.com/photo-1565689223838-a741089720a5?ixlib=rb-4.0.3&auto=format&fit=crop&w=1170&q=80',
+      image: 'https://blog.napacanada.com/wp-content/uploads/2020/02/shutterstock_118548643-scaled.jpg',
       features: ['Multi-point Inspection', 'Fluid Changes', 'Filter Replacement', 'Safety Check']
     }
   ];

@@ -116,11 +116,12 @@ const ContactUs = () => {
           display: 'grid',
           gridTemplateColumns: '1fr 1fr',
           gap: '2rem',
-          alignItems: 'start'
+          alignItems: 'start',
+
         }}>
           {/* Contact Form */}
           <div style={{
-            background: 'rgba(255, 255, 255, 0.9)',
+            background: '#172554',
             borderRadius: '16px',
             padding: '2.5rem',
             border: '2px solid #fbbf24',
@@ -131,7 +132,7 @@ const ContactUs = () => {
               fontSize: '1.8rem',
               fontWeight: '700',
               marginBottom: '2rem',
-              color: '#172554',
+              color: '#fbbf24',
               textAlign: 'center'
             }}>
               Send Us a Message
@@ -143,7 +144,7 @@ const ContactUs = () => {
                   display: 'block',
                   marginBottom: '0.5rem',
                   fontWeight: '600',
-                  color: '#172554'
+                  color: '#fbbf24'
                 }}>
                   Full Name *
                 </label>
@@ -181,7 +182,7 @@ const ContactUs = () => {
                   display: 'block',
                   marginBottom: '0.5rem',
                   fontWeight: '600',
-                  color: '#172554'
+                  color: '#fbbf24'
                 }}>
                   Email Address *
                 </label>
@@ -219,7 +220,7 @@ const ContactUs = () => {
                   display: 'block',
                   marginBottom: '0.5rem',
                   fontWeight: '600',
-                  color: '#172554'
+                  color: '#fbbf24'
                 }}>
                   Phone Number
                 </label>
@@ -256,7 +257,7 @@ const ContactUs = () => {
                   display: 'block',
                   marginBottom: '0.5rem',
                   fontWeight: '600',
-                  color: '#172554'
+                  color: '#fbbf24'
                 }}>
                   Subject *
                 </label>
@@ -305,7 +306,7 @@ const ContactUs = () => {
                   display: 'block',
                   marginBottom: '0.5rem',
                   fontWeight: '600',
-                  color: '#172554'
+                  color: '#fbbf24'
                 }}>
                   Message *
                 </label>
@@ -369,7 +370,7 @@ const ContactUs = () => {
 
           {/* Contact Information */}
           <div style={{
-            background: 'rgba(255, 255, 255, 0.9)',
+            background: '#172554',
             borderRadius: '16px',
             padding: '2.5rem',
             border: '2px solid #fbbf24',
@@ -380,7 +381,7 @@ const ContactUs = () => {
               fontSize: '1.8rem',
               fontWeight: '700',
               marginBottom: '2rem',
-              color: '#172554',
+              color: '#fbbf24',
               textAlign: 'center'
             }}>
               Contact Information
@@ -388,70 +389,70 @@ const ContactUs = () => {
 
             <div style={{ marginBottom: '2.5rem' }}>
               <h3 style={{
-                color: '#172554',
+                color: '#fbbf24',
                 fontSize: '1.3rem',
                 marginBottom: '1rem',
                 fontWeight: '600'
               }}>
                 Company Name
               </h3>
-              <p style={{ color: '#475569', lineHeight: '1.6' }}>
+              <p style={{ color: '#fbbf24', lineHeight: '1.6' }}>
                 Sunny Auto Services
               </p>
             </div>
 
             <div style={{ marginBottom: '2.5rem' }}>
               <h3 style={{
-                color: '#172554',
+                color: '#fbbf24',
                 fontSize: '1.3rem',
                 marginBottom: '1rem',
                 fontWeight: '600'
               }}>
                 Email
               </h3>
-              <p style={{ color: '#475569', lineHeight: '1.6' }}>
+              <p style={{ color: '#fbbf24', lineHeight: '1.6' }}>
                 contact@sunnyauto.com
               </p>
             </div>
 
             <div style={{ marginBottom: '2.5rem' }}>
               <h3 style={{
-                color: '#172554',
+                color: '#fbbf24',
                 fontSize: '1.3rem',
                 marginBottom: '1rem',
                 fontWeight: '600'
               }}>
                 Phone
               </h3>
-              <p style={{ color: '#475569', lineHeight: '1.6' }}>
+              <p style={{ color: '#fbbf24', lineHeight: '1.6' }}>
                 (368) 999-8074
               </p>
             </div>
 
             <div style={{ marginBottom: '2.5rem' }}>
               <h3 style={{
-                color: '#172554',
+                color: '#fbbf24',
                 fontSize: '1.3rem',
                 marginBottom: '1rem',
                 fontWeight: '600'
               }}>
                 Additional Phone
               </h3>
-              <p style={{ color: '#475569', lineHeight: '1.6' }}>
+              <p style={{ color: '#fbbf24', lineHeight: '1.6' }}>
                 (368) 555-1234
               </p>
             </div>
 
             <div>
               <h3 style={{
-                color: '#172554',
+                color: '#fbbf24',
                 fontSize: '1.3rem',
                 marginBottom: '1rem',
                 fontWeight: '600'
               }}>
                 Business Hours
               </h3>
-              <p style={{ color: '#475569', lineHeight: '1.6' }}>
+              <p style={{ color: '#fbbf24', lineHeight: '1.6' }}>
                 Monday - Friday: 8:00 AM - 6:00 PM<br />
                 Saturday: 9:00 AM - 4:00 PM<br />
                 Sunday: Closed

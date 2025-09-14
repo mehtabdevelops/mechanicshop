@@ -111,7 +111,9 @@ const Appointment = () => {
       <div style={{
         maxWidth: '1000px',
         margin: '0 auto',
-        padding: '0 2rem 3rem'
+        padding: '0 2rem 3rem',
+        border: '2px solid #fbbf24',
+        borderRadius: '12px'
       }}>
         {/* Header */}
         <div style={{
@@ -239,6 +241,7 @@ const Appointment = () => {
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
               gap: '1.5rem'
+              
             }}>
               <div>
                 <label style={{
