@@ -170,7 +170,7 @@ const AutoServiceShop = () => {
             textTransform: 'uppercase'
           }} onMouseOver={(e) => e.currentTarget.style.color = '#fbbf24'}
           onMouseOut={(e) => e.currentTarget.style.color = 'white'}
-          onClick={() => handleNavigation('/contact')}>
+          onClick={() => handleNavigation('/Contactus')}>
             Contact
           </button>
         </div>
