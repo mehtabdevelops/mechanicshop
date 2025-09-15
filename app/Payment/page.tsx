@@ -468,14 +468,6 @@ const OrderSummary = () => {
                       transition: 'all 0.2s ease',
                       boxSizing: 'border-box'
                     }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = '#3b82f6';
-                      e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = '#d1d5db';
-                      e.target.style.boxShadow = 'none';
-                    }}
                   />
                 </div>
               </div>

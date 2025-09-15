@@ -19,7 +19,7 @@ const HomePage = () => {
     fontWeight: 'bold',
     width: '100%',
     transition: 'all 0.2s ease',
-    textAlign: 'center' as const,
+    textAlign: 'center' as const
   });
 
   const handleSignIn = () => {
@@ -34,16 +34,15 @@ const HomePage = () => {
     router.push('/AdminSignIn');
   };
 
-  // Sample car images
+
   const carImages = [
-    "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
+    "https://cdn-8.motorsport.com/images/amp/27vzRVR0/s1000/mcl38.jpg",
     "https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
     "https://images.unsplash.com/photo-1542362567-b07e54358753?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-    "https://images.unsplash.com/photo-1553440569-bcc63803a83d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1175&q=80"
+    "https://lastwordonsports.com/motorsports/wp-content/uploads/sites/12/2023/01/VF-23-Livery-HULK-3-195-scaled.jpg"
   ];
 
   useEffect(() => {
-    // Animation sequence
     const timer1 = setTimeout(() => setAnimationStage(1), 300);
     const timer2 = setTimeout(() => setAnimationStage(2), 600);
     const timer3 = setTimeout(() => setAnimationStage(3), 900);
@@ -95,7 +94,7 @@ const HomePage = () => {
         width: '100%',
         height: '25%',
         opacity: animationStage >= 2 ? 1 : 0,
-        transform: animationStage >= 2 ? 'translateY(0)' : 'translateY(-100%)',
+        transform: animationStage >= 2 ? 'translateY(0%)' : 'translateY(-100%)',
         transition: 'all 0.8s ease-in-out',
         backgroundImage: `url(${carImages[1]})`,
         backgroundSize: 'cover',
@@ -152,10 +151,10 @@ const HomePage = () => {
       <div style={{ 
         position: 'relative', 
         zIndex: 10,
-        backgroundColor: 'rgba(23, 37, 84, 0.85)',
+        backgroundColor: '#172554',
         padding: '2.5rem',
         borderRadius: '12px',
-        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
         border: '2px solid #fbbf24',
         display: 'flex',
         flexDirection: 'column',

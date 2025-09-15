@@ -482,7 +482,7 @@ const AutoServiceShop = () => {
             onClick={handleViewServices}>
               <div style={{ height: '12rem', overflow: 'hidden' }}>
                 <img 
-                  src="https://images.unsplash.com/photo-1563720223880-4d93eef1f1c2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80" 
+                  src="https://www.carkeys.co.uk/media/1083/oil_change.jpg?anchor=center&mode=crop&width=1200&height=800"
                   alt="Oil Change" 
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
@@ -511,7 +511,7 @@ const AutoServiceShop = () => {
             onClick={handleViewServices}>
               <div style={{ height: '12rem', overflow: 'hidden' }}>
                 <img 
-                  src="https://images.unsplash.com/photo-1493238792000-8113da705763?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80" 
+                  src="https://edmorsecadillacbrandonservice.com/wp-content/uploads/2018/10/brakes.jpg" 
                   alt="Brake Service" 
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />

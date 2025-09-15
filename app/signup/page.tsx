@@ -29,7 +29,7 @@ const Signup = () => {
       }));
     }
   };
-
+{/*prev => safere way when multi updates hapen and ...prev copies data fast*/}
   const validateForm = () => {
     const newErrors: {[key: string]: string} = {};
     if (!formData.fullName.trim()) newErrors.fullName = 'Full name is required';
