@@ -125,7 +125,6 @@ const Services = () => {
           padding: '0.75rem 1.5rem',
           borderRadius: '50px',
           fontWeight: '400',
-          border: '2px solid #fbbf24',
           cursor: 'pointer',
           transition: 'all 0.3s ease',
           fontSize: '1.1rem'
@@ -316,7 +315,7 @@ const Services = () => {
                 }}
                 onMouseOver={(e) => {
                   e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 8px 20px rgba(251, 191, 36, 0.4)';
+                  e.currentTarget.style.boxShadow = 'none';
                 }}
                 onMouseOut={(e) => {
                   e.currentTarget.style.transform = 'translateY(0)';
@@ -370,14 +369,6 @@ const Services = () => {
             cursor: 'pointer',
             fontSize: '1.25rem',
             transition: 'all 0.3s ease'
-          }}
-          onMouseOver={(e) => {
-            e.currentTarget.style.transform = 'translateY(-2px)';
-            e.currentTarget.style.boxShadow = '0 12px 25px rgba(251, 191, 36, 0.4)';
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = 'none';
           }}
           onClick={() => router.push('/appointment')}>
             Book Appointment Now

@@ -91,13 +91,12 @@ const Appointment = () => {
           padding: '0.75rem 1.5rem',
           borderRadius: '8px',
           fontWeight: '500',
-          border: '1px solid #cbd5e1',
           cursor: 'pointer',
           transition: 'all 0.2s ease',
           fontSize: '1rem'
         }} 
         onMouseOver={(e) => {
-          e.currentTarget.style.backgroundColor = '#f1f5f9';
+          e.currentTarget.style.backgroundColor = 'black';
         }}
         onMouseOut={(e) => {
           e.currentTarget.style.backgroundColor = 'transparent';

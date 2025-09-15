@@ -114,14 +114,14 @@ const About = () => {
           padding: '0.75rem 1.5rem',
           borderRadius: '50px',
           fontWeight: '400',
-          border: '2px solid #fbbf24',
+ 
           cursor: 'pointer',
           transition: 'all 0.3s ease',
           fontSize: '1.1rem'
         }} 
         onMouseOver={(e) => {
-          e.currentTarget.style.background = '#fbbf24';
-          e.currentTarget.style.color = '#0a2540';
+          e.currentTarget.style.background = 'black';
+          e.currentTarget.style.color = '#fbbf24';
         }}
         onMouseOut={(e) => {
           e.currentTarget.style.background = 'transparent';

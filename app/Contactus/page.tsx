@@ -67,7 +67,6 @@ const ContactUs = () => {
           padding: '0.75rem 1.5rem',
           borderRadius: '8px',
           fontWeight: '500',
-          border: '1px solid #fbbf24',
           cursor: 'pointer',
           transition: 'all 0.2s ease',
           fontSize: '1rem'
@@ -359,7 +358,7 @@ const ContactUs = () => {
                 e.currentTarget.style.boxShadow = '0 6px 12px rgba(0, 0, 0, 0.15)';
               }}
               onMouseOut={(e) => {
-                e.currentTarget.style.background = '#172554';
+                e.currentTarget.style.background = 'black';
                 e.currentTarget.style.transform = 'translateY(0)';
                 e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
               }}>
