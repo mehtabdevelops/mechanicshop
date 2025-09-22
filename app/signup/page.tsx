@@ -8,8 +8,10 @@ const Signup = () => {
   const router = useRouter();
   const supabase = createClientComponentClient();
   const [formData, setFormData] = useState({
-    fullName: '',
+    firstName: '',
+    lastName: '',
     email: '',
+    phone: '',
     password: '',
     confirmPassword: ''
   });
@@ -29,12 +31,14 @@ const Signup = () => {
       }));
     }
   };
-{/*prev => safere way when multi updates hapen and ...prev copies data fast*/}
+
   const validateForm = () => {
     const newErrors: {[key: string]: string} = {};
-    if (!formData.fullName.trim()) newErrors.fullName = 'Full name is required';
+    if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
+    if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
     if (!formData.email) newErrors.email = 'Email is required';
     else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid';
+    if (!formData.phone) newErrors.phone = 'Phone number is required';
     if (!formData.password) newErrors.password = 'Password is required';
     else {
       if (formData.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
@@ -55,7 +59,12 @@ const Signup = () => {
         email: formData.email,
         password: formData.password,
         options: {
-          data: { full_name: formData.fullName },
+          data: { 
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            full_name: `${formData.firstName} ${formData.lastName}`,
+            phone: formData.phone 
+          },
           emailRedirectTo: `${location.origin}/auth/callback`,
         },
       });
@@ -145,7 +154,7 @@ const Signup = () => {
             </p>
 
             <form onSubmit={handleSignUp}>
-              {/* Full Name */}
+              {/* First Name */}
               <div style={{ marginBottom: '1.5rem' }}>
                 <label style={{ 
                   display: 'block', 
@@ -154,18 +163,18 @@ const Signup = () => {
                   color: '#fbbf24',
                   fontSize: '0.95rem',
                 }}>
-                  Full Name
+                  First Name
                 </label>
                 <input 
                   type="text" 
-                  name="fullName"
-                  value={formData.fullName}
+                  name="firstName"
+                  value={formData.firstName}
                   onChange={handleInputChange}
-                  placeholder="Enter your full name" 
+                  placeholder="Enter your first name" 
                   style={{
                     padding: '0.875rem 1rem',
                     borderRadius: '8px',
-                    border: `1px solid ${errors.fullName ? '#e53e3e' : '#d1d5db'}`,
+                    border: `1px solid ${errors.firstName ? '#e53e3e' : '#d1d5db'}`,
                     backgroundColor: 'white',
                     color: '#1f2937',
                     fontSize: '1rem',
@@ -178,16 +187,63 @@ const Signup = () => {
                     e.target.style.borderColor = '#3b82f6';
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = errors.fullName ? '#e53e3e' : '#d1d5db';
+                    e.target.style.borderColor = errors.firstName ? '#e53e3e' : '#d1d5db';
                   }}
                 />
-                {errors.fullName && (
+                {errors.firstName && (
                   <p style={{ 
                     color: '#e53e3e', 
                     fontSize: '0.875rem', 
                     marginTop: '0.5rem',
                   }}>
-                    {errors.fullName}
+                    {errors.firstName}
+                  </p>
+                )}
+              </div>
+
+              {/* Last Name */}
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '0.5rem', 
+                  fontWeight: '500',
+                  color: '#fbbf24',
+                  fontSize: '0.95rem',
+                }}>
+                  Last Name
+                </label>
+                <input 
+                  type="text" 
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleInputChange}
+                  placeholder="Enter your last name" 
+                  style={{
+                    padding: '0.875rem 1rem',
+                    borderRadius: '8px',
+                    border: `1px solid ${errors.lastName ? '#e53e3e' : '#d1d5db'}`,
+                    backgroundColor: 'white',
+                    color: '#1f2937',
+                    fontSize: '1rem',
+                    width: '100%',
+                    outline: 'none',
+                    transition: 'border-color 0.2s ease',
+                    boxSizing: 'border-box'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#3b82f6';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = errors.lastName ? '#e53e3e' : '#d1d5db';
+                  }}
+                />
+                {errors.lastName && (
+                  <p style={{ 
+                    color: '#e53e3e', 
+                    fontSize: '0.875rem', 
+                    marginTop: '0.5rem',
+                  }}>
+                    {errors.lastName}
                   </p>
                 )}
               </div>
@@ -235,6 +291,53 @@ const Signup = () => {
                     marginTop: '0.5rem',
                   }}>
                     {errors.email}
+                  </p>
+                )}
+              </div>
+
+              {/* Phone */}
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '0.5rem', 
+                  fontWeight: '500',
+                  color: '#fbbf24',
+                  fontSize: '0.95rem',
+                }}>
+                  Phone Number
+                </label>
+                <input 
+                  type="tel" 
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  placeholder="Enter your phone number" 
+                  style={{
+                    padding: '0.875rem 1rem',
+                    borderRadius: '8px',
+                    border: `1px solid ${errors.phone ? '#e53e3e' : '#d1d5db'}`,
+                    backgroundColor: 'white',
+                    color: '#1f2937',
+                    fontSize: '1rem',
+                    width: '100%',
+                    outline: 'none',
+                    transition: 'border-color 0.2s ease',
+                    boxSizing: 'border-box'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#3b82f6';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = errors.phone ? '#e53e3e' : '#d1d5db';
+                  }}
+                />
+                {errors.phone && (
+                  <p style={{ 
+                    color: '#e53e3e', 
+                    fontSize: '0.875rem', 
+                    marginTop: '0.5rem',
+                  }}>
+                    {errors.phone}
                   </p>
                 )}
               </div>

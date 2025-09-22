@@ -177,7 +177,7 @@ const HomePage = () => {
           fontSize: '1.2rem', 
           marginBottom: '30px',
           fontWeight: 'bold',
-          textShadow: '1px 1px 2px rgba(0,0,0,0.5)',
+          textShadow: '1px 1px 2px black',
           width: '100%'
         }}>
           Premium Auto Repair & Service

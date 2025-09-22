@@ -167,24 +167,6 @@ const UserProfile = () => {
     router.push('/signin');
   };
 
-  const handleLogout = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        throw error;
-      }
-      
-      // Clear session storage
-      sessionStorage.removeItem('userData');
-      
-      // Redirect to home page
-      router.push('/');
-    } catch (err: any) {
-      console.error('Error signing out:', err);
-      setError(err.message || 'An error occurred while signing out');
-    }
-  };
-
   const handleNavigation = (path: string) => {
     router.push(path);
   };
@@ -252,22 +234,10 @@ const UserProfile = () => {
           </button>
         </nav>
         
-        <div style={styles.headerActions}>
-          <button 
-            onClick={handleLogout}
-            style={styles.logoutButton}
-            title="Logout"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            Logout
-          </button>
-          <div style={styles.profileIcon}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" fill="currentColor"/>
-            </svg>
-          </div>
+        <div style={styles.profileIcon}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" fill="currentColor"/>
+          </svg>
         </div>
       </header>
 
@@ -436,25 +406,6 @@ const styles = {
     fontWeight: '600',
     fontSize: '1rem',
     transition: 'color 0.2s ease',
-  } as const,
-  headerActions: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '1rem'
-  } as const,
-  logoutButton: {
-    backgroundColor: '#ef4444',
-    color: 'white',
-    border: 'none',
-    padding: '0.5rem 1rem',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontWeight: '600',
-    fontSize: '0.9rem',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-    transition: 'background-color 0.2s ease'
   } as const,
   profileIcon: {
     color: '#f97316',

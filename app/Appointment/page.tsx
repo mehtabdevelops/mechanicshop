@@ -28,7 +28,7 @@ const Appointment = () => {
     e.preventDefault();
     // Handle form submission here
     alert('Appointment booked successfully!');
-    router.push('/Payment');
+    router.push('/UserHome');
   };
 
   const serviceOptions = [

@@ -52,9 +52,17 @@ const Signin = () => {
 
       if (data) {
         alert('Sign in successful! Welcome back.');
+        supabase.from('profiles').select('*').eq('email', formData.email).single().then(({ data, error }) => {
+          if (error) {
+            console.error('Error fetching user role:', error);
+            return;
+          }
+          sessionStorage.setItem('userData', JSON.stringify(data));
+
         router.push('/UserHome');
-      }
-    } catch (error: unknown) {
+      });
+    }  
+    } catch (error) {
       console.error('Signin error:', error);
       if (error instanceof Error) {
         alert(error.message || 'Invalid email or password');
