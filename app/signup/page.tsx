@@ -71,6 +71,9 @@ const Signup = () => {
       if (error) throw error;
       if (data) {
         alert('Sign up successful! Please check your email for verification.');
+        
+
+
         router.push('/signin');
       }
     } catch (error: unknown) {

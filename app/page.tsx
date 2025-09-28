@@ -34,7 +34,6 @@ const HomePage = () => {
     router.push('/AdminSignIn');
   };
 
-
   const carImages = [
     "https://cdn-8.motorsport.com/images/amp/27vzRVR0/s1000/mcl38.jpg",
     "https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
@@ -136,7 +135,7 @@ const HomePage = () => {
         zIndex: 4
       }}></div>
 
-      {/* Overlay to darken images for better text visibility */}
+      {/* Overlay to darken images for  text visibility */}
       <div style={{
         position: 'absolute',
         top: 0,
@@ -147,7 +146,7 @@ const HomePage = () => {
         zIndex: 5
       }}></div>
 
-      {/* Content - Centered properly */}
+      {/* Content -  properly */}
       <div style={{ 
         position: 'relative', 
         zIndex: 10,

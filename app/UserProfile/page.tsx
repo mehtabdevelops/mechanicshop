@@ -209,7 +209,7 @@ const UserProfile = () => {
         
         <nav style={styles.nav}>
           <button 
-            onClick={() => handleNavigation('/')}
+            onClick={() => handleNavigation('/UserHome')}
             style={styles.navButton}
           >
             HOME

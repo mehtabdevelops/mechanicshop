@@ -1,668 +1,581 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase-client';
 
-interface UserProfile {
-  id: string;
-  email: string;
-  first_name: string | null;
-  last_name: string | null;
-  bio: string | null;
-  avatar_url: string | null;
-  updated_at: string | null;
-  phone?: string;
-  providers?: string[];
-  created_at?: string;
-}
-
-const UserProfile = () => {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedProfile, setEditedProfile] = useState<UserProfile | null>(null);
+const AutoServiceShop = () => {
+  const [showWelcome, setShowWelcome] = useState(true);
+  const [isClient, setIsClient] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    const userDataStr = sessionStorage.getItem('userData');
-    if (userDataStr) {
-      try {
-        const userData = JSON.parse(userDataStr);
-        const userProfile: UserProfile = {
-          id: userData.id || '',
-          email: userData.email || '',
-          first_name: userData.first_name || userData.firstname || null,
-          last_name: userData.last_name || null,
-          bio: userData.bio || null,
-          avatar_url: userData.avatar_url || null,
-          updated_at: userData.updated_at || userData.update_at || null,
-          phone: userData.phone || '',
-          providers: userData.providers || [],
-          created_at: userData.created_at || ''
-        };
-        
-        setProfile(userProfile);
-        setEditedProfile(userProfile);
-        setLoading(false);
-        return;
-      } catch (err) {
-        console.error('Error parsing userData from sessionStorage:', err);
-      }
-    }
+    setIsClient(true);
     
-    checkAuth();
+    const timer = setTimeout(() => {
+      setShowWelcome(false);
+    }, 3000);
+    
+    return () => clearTimeout(timer);
   }, []);
 
-  const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      setError('Please sign in to view your profile');
-      setLoading(false);
-      return;
-    }
-    fetchUserProfile();
+  const handleBookAppointment = () => {
+    router.push('/Appointment');
   };
 
-  const fetchUserProfile = async () => {
-    try {
-      setLoading(true);
-      
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      
-      if (userError) {
-        throw userError;
-      }
-      
-      if (!user) {
-        throw new Error('No authenticated user found. Please sign in.');
-      }
-
-      try {
-        const { data, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-
-        if (!profileError && data) {
-          const userProfile: UserProfile = {
-            id: user.id,
-            email: user.email || '',
-            first_name: data.firstname,
-            last_name: data.last_name,
-            bio: data.bio,
-            avatar_url: data.avatar_url,
-            updated_at: data.update_at,
-            phone: user.phone || '',
-            providers: user.app_metadata?.providers || [],
-            created_at: user.created_at
-          };
-          setProfile(userProfile);
-          setEditedProfile(userProfile);
-          return;
-        }
-      } catch (profileErr) {
-        console.log('No profiles table or data found, using auth data only');
-      }
-
-      const userProfile: UserProfile = {
-        id: user.id,
-        email: user.email || '',
-        first_name: null,
-        last_name: null,
-        bio: null,
-        avatar_url: null,
-        updated_at: null,
-        phone: user.phone || '',
-        providers: user.app_metadata?.providers || [],
-        created_at: user.created_at
-      };
-
-      setProfile(userProfile);
-      setEditedProfile(userProfile);
-    } catch (err: any) {
-      console.error('Error fetching profile:', err);
-      setError(err.message || 'An error occurred while fetching profile');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSave = async () => {
-    if (!editedProfile) return;
-    
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          firstname: editedProfile.first_name,
-          last_name: editedProfile.last_name,
-          bio: editedProfile.bio,
-          avatar_url: editedProfile.avatar_url,
-          update_at: new Date().toISOString()
-        })
-        .eq('id', editedProfile.id);
-      
-      if (error) {
-        throw error;
-      }
-      
-      setProfile(editedProfile);
-      setIsEditing(false);
-      alert('Profile updated successfully!');
-    } catch (err: any) {
-      console.error('Error updating profile:', err);
-      setError(err.message || 'An error occurred while updating profile');
-    }
-  };
-
-  const handleCancel = () => {
-    setEditedProfile(profile);
-    setIsEditing(false);
-  };
-
-  const handleSignIn = () => {
-    router.push('/signin');
-  };
-
-  const handleLogout = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        throw error;
-      }
-      
-      // Clear session storage
-      sessionStorage.removeItem('userData');
-      
-      // Redirect to home page
-      router.push('/');
-    } catch (err: any) {
-      console.error('Error signing out:', err);
-      setError(err.message || 'An error occurred while signing out');
-    }
+  const handlepropfile = () => {
+    router.push('/UserProfile');
+  }
+  const handleViewServices = () => {
+    router.push('/Services');
   };
 
   const handleNavigation = (path: string) => {
     router.push(path);
   };
 
-  if (loading) {
+  // Prevent rendering until client-side to avoid hydration mismatches
+  if (!isClient) {
     return (
-      <div style={styles.profileContainer}>
-        <div style={styles.profileLoading}>
-          <div style={styles.loadingSpinner}></div>
-          <p>Loading your profile...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div style={styles.profileContainer}>
-        <div style={styles.profileError}>
-          <h2>Error Loading Profile</h2>
-          <p>{error}</p>
-          <div style={styles.authActions}>
-            <button onClick={fetchUserProfile} style={styles.retryButton}>
-              Try Again
-            </button>
-            <button onClick={handleSignIn} style={styles.signInButton}>
-              Sign In
-            </button>
-          </div>
-        </div>
-      </div>
+      <div style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(to bottom, #0a2540 0%, #1a4b78 100%)',
+        color: 'white',
+        fontFamily: 'Arial, sans-serif'
+      }} />
     );
   }
 
   return (
-    <div style={styles.container}>
-      {/* Header */}
-      <header style={styles.header}>
-        <h1 style={styles.logo}>SUNNY AUTO</h1>
-        
-        <nav style={styles.nav}>
-          <button 
-            onClick={() => handleNavigation('/')}
-            style={styles.navButton}
-          >
-            HOME
-          </button>
-          <button 
-            onClick={() => handleNavigation('/services')}
-            style={styles.navButton}
-          >
-            SERVICES
-          </button>
-          <button 
-            onClick={() => handleNavigation('/about')}
-            style={styles.navButton}
-          >
-            ABOUT
-          </button>
-          <button 
-            onClick={() => handleNavigation('/contact')}
-            style={styles.navButton}
-          >
-            CONTACT
-          </button>
-        </nav>
-        
-        <div style={styles.headerActions}>
-          <button 
-            onClick={handleLogout}
-            style={styles.logoutButton}
-            title="Logout"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            Logout
-          </button>
-          <div style={styles.profileIcon}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" fill="currentColor"/>
-            </svg>
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(to bottom, #0a2540 0%, #1a4b78 100%)',
+      color: 'white',
+      fontFamily: 'Arial, sans-serif'
+    }} suppressHydrationWarning>
+      {/* Welcome Animation */}
+      {showWelcome && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: '#0a2540',
+          zIndex: 1000
+        }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ animation: 'fadeIn 1.5s ease-in-out' }}>
+              <h1 style={{
+                fontSize: '3.5rem',
+                fontWeight: 'bold',
+                marginBottom: '1rem',
+                color: 'white'
+              }}>
+                SUNNY AUTO
+              </h1>
+              <div style={{
+                width: '16rem',
+                height: '2px',
+                background: '#fbbf24',
+                margin: '0 auto 1rem'
+              }}></div>
+              <p style={{
+                fontSize: '1.5rem',
+                opacity: 0,
+                animation: 'fadeIn 2s ease-in-out 1s forwards'
+              }}>
+                Your Trusted Auto Care Partner
+              </p>
+            </div>
           </div>
         </div>
-      </header>
+      )}
 
-      {/* Main Content */}
-      <div style={styles.mainContent}>
-        <div style={styles.profileContainer}>
-          <div style={styles.profileCard}>
-            <div style={styles.profileHeader}>
-              <h2 style={styles.profileTitle}>User Profile</h2>
-              <div style={styles.avatarContainer}>
-                {profile?.avatar_url ? (
-                  <img src={profile.avatar_url} alt="Profile" style={styles.profileAvatar} />
-                ) : (
-                  <div style={styles.profileAvatarPlaceholder}>
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" fill="#f97316"/>
-                    </svg>
-                  </div>
-                )}
-              </div>
-            </div>
+      {/* Navigation */}
+      <nav style={{
+        background: 'rgba(10, 37, 64, 0.9)',
+        padding: '1rem 1.5rem',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        position: 'sticky',
+        top: 0,
+        zIndex: 40
+      }}>
+        <div>
+          <h1 style={{
+            fontSize: '1.5rem',
+            fontWeight: 'bold',
+            color: '#fbbf24'
+          }}>
+            SUNNY AUTO
+          </h1>
+        </div>
+        <div style={{ display: 'flex', gap: '1.5rem' }}>
+          <button style={{
+            color: 'white',
+            fontSize: '1.25rem',
+            fontWeight: '300',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            padding: '0.75rem 1.5rem',
+            transition: 'all 0.3s ease',
+            letterSpacing: '0.5px',
+            textTransform: 'uppercase'
+          }} onMouseOver={(e) => e.currentTarget.style.color = '#fbbf24'}
+          onMouseOut={(e) => e.currentTarget.style.color = 'white'}
+          onClick={() => handleNavigation('/UserHome')}>
+            Home
+          </button>
+          <button style={{
+            color: 'white',
+            fontSize: '1.25rem',
+            fontWeight: '300',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            padding: '0.75rem 1.5rem',
+            transition: 'all 0.3s ease',
+            letterSpacing: '0.5px',
+            textTransform: 'uppercase'
+          }} onMouseOver={(e) => e.currentTarget.style.color = '#fbbf24'}
+          onMouseOut={(e) => e.currentTarget.style.color = 'white'}
+          onClick={handleViewServices}>
+            Services
+          </button>
+          <button style={{
+            color: 'white',
+            fontSize: '1.25rem',
+            fontWeight: '300',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            padding: '0.75rem 1.5rem',
+            transition: 'all 0.3s ease',
+            letterSpacing: '0.5px',
+            textTransform: 'uppercase'
+          }} onMouseOver={(e) => e.currentTarget.style.color = '#fbbf24'}
+          onMouseOut={(e) => e.currentTarget.style.color = 'white'}
+          onClick={() => handleNavigation('/About')}>
+            About
+          </button>
+          <button style={{
+            color: 'white',
+            fontSize: '1.25rem',
+            fontWeight: '300',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            padding: '0.75rem 1.5rem',
+            transition: 'all 0.3s ease',
+            letterSpacing: '0.5px',
+            textTransform: 'uppercase'
+          }} onMouseOver={(e) => e.currentTarget.style.color = '#fbbf24'}
+          onMouseOut={(e) => e.currentTarget.style.color = 'white'}
+          onClick={() => handleNavigation('/Contactus')}>
+            Contact
+          </button>
+        </div>
+        <div>
+          <button style={{
+            background: '#fbbf24',
+            color: '#0a2540',
+            padding: '0.5rem 1.5rem',
+            borderRadius: '9999px',
+            fontWeight: 600,
+            border: 'none',
+            cursor: 'pointer',
+            transition: 'background-color 0.3s'
+          }} onMouseOver={(e) => e.currentTarget.style.background = '#f59e0b'}
+          onMouseOut={(e) => e.currentTarget.style.background = '#fbbf24'}
+          onClick={handlepropfile}>
+            proflie
+          </button>
+        </div>
+      </nav>
 
-            <div style={styles.profileDetails}>
-              <div style={styles.detailRow}>
-                <label style={styles.detailLabel}>Email</label>
-                {isEditing ? (
-                  <input
-                    type="email"
-                    value={editedProfile?.email || ''}
-                    disabled
-                    style={styles.inputField}
-                  />
-                ) : (
-                  <p style={styles.detailValue}>{profile?.email}</p>
-                )}
-              </div>
+      {/* Hero Section */}
+      <section style={{
+        position: 'relative',
+        height: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundImage: 'url(https://cdn.gobankingrates.com/wp-content/uploads/2020/03/50-1930-Cadillac-V-16-Sport-Phaeton-by-Fleetwood-RM-Sothebys.jpg)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          opacity: 0.3
+        }}></div>
+        
+        <div style={{
+          position: 'relative',
+          zIndex: 10,
+          textAlign: 'center',
+          padding: '0 1.5rem',
+          maxWidth: '64rem'
+        }}>
+          <h1 style={{
+            fontSize: '3rem',
+            fontWeight: 'bold',
+            marginBottom: '1.5rem',
+            lineHeight: 1.2
+          }}>
+            Premium Auto Care <br /> For All Makes & Models
+          </h1>
+          <p style={{
+            fontSize: '1.5rem',
+            marginBottom: '2.5rem',
+            color: '#dbeafe'
+          }}>
+            Experience the difference of expert automotive service with a personal touch
+          </p>
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '1rem'
+          }}>
+            <button style={{
+              background: '#fbbf24',
+              color: '#0a2540',
+              padding: '1rem 2rem',
+              borderRadius: '9999px',
+              fontWeight: 600,
+              border: 'none',
+              cursor: 'pointer',
+              transition: 'all 0.3s',
+              fontSize: '1.125rem'
+            }} onMouseOver={(e) => {
+              e.currentTarget.style.background = '#f59e0b';
+              e.currentTarget.style.transform = 'scale(1.05)';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.background = '#fbbf24';
+              e.currentTarget.style.transform = 'scale(1)';
+            }}
+            onClick={handleBookAppointment}>
+              Book Appointment
+            </button>
+            <button style={{
+              background: 'transparent',
+              color: '#fbbf24',
+              padding: '1rem 2rem',
+              borderRadius: '9999px',
+              fontWeight: 600,
+              border: '2px solid #fbbf24',
+              cursor: 'pointer',
+              transition: 'all 0.3s',
+              fontSize: '1.125rem'
+            }} onMouseOver={(e) => {
+              e.currentTarget.style.background = '#fbbf24';
+              e.currentTarget.style.color = '#0a2540';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.background = 'transparent';
+              e.currentTarget.style.color = '#fbbf24';
+            }}
+            onClick={handleViewServices}>
+              Our Services
+            </button>
+          </div>
+        </div>
 
-              <div style={styles.detailRow}>
-                <label style={styles.detailLabel}>First Name</label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    value={editedProfile?.first_name || ''}
-                    onChange={(e) => setEditedProfile({...editedProfile!, first_name: e.target.value})}
-                    style={styles.inputField}
-                  />
-                ) : (
-                  <p style={styles.detailValue}>{profile?.first_name || 'Not provided'}</p>
-                )}
-              </div>
+        <div style={{
+          position: 'absolute',
+          bottom: '2.5rem',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          animation: 'bounce 1s infinite'
+        }}>
+          <svg style={{
+            width: '2rem',
+            height: '2rem',
+            color: '#fbbf24'
+          }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+          </svg>
+        </div>
+      </section>
 
-              <div style={styles.detailRow}>
-                <label style={styles.detailLabel}>Last Name</label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    value={editedProfile?.last_name || ''}
-                    onChange={(e) => setEditedProfile({...editedProfile!, last_name: e.target.value})}
-                    style={styles.inputField}
-                  />
-                ) : (
-                  <p style={styles.detailValue}>{profile?.last_name || 'Not provided'}</p>
-                )}
-              </div>
-
-              <div style={styles.detailRow}>
-                <label style={styles.detailLabel}>Bio</label>
-                {isEditing ? (
-                  <textarea
-                    value={editedProfile?.bio || ''}
-                    onChange={(e) => setEditedProfile({...editedProfile!, bio: e.target.value})}
-                    style={styles.textareaField}
-                    rows={3}
-                  />
-                ) : (
-                  <p style={{...styles.detailValue, ...styles.bioText}}>{profile?.bio || 'No bio provided'}</p>
-                )}
-              </div>
-
-              {profile?.phone && (
-                <div style={styles.detailRow}>
-                  <label style={styles.detailLabel}>Phone</label>
-                  <p style={styles.detailValue}>{profile.phone}</p>
-                </div>
-              )}
-
-              <div style={styles.detailRow}>
-                <label style={styles.detailLabel}>User ID</label>
-                <p style={{...styles.detailValue, ...styles.userId}}>{profile?.id}</p>
-              </div>
-
-              {profile?.providers && profile.providers.length > 0 && (
-                <div style={styles.detailRow}>
-                  <label style={styles.detailLabel}>Auth Providers</label>
-                  <p style={styles.detailValue}>{profile.providers.join(', ')}</p>
-                </div>
-              )}
-
-              {profile?.created_at && (
-                <div style={styles.detailRow}>
-                  <label style={styles.detailLabel}>Account Created</label>
-                  <p style={styles.detailValue}>{new Date(profile.created_at).toLocaleDateString()}</p>
-                </div>
-              )}
-            </div>
-
-            <div style={styles.profileActions}>
-              {isEditing ? (
-                <>
-                  <button onClick={handleSave} style={styles.saveButton}>
-                    Save Changes
-                  </button>
-                  <button onClick={handleCancel} style={styles.cancelButton}>
-                    Cancel
-                  </button>
-                </>
-              ) : (
-                <button onClick={() => setIsEditing(true)} style={styles.editButton}>
-                  Edit Profile
+      {/* About Section */}
+      <section style={{
+        padding: '5rem 1.5rem',
+        background: '#1a4b78'
+      }}>
+        <div style={{
+          maxWidth: '72rem',
+          margin: '0 auto'
+        }}>
+          <h2 style={{
+            fontSize: '2.25rem',
+            fontWeight: 'bold',
+            marginBottom: '3rem',
+            textAlign: 'center'
+          }}>
+            Welcome to Sunny Auto
+          </h2>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr',
+            gap: '3rem',
+            alignItems: 'center'
+          }}>
+            <div>
+              <p style={{
+                fontSize: '1.125rem',
+                marginBottom: '1.5rem'
+              }}>
+                Located in the heart of the community, Sunny Auto has been serving drivers with reliable and affordable auto repair services for over a decade. We pride ourselves on being more than just a repair shop — we're your trusted automotive care partner.
+              </p>
+              <p style={{
+                fontSize: '1.125rem',
+                marginBottom: '1.5rem'
+              }}>
+                Our team of certified technicians combines modern technology with old-fashioned customer care. We use the latest diagnostic tools and high-quality parts, but we never lose sight of what matters most — building trust with our customers.
+              </p>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <button style={{
+                  background: '#fbbf24',
+                  color: '#0a2540',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '9999px',
+                  fontWeight: 600,
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.3s'
+                }} onMouseOver={(e) => e.currentTarget.style.background = '#f59e0b'}
+                onMouseOut={(e) => e.currentTarget.style.background = '#fbbf24'}
+                onClick={() => handleNavigation('/about')}>
+                  Learn More
                 </button>
-              )}
+                <button style={{
+                  background: 'transparent',
+                  color: '#fbbf24',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '9999px',
+                  fontWeight: 600,
+                  border: '2px solid #fbbf24',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s'
+                }} onMouseOver={(e) => {
+                  e.currentTarget.style.background = '#fbbf24';
+                  e.currentTarget.style.color = '#0a2540';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.color = '#fbbf24';
+                }}
+                onClick={() => handleNavigation('/About')}>
+                  Meet Our Team
+                </button>
+              </div>
+            </div>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: '1rem'
+            }}>
+              <div style={{
+                background: '#1e3a8a',
+                padding: '1.5rem',
+                borderRadius: '0.75rem',
+                textAlign: 'center'
+              }}>
+                <div style={{
+                  fontSize: '2.25rem',
+                  fontWeight: 'bold',
+                  color: '#fbbf24',
+                  marginBottom: '0.5rem'
+                }}>10+</div>
+                <div>Years Experience</div>
+              </div>
+              <div style={{
+                background: '#1e3a8a',
+                padding: '1.5rem',
+                borderRadius: '0.75rem',
+                textAlign: 'center'
+              }}>
+                <div style={{
+                  fontSize: '2.25rem',
+                  fontWeight: 'bold',
+                  color: '#fbbf24',
+                  marginBottom: '0.5rem'
+                }}>5,000+</div>
+                <div>Happy Customers</div>
+              </div>
+              <div style={{
+                background: '#1e3a8a',
+                padding: '1.5rem',
+                borderRadius: '0.75rem',
+                textAlign: 'center'
+              }}>
+                <div style={{
+                  fontSize: '2.25rem',
+                  fontWeight: 'bold',
+                  color: '#fbbf24',
+                  marginBottom: '0.5rem'
+                }}>100%</div>
+                <div>Satisfaction Guarantee</div>
+              </div>
+              <div style={{
+                background: '#1e3a8a',
+                padding: '1.5rem',
+                borderRadius: '0.75rem',
+                textAlign: 'center'
+              }}>
+                <div style={{
+                  fontSize: '2.25rem',
+                  fontWeight: 'bold',
+                  color: '#fbbf24',
+                  marginBottom: '0.5rem'
+                }}>24/7</div>
+                <div>Roadside Assistance</div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </section>
+
+      {/* Services Section */}
+      <section style={{
+        padding: '5rem 1.5rem',
+        background: '#0a2540'
+      }}>
+        <div style={{
+          maxWidth: '72rem',
+          margin: '0 auto'
+        }}>
+          <h2 style={{
+            fontSize: '2.25rem',
+            fontWeight: 'bold',
+            marginBottom: '1rem',
+            textAlign: 'center'
+          }}>
+            Our Popular Services
+          </h2>
+          <p style={{
+            fontSize: '1.25rem',
+            color: '#93c5fd',
+            marginBottom: '3rem',
+            textAlign: 'center'
+          }}>
+            Quality service for all your automotive needs
+          </p>
+          
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gap: '2rem'
+          }}>
+            {/* Service 1 */}
+            <div style={{
+              background: '#1a4b78',
+              borderRadius: '0.75rem',
+              overflow: 'hidden',
+              transition: 'transform 0.3s',
+              cursor: 'pointer'
+            }} onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+            onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            onClick={handleViewServices}>
+              <div style={{ height: '12rem', overflow: 'hidden' }}>
+                <img 
+                  src="https://www.carkeys.co.uk/media/1083/oil_change.jpg?anchor=center&mode=crop&width=1200&height=800"
+                  alt="Oil Change" 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              </div>
+              <div style={{ padding: '1.5rem' }}>
+                <h3 style={{
+                  fontSize: '1.25rem',
+                  fontWeight: 600,
+                  marginBottom: '0.5rem'
+                }}>Oil Change</h3>
+                <p style={{ color: '#d1d5db' }}>
+                  Professional oil change service to keep your engine running smoothly and efficiently.
+                </p>
+              </div>
+            </div>
+
+            {/* Service 2 */}
+            <div style={{
+              background: '#1a4b78',
+              borderRadius: '0.75rem',
+              overflow: 'hidden',
+              transition: 'transform 0.3s',
+              cursor: 'pointer'
+            }} onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+            onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            onClick={handleViewServices}>
+              <div style={{ height: '12rem', overflow: 'hidden' }}>
+                <img 
+                  src="https://edmorsecadillacbrandonservice.com/wp-content/uploads/2018/10/brakes.jpg" 
+                  alt="Brake Service" 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              </div>
+              <div style={{ padding: '1.5rem' }}>
+                <h3 style={{
+                  fontSize: '1.25rem',
+                  fontWeight: 600,
+                  marginBottom: '0.5rem'
+                }}>Brake Service</h3>
+                <p style={{ color: '#d1d5db' }}>
+                  Complete brake inspection and repair services for your safety on the road.
+                </p>
+              </div>
+            </div>
+
+            {/* Service 3 */}
+            <div style={{
+              background: '#1a4b78',
+              borderRadius: '0.75rem',
+              overflow: 'hidden',
+              transition: 'transform 0.3s',
+              cursor: 'pointer'
+            }} onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+            onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            onClick={handleViewServices}>
+              <div style={{ height: '12rem', overflow: 'hidden' }}>
+                <img 
+                  src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80" 
+                  alt="Tire Service" 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              </div>
+              <div style={{ padding: '1.5rem' }}>
+                <h3 style={{
+                  fontSize: '1.25rem',
+                  fontWeight: 600,
+                  marginBottom: '0.5rem'
+                }}>Tire Service</h3>
+                <p style={{ color: '#d1d5db' }}>
+                  Tire rotation, balancing, and replacement services for optimal performance.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <style jsx>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes bounce {
+          0%, 20%, 50%, 80%, 100% { transform: translateY(0) translateX(-50%); }
+          40% { transform: translateY(-30px) translateX(-50%); }
+          60% { transform: translateY(-15px) translateX(-50%); }
+        }
+      `}</style>
     </div>
   );
 };
 
-const styles = {
-  container: {
-    background: '#0f172a',
-    minHeight: '100vh',
-    color: 'white',
-    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-  } as const,
-  header: {
-    padding: '1.5rem 2rem',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#1e293b',
-    borderBottom: '1px solid #334155',
-    position: 'sticky' as const,
-    top: 0,
-    zIndex: 50
-  },
-  logo: {
-    fontSize: '2rem',
-    fontWeight: '700',
-    color: '#f97316',
-    margin: 0
-  } as const,
-  nav: {
-    display: 'flex',
-    gap: '1.5rem',
-    alignItems: 'center'
-  } as const,
-  navButton: {
-    backgroundColor: 'transparent',
-    color: 'white',
-    border: 'none',
-    padding: '0.5rem 1rem',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontWeight: '600',
-    fontSize: '1rem',
-    transition: 'color 0.2s ease',
-  } as const,
-  headerActions: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '1rem'
-  } as const,
-  logoutButton: {
-    backgroundColor: '#ef4444',
-    color: 'white',
-    border: 'none',
-    padding: '0.5rem 1rem',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontWeight: '600',
-    fontSize: '0.9rem',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-    transition: 'background-color 0.2s ease'
-  } as const,
-  profileIcon: {
-    color: '#f97316',
-    width: '45px',
-    height: '45px',
-    borderRadius: '8px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(249, 115, 22, 0.1)'
-  } as const,
-  mainContent: {
-    padding: '2rem',
-    minHeight: 'calc(100vh - 100px)'
-  } as const,
-  profileContainer: {
-    maxWidth: '800px',
-    margin: '0 auto'
-  } as const,
-  profileCard: {
-    backgroundColor: '#1e293b',
-    padding: '2.5rem',
-    borderRadius: '12px',
-    border: '1px solid #334155'
-  } as const,
-  profileHeader: {
-    textAlign: 'center' as const,
-    marginBottom: '2rem'
-  } as const,
-  profileTitle: {
-    color: '#f97316',
-    fontSize: '2rem',
-    fontWeight: '700',
-    marginBottom: '1.5rem'
-  } as const,
-  avatarContainer: {
-    display: 'flex',
-    justifyContent: 'center' as const,
-    marginBottom: '1.5rem'
-  } as const,
-  profileAvatar: {
-    width: '120px',
-    height: '120px',
-    borderRadius: '50%',
-    border: '4px solid #f97316',
-    objectFit: 'cover' as const
-  } as const,
-  profileAvatarPlaceholder: {
-    width: '120px',
-    height: '120px',
-    borderRadius: '50%',
-    backgroundColor: '#334155',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    border: '4px solid #f97316'
-  } as const,
-  profileDetails: {
-    marginBottom: '2rem'
-  } as const,
-  detailRow: {
-    display: 'flex',
-    marginBottom: '1.5rem',
-    paddingBottom: '1rem',
-    borderBottom: '1px solid #334155',
-    alignItems: 'center' as const,
-    flexWrap: 'wrap' as const
-  } as const,
-  detailLabel: {
-    fontWeight: '600',
-    width: '150px',
-    color: '#f97316',
-    flexShrink: 0
-  } as const,
-  detailValue: {
-    color: '#cbd5e1',
-    margin: 0,
-    flexGrow: 1
-  } as const,
-  inputField: {
-    padding: '0.75rem',
-    border: '1px solid #334155',
-    borderRadius: '6px',
-    fontSize: '1rem',
-    flexGrow: 1,
-    backgroundColor: '#0f172a',
-    color: 'white'
-  } as const,
-  textareaField: {
-    padding: '0.75rem',
-    border: '1px solid #334155',
-    borderRadius: '6px',
-    fontSize: '1rem',
-    flexGrow: 1,
-    fontFamily: 'inherit',
-    backgroundColor: '#0f172a',
-    color: 'white',
-    minHeight: '100px',
-    resize: 'vertical' as const
-  } as const,
-  bioText: {
-    lineHeight: '1.5'
-  } as const,
-  userId: {
-    fontFamily: 'monospace',
-    fontSize: '0.9em',
-    wordBreak: 'break-all' as const
-  } as const,
-  profileActions: {
-    display: 'flex',
-    gap: '1rem',
-    justifyContent: 'center'
-  } as const,
-  editButton: {
-    backgroundColor: '#f97316',
-    color: 'white',
-    border: 'none',
-    padding: '0.75rem 1.5rem',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontWeight: '600',
-    fontSize: '1rem',
-    transition: 'background-color 0.2s ease'
-  } as const,
-  saveButton: {
-    backgroundColor: '#10b981',
-    color: 'white',
-    border: 'none',
-    padding: '0.75rem 1.5rem',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontWeight: '600',
-    fontSize: '1rem',
-    transition: 'background-color 0.2s ease'
-  } as const,
-  cancelButton: {
-    backgroundColor: '#6b7280',
-    color: 'white',
-    border: 'none',
-    padding: '0.75rem 1.5rem',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontWeight: '600',
-    fontSize: '1rem',
-    transition: 'background-color 0.2s ease'
-  } as const,
-  profileLoading: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '3rem',
-    textAlign: 'center' as const,
-    backgroundColor: '#1e293b',
-    borderRadius: '12px',
-    border: '1px solid #334155'
-  } as const,
-  loadingSpinner: {
-    width: '50px',
-    height: '50px',
-    border: '4px solid #334155',
-    borderTop: '4px solid #f97316',
-    borderRadius: '50%',
-    animation: 'spin 1s linear infinite',
-    marginBottom: '1rem'
-  } as const,
-  profileError: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '3rem',
-    textAlign: 'center' as const,
-    backgroundColor: '#1e293b',
-    borderRadius: '12px',
-    border: '1px solid #334155'
-  } as const,
-  retryButton: {
-    backgroundColor: '#f97316',
-    color: 'white',
-    border: 'none',
-    padding: '0.75rem 1.5rem',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontWeight: '600',
-    fontSize: '1rem',
-    transition: 'background-color 0.2s ease',
-    margin: '0.5rem'
-  } as const,
-  signInButton: {
-    backgroundColor: '#3b82f6',
-    color: 'white',
-    border: 'none',
-    padding: '0.75rem 1.5rem',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontWeight: '600',
-    fontSize: '1rem',
-    transition: 'background-color 0.2s ease',
-    margin: '0.5rem'
-  } as const,
-  authActions: {
-    display: 'flex',
-    gap: '1rem',
-    justifyContent: 'center',
-    marginTop: '1.5rem',
-    flexWrap: 'wrap' as const
-  } as const
-};
-
-export default UserProfile;
+export default AutoServiceShop;
