@@ -1,157 +1,146 @@
 "use client";
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 interface Appointment {
-  id: number;
-  customerName: string;
-  vehicle: string;
-  service: string;
-  date: string;
-  time: string;
-  status: 'Scheduled' | 'In Progress' | 'Completed' | 'Cancelled';
+  id: string;
+  user_id: string | null;
+  name: string;
+  email: string;
   phone: string;
-  estimatedDuration: string;
-  notes?: string;
+  vehicle_type: string;
+  service_type: string;
+  preferred_date: string;
+  preferred_time: string;
+  message: string;
+  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  created_at: string;
   images?: string[];
 }
 
 const AdminAppointments = () => {
-  const router = useRouter(); // Initialize the router
+  const router = useRouter();
+  const supabase = createClientComponentClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [showImageModal, setShowImageModal] = useState<boolean>(false);
   const [showEditModal, setShowEditModal] = useState<boolean>(false);
-  const [showAddModal, setShowAddModal] = useState<boolean>(false);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [editFormData, setEditFormData] = useState<Appointment | null>(null);
-  
-  // Sample appointment data
-  const [appointments, setAppointments] = useState<Appointment[]>([
-    {
-      id: 1,
-      customerName: "John Smith",
-      vehicle: "Toyota Camry 2019",
-      service: "Oil Change",
-      date: new Date().toISOString().split('T')[0],
-      time: "09:00",
-      status: "Scheduled",
-      phone: "+1 (555) 123-4567",
-      estimatedDuration: "45 mins",
-      notes: "Synthetic oil preferred",
-      images: []
-    },
-    {
-      id: 2,
-      customerName: "Maria Garcia",
-      vehicle: "Honda Civic 2021",
-      service: "Brake Service",
-      date: new Date().toISOString().split('T')[0],
-      time: "10:30",
-      status: "In Progress",
-      phone: "+1 (555) 987-6543",
-      estimatedDuration: "2 hours",
-      notes: "Front brakes only",
-      images: []
-    },
-    {
-      id: 3,
-      customerName: "Robert Johnson",
-      vehicle: "Ford F-150 2020",
-      service: "Tire Rotation",
-      date: new Date().toISOString().split('T')[0],
-      time: "11:15",
-      status: "Scheduled",
-      phone: "+1 (555) 456-7890",
-      estimatedDuration: "30 mins",
-      images: []
-    },
-    {
-      id: 4,
-      customerName: "Sarah Williams",
-      vehicle: "Chevrolet Malibu 2018",
-      service: "Full Service",
-      date: new Date().toISOString().split('T')[0],
-      time: "13:00",
-      status: "Scheduled",
-      phone: "+1 (555) 234-5678",
-      estimatedDuration: "3 hours",
-      notes: "Includes oil change, filter replacement, and inspection",
-      images: []
-    },
-    {
-      id: 5,
-      customerName: "James Brown",
-      vehicle: "Nissan Altima 2022",
-      service: "AC Repair",
-      date: new Date().toISOString().split('T')[0],
-      time: "14:45",
-      status: "Completed",
-      phone: "+1 (555) 876-5432",
-      estimatedDuration: "1.5 hours",
-      images: []
-    },
-    {
-      id: 6,
-      customerName: "Lisa Davis",
-      vehicle: "BMW X5 2020",
-      service: "Electrical Diagnostics",
-      date: new Date().toISOString().split('T')[0],
-      time: "16:00",
-      status: "Cancelled",
-      phone: "+1 (555) 345-6789",
-      estimatedDuration: "2 hours",
-      notes: "Customer will reschedule",
-      images: []
-    }
-  ]);
 
-  const handleBackToDashboard = () => {
-    router.push('/AdminHome'); // Navigate to the root URL
+  // Color scheme
+  const colors = {
+    primary: '#C7613C',
+    primaryLight: '#e07a4f',
+    primaryDark: '#b55536',
+    background: 'white',
+    card: '#f8f9fa',
+    text: '#333',
+    textLight: '#6b7280',
+    border: '#e5e7eb',
+    success: '#10b981',
+    warning: '#f59e0b',
+    error: '#ef4444',
+    info: '#3b82f6'
   };
 
-  const handleLogout = () => {
-    if (window.confirm('Are you sure you want to logout?')) {
-      alert('Logging out...');
-      // In a real app, this would navigate to /
+  useEffect(() => {
+    fetchAppointments();
+  }, []);
+
+  const fetchAppointments = async () => {
+    try {
+      console.log('Fetching appointments from Supabase...');
+      
+      const { data, error } = await supabase
+        .from('appointments')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      console.log('Fetched appointments:', data);
+      setAppointments(data || []);
+      
+    } catch (error: any) {
+      console.error('Error fetching appointments:', error);
+      
+      // Show detailed error information
+      if (error.code === 'PGRST301') {
+        alert('Error: No appointments table found. Please make sure the table exists in your Supabase database.');
+      } else if (error.code === '42501') {
+        alert('Error: Permission denied. Please check RLS policies for the appointments table.');
+      } else {
+        alert(`Error loading appointments: ${error.message}`);
+      }
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleBackToDashboard = () => {
+    router.push('/AdminHome');
   };
 
   const handleProfile = () => {
-    alert('Opening Admin Profile...');
-    // In a real app, this would navigate to /Adminprofile
+    router.push('/Adminprofile');
   };
 
   // Filter appointments by selected date
-  const filteredAppointments = appointments.filter(app => app.date === selectedDate);
+  const filteredAppointments = appointments.filter(app => app.preferred_date === selectedDate);
   
   // Sort appointments by time
   const sortedAppointments = filteredAppointments.sort((a, b) => {
-    return a.time.localeCompare(b.time);
+    return a.preferred_time.localeCompare(b.preferred_time);
   });
 
   // Count appointments by status
   const statusCounts = {
-    Scheduled: filteredAppointments.filter(a => a.status === 'Scheduled').length,
-    'In Progress': filteredAppointments.filter(a => a.status === 'In Progress').length,
-    Completed: filteredAppointments.filter(a => a.status === 'Completed').length,
-    Cancelled: filteredAppointments.filter(a => a.status === 'Cancelled').length
+    pending: filteredAppointments.filter(a => a.status === 'pending').length,
+    confirmed: filteredAppointments.filter(a => a.status === 'confirmed').length,
+    completed: filteredAppointments.filter(a => a.status === 'completed').length,
+    cancelled: filteredAppointments.filter(a => a.status === 'cancelled').length
   };
 
   const getStatusColor = (status: string) => {
     switch(status) {
-      case 'Scheduled': return '#3b82f6';
-      case 'In Progress': return '#f59e0b';
-      case 'Completed': return '#10b981';
-      case 'Cancelled': return '#ef4444';
-      default: return '#6b7280';
+      case 'pending': return colors.warning;
+      case 'confirmed': return colors.info;
+      case 'completed': return colors.success;
+      case 'cancelled': return colors.error;
+      default: return colors.textLight;
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch(status) {
+      case 'pending': return 'Pending';
+      case 'confirmed': return 'Confirmed';
+      case 'completed': return 'Completed';
+      case 'cancelled': return 'Cancelled';
+      default: return status;
     }
   };
 
   const formatDate = (dateString: string) => {
     const options: Intl.DateTimeFormatOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     return new Date(dateString).toLocaleDateString('en-US', options);
+  };
+
+  const formatTime = (timeString: string) => {
+    const [hours, minutes] = timeString.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour % 12 || 12;
+    return `${displayHour}:${minutes} ${ampm}`;
   };
 
   const handleOpenImageSelector = (appointment: Appointment) => {
@@ -164,9 +153,11 @@ const AdminAppointments = () => {
     setSelectedAppointment(null);
   };
 
-  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files && selectedAppointment) {
+      // In a real app, you would upload to Supabase Storage
+      // For now, we'll simulate with base64
       Array.from(files).forEach(file => {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -190,55 +181,96 @@ const AdminAppointments = () => {
     setShowEditModal(true);
   };
 
-  const handleDeleteAppointment = (appointmentId: number) => {
+  const handleDeleteAppointment = async (appointmentId: string) => {
     if (window.confirm('Are you sure you want to delete this appointment?')) {
-      setAppointments(prev => prev.filter(app => app.id !== appointmentId));
+      try {
+        const { error } = await supabase
+          .from('appointments')
+          .delete()
+          .eq('id', appointmentId);
+
+        if (error) throw error;
+        
+        setAppointments(prev => prev.filter(app => app.id !== appointmentId));
+        alert('Appointment deleted successfully!');
+      } catch (error) {
+        console.error('Error deleting appointment:', error);
+        alert('Error deleting appointment');
+      }
     }
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (editFormData) {
-      setAppointments(prev => prev.map(app => 
-        app.id === editFormData.id ? editFormData : app
-      ));
-      setShowEditModal(false);
-      setEditFormData(null);
+      try {
+        const { error } = await supabase
+          .from('appointments')
+          .update({
+            name: editFormData.name,
+            email: editFormData.email,
+            phone: editFormData.phone,
+            vehicle_type: editFormData.vehicle_type,
+            service_type: editFormData.service_type,
+            preferred_date: editFormData.preferred_date,
+            preferred_time: editFormData.preferred_time,
+            message: editFormData.message,
+            status: editFormData.status
+          })
+          .eq('id', editFormData.id);
+
+        if (error) throw error;
+
+        setAppointments(prev => prev.map(app => 
+          app.id === editFormData.id ? editFormData : app
+        ));
+        setShowEditModal(false);
+        setEditFormData(null);
+        alert('Appointment updated successfully!');
+      } catch (error) {
+        console.error('Error updating appointment:', error);
+        alert('Error updating appointment');
+      }
     }
   };
 
-  const handleAddAppointment = () => {
-    const newAppointment: Appointment = {
-      id: Math.max(...appointments.map(a => a.id)) + 1,
-      customerName: "",
-      vehicle: "",
-      service: "",
-      date: selectedDate,
-      time: "09:00",
-      status: "Scheduled",
-      phone: "",
-      estimatedDuration: "1 hour",
-      notes: "",
-      images: []
-    };
-    setEditFormData(newAppointment);
-    setShowAddModal(true);
+  // Refresh appointments data
+  const handleRefresh = () => {
+    setLoading(true);
+    fetchAppointments();
   };
 
-  const handleSaveAdd = () => {
-    if (editFormData && editFormData.customerName && editFormData.vehicle && editFormData.service) {
-      setAppointments(prev => [...prev, editFormData]);
-      setShowAddModal(false);
-      setEditFormData(null);
-    } else {
-      alert('Please fill in all required fields');
-    }
-  };
+  if (loading) {
+    return (
+      <div style={{ 
+        background: colors.background,
+        minHeight: '100vh', 
+        color: colors.text,
+        fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{
+            width: '50px',
+            height: '50px',
+            border: `4px solid ${colors.border}`,
+            borderTop: `4px solid ${colors.primary}`,
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 1rem'
+          }} />
+          <p style={{ color: colors.primary, fontSize: '1.2rem', fontWeight: '600' }}>Loading Appointments...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ 
-      background: '#0f172a',
+      background: colors.background,
       minHeight: '100vh', 
-      color: 'white',
+      color: colors.text,
       fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     }}>
       {/* Header */}
@@ -247,44 +279,82 @@ const AdminAppointments = () => {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        backgroundColor: '#1e293b',
-        borderBottom: '1px solid #334155',
+        backgroundColor: colors.background,
+        borderBottom: `2px solid ${colors.primary}`,
+        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
         position: 'sticky',
         top: 0,
         zIndex: 50
       }}>
         <h1 style={{ 
-          fontSize: '2rem', 
+          fontSize: '2.5rem', 
           fontWeight: '700',
-          color: '#f97316',
-          margin: 0
-        }}>
+          color: colors.primary,
+          margin: 0,
+          cursor: 'pointer'
+        }} onClick={handleBackToDashboard}>
           SUNNY AUTO ADMIN
         </h1>
         
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           <button 
+            onClick={handleRefresh}
+            style={{
+              backgroundColor: colors.primary,
+              color: 'white',
+              border: 'none',
+              padding: '0.75rem 1rem',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: '600',
+              fontSize: '0.9rem',
+              transition: 'all 0.3s ease',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = colors.primaryDark;
+              e.currentTarget.style.transform = 'translateY(-2px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = colors.primary;
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
+            title="Refresh Appointments"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M23 4v6h-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M1 20v-6h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Refresh
+          </button>
+          
+          <button 
             onClick={handleProfile}
             style={{
-              backgroundColor: '#f97316',
+              backgroundColor: colors.primary,
               color: 'white',
               width: '45px',
               height: '45px',
-              borderRadius: '8px',
+              borderRadius: '10px',
               border: 'none',
               cursor: 'pointer',
               fontSize: '1.2rem',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              transition: 'background-color 0.2s ease',
-              boxShadow: 'none'
+              transition: 'all 0.3s ease',
+              boxShadow: `0 4px 15px ${colors.primary}40`
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#ea580c';
+              e.currentTarget.style.backgroundColor = colors.primaryDark;
+              e.currentTarget.style.transform = 'translateY(-2px)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#f97316';
+              e.currentTarget.style.backgroundColor = colors.primary;
+              e.currentTarget.style.transform = 'translateY(0)';
             }}
             title="Admin Profile"
           >
@@ -301,12 +371,13 @@ const AdminAppointments = () => {
         minHeight: 'calc(100vh - 100px)'
       }}>
         <div style={{ 
-          backgroundColor: '#1e293b',
+          backgroundColor: colors.background,
           padding: '2.5rem',
-          borderRadius: '12px',
+          borderRadius: '15px',
           maxWidth: '1400px',
           margin: '0 auto',
-          border: '1px solid #334155'
+          border: `1px solid ${colors.border}`,
+          boxShadow: '0 10px 40px rgba(0, 0, 0, 0.08)'
         }}>
           <div style={{ 
             display: 'flex', 
@@ -317,90 +388,134 @@ const AdminAppointments = () => {
             gap: '1rem'
           }}>
             <h2 style={{ 
-              fontSize: '2rem', 
+              fontSize: '2.5rem', 
               fontWeight: '700',
-              color: '#f97316',
-              margin: 0
+              color: colors.primary,
+              margin: 0,
+              background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.primaryLight} 100%)`,
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent'
             }}>
               Appointment Management
             </h2>
             
             <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
-              <button 
-                onClick={handleAddAppointment}
-                style={{
-                  backgroundColor: '#10b981',
-                  color: 'white',
-                  border: 'none',
-                  padding: '0.75rem 1.5rem',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontWeight: '600',
-                  fontSize: '1rem',
-                  transition: 'background-color 0.2s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  boxShadow: 'none'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#059669';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#10b981';
-                }}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 2v20M2 12h20" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
-                Add Appointment
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ color: colors.primary, fontWeight: '600', fontSize: '1.1rem' }}>Total Appointments:</span>
+                <span style={{ 
+                  backgroundColor: colors.primary, 
+                  color: 'white', 
+                  padding: '0.25rem 0.75rem', 
+                  borderRadius: '20px',
+                  fontWeight: '700',
+                  fontSize: '0.9rem'
+                }}>
+                  {appointments.length}
+                </span>
+              </div>
               
-              <label style={{ color: '#f97316', fontWeight: '600' }}>Select Date:</label>
+              <label style={{ color: colors.primary, fontWeight: '600', fontSize: '1.1rem' }}>Filter by Date:</label>
               <input 
                 type="date" 
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
                 style={{ 
-                  backgroundColor: '#334155', 
-                  color: 'white', 
-                  border: '1px solid #f97316', 
-                  borderRadius: '8px',
+                  backgroundColor: colors.background, 
+                  color: colors.text, 
+                  border: `2px solid ${colors.primary}`, 
+                  borderRadius: '10px',
                   padding: '0.75rem 1rem',
-                  fontSize: '1rem'
+                  fontSize: '1rem',
+                  fontWeight: '500',
+                  transition: 'all 0.3s ease'
+                }}
+                onFocus={(e) => {
+                  e.target.style.boxShadow = `0 0 0 3px ${colors.primary}20`;
+                }}
+                onBlur={(e) => {
+                  e.target.style.boxShadow = 'none';
                 }}
               />
             </div>
           </div>
+          
+          {/* Debug Information */}
+          {appointments.length === 0 && (
+            <div style={{
+              backgroundColor: colors.warning + '20',
+              border: `1px solid ${colors.warning}`,
+              borderRadius: '10px',
+              padding: '1.5rem',
+              marginBottom: '2rem',
+              textAlign: 'center'
+            }}>
+              <h3 style={{ color: colors.warning, marginTop: 0 }}>No Appointments Found</h3>
+              <p style={{ color: colors.text, marginBottom: '1rem' }}>
+                There are no appointments in the database. This could be because:
+              </p>
+              <ul style={{ textAlign: 'left', color: colors.text, marginBottom: '1rem' }}>
+                <li>No users have booked appointments yet</li>
+                <li>The appointments table doesn't exist in Supabase</li>
+                <li>RLS policies are preventing access to the data</li>
+                <li>There's a connection issue with Supabase</li>
+              </ul>
+              <button 
+                onClick={handleRefresh}
+                style={{
+                  backgroundColor: colors.primary,
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: '600'
+                }}
+              >
+                Check Again
+              </button>
+            </div>
+          )}
           
           {/* Appointment Summary */}
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
             gap: '1.5rem',
-            backgroundColor: '#334155',
+            backgroundColor: colors.card,
             padding: '2rem',
-            borderRadius: '8px',
-            border: '1px solid #475569',
-            marginBottom: '2rem'
+            borderRadius: '12px',
+            border: `1px solid ${colors.border}`,
+            marginBottom: '2rem',
+            boxShadow: '0 5px 20px rgba(0, 0, 0, 0.05)'
           }}>
             {[
-              { label: 'Total Appointments', count: filteredAppointments.length, color: '#f97316', icon: 'calendar' },
-              { label: 'Scheduled', count: statusCounts.Scheduled, color: '#3b82f6', icon: 'clock' },
-              { label: 'In Progress', count: statusCounts['In Progress'], color: '#f59e0b', icon: 'tool' },
-              { label: 'Completed', count: statusCounts.Completed, color: '#10b981', icon: 'check' },
-              { label: 'Cancelled', count: statusCounts.Cancelled, color: '#ef4444', icon: 'x' }
+              { label: 'Total Appointments', count: filteredAppointments.length, color: colors.primary, icon: 'calendar' },
+              { label: 'Pending', count: statusCounts.pending, color: colors.warning, icon: 'clock' },
+              { label: 'Confirmed', count: statusCounts.confirmed, color: colors.info, icon: 'check-circle' },
+              { label: 'Completed', count: statusCounts.completed, color: colors.success, icon: 'check' },
+              { label: 'Cancelled', count: statusCounts.cancelled, color: colors.error, icon: 'x' }
             ].map((stat, index) => (
               <div key={index} style={{ 
                 textAlign: 'center', 
                 padding: '1.5rem',
-                backgroundColor: '#475569',
-                borderRadius: '8px',
-                border: `1px solid ${stat.color}`
-              }}>
+                backgroundColor: colors.background,
+                borderRadius: '10px',
+                border: `2px solid ${stat.color}`,
+                transition: 'all 0.3s ease',
+                boxShadow: '0 4px 15px rgba(0, 0, 0, 0.05)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-5px)';
+                e.currentTarget.style.boxShadow = `0 8px 25px ${stat.color}40`;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.05)';
+              }}
+              >
                 <div style={{ marginBottom: '0.5rem' }}>
                   {stat.icon === 'calendar' && (
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke={stat.color} strokeWidth="2"/>
                       <line x1="16" y1="2" x2="16" y2="6" stroke={stat.color} strokeWidth="2"/>
                       <line x1="8" y1="2" x2="8" y2="6" stroke={stat.color} strokeWidth="2"/>
@@ -408,32 +523,33 @@ const AdminAppointments = () => {
                     </svg>
                   )}
                   {stat.icon === 'clock' && (
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <circle cx="12" cy="12" r="10" stroke={stat.color} strokeWidth="2"/>
                       <polyline points="12,6 12,12 16,14" stroke={stat.color} strokeWidth="2"/>
                     </svg>
                   )}
-                  {stat.icon === 'tool' && (
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" stroke={stat.color} strokeWidth="2"/>
+                  {stat.icon === 'check-circle' && (
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke={stat.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <polyline points="22,4 12,14.01 9,11.01" stroke={stat.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   )}
                   {stat.icon === 'check' && (
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <polyline points="20,6 9,17 4,12" stroke={stat.color} strokeWidth="2"/>
                     </svg>
                   )}
                   {stat.icon === 'x' && (
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <line x1="18" y1="6" x2="6" y2="18" stroke={stat.color} strokeWidth="2"/>
                       <line x1="6" y1="6" x2="18" y2="18" stroke={stat.color} strokeWidth="2"/>
                     </svg>
                   )}
                 </div>
-                <div style={{ fontSize: '2rem', color: stat.color, fontWeight: '700', marginBottom: '0.5rem' }}>
+                <div style={{ fontSize: '2.5rem', color: stat.color, fontWeight: '800', marginBottom: '0.5rem' }}>
                   {stat.count}
                 </div>
-                <div style={{ color: '#cbd5e1', fontWeight: '500' }}>{stat.label}</div>
+                <div style={{ color: colors.text, fontWeight: '600', fontSize: '1.1rem' }}>{stat.label}</div>
               </div>
             ))}
           </div>
@@ -443,27 +559,38 @@ const AdminAppointments = () => {
             textAlign: 'center', 
             marginBottom: '2rem',
             padding: '1.5rem',
-            backgroundColor: '#334155',
-            borderRadius: '8px',
-            border: '1px solid #475569'
+            backgroundColor: colors.card,
+            borderRadius: '12px',
+            border: `1px solid ${colors.border}`,
+            background: `linear-gradient(135deg, ${colors.primary}15 0%, ${colors.primaryLight}15 100%)`
           }}>
             <h3 style={{ 
-              color: '#f97316', 
+              color: colors.primary, 
               margin: 0, 
-              fontSize: '1.4rem',
-              fontWeight: '600',
+              fontSize: '1.5rem',
+              fontWeight: '700',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '0.5rem'
+              gap: '0.75rem'
             }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke="currentColor" strokeWidth="2"/>
                 <line x1="16" y1="2" x2="16" y2="6" stroke="currentColor" strokeWidth="2"/>
                 <line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" strokeWidth="2"/>
                 <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" strokeWidth="2"/>
               </svg>
               {formatDate(selectedDate)}
+              <span style={{ 
+                fontSize: '1rem', 
+                backgroundColor: colors.primary, 
+                color: 'white', 
+                padding: '0.25rem 0.75rem', 
+                borderRadius: '20px',
+                marginLeft: '1rem'
+              }}>
+                {filteredAppointments.length} appointment{filteredAppointments.length !== 1 ? 's' : ''}
+              </span>
             </h3>
           </div>
           
@@ -475,42 +602,52 @@ const AdminAppointments = () => {
                   <div 
                     key={appointment.id}
                     style={{
-                      backgroundColor: '#334155',
+                      backgroundColor: colors.background,
                       padding: '2rem',
-                      borderRadius: '8px',
-                      border: `1px solid ${getStatusColor(appointment.status)}`,
-                      transition: 'all 0.2s ease'
+                      borderRadius: '12px',
+                      border: `2px solid ${getStatusColor(appointment.status)}`,
+                      transition: 'all 0.3s ease',
+                      boxShadow: '0 5px 20px rgba(0, 0, 0, 0.08)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-5px)';
+                      e.currentTarget.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.12)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 5px 20px rgba(0, 0, 0, 0.08)';
                     }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
                         <div style={{ 
-                          padding: '0.5rem 1rem', 
-                          borderRadius: '6px', 
-                          backgroundColor: '#475569',
-                          fontWeight: '600',
-                          fontSize: '0.9rem',
-                          color: '#f97316',
-                          border: '1px solid #f97316',
+                          padding: '0.6rem 1.2rem', 
+                          borderRadius: '8px', 
+                          backgroundColor: colors.primary,
+                          fontWeight: '700',
+                          fontSize: '1rem',
+                          color: 'white',
                           display: 'flex',
                           alignItems: 'center',
-                          gap: '0.5rem'
+                          gap: '0.5rem',
+                          boxShadow: `0 4px 15px ${colors.primary}40`
                         }}>
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
                             <polyline points="12,6 12,12 16,14" stroke="currentColor" strokeWidth="2"/>
                           </svg>
-                          {appointment.time}
+                          {formatTime(appointment.preferred_time)}
                         </div>
                         <div style={{ 
-                          padding: '0.5rem 1rem', 
-                          borderRadius: '6px', 
-                          fontWeight: '600',
-                          fontSize: '0.9rem',
+                          padding: '0.6rem 1.2rem', 
+                          borderRadius: '8px', 
+                          fontWeight: '700',
+                          fontSize: '1rem',
                           backgroundColor: getStatusColor(appointment.status),
-                          color: 'white'
+                          color: 'white',
+                          boxShadow: `0 4px 15px ${getStatusColor(appointment.status)}40`
                         }}>
-                          {appointment.status}
+                          {getStatusText(appointment.status)}
                         </div>
                       </div>
                       
@@ -518,28 +655,30 @@ const AdminAppointments = () => {
                         <button 
                           onClick={() => handleOpenImageSelector(appointment)}
                           style={{
-                            backgroundColor: '#8b5cf6',
+                            backgroundColor: colors.primary,
                             color: 'white',
                             border: 'none',
-                            width: '36px',
-                            height: '36px',
-                            borderRadius: '6px',
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: '8px',
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            transition: 'background-color 0.2s ease',
-                            boxShadow: 'none'
+                            transition: 'all 0.3s ease',
+                            boxShadow: `0 4px 15px ${colors.primary}40`
                           }}
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = '#7c3aed';
+                            e.currentTarget.style.backgroundColor = colors.primaryDark;
+                            e.currentTarget.style.transform = 'translateY(-2px)';
                           }}
                           onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = '#8b5cf6';
+                            e.currentTarget.style.backgroundColor = colors.primary;
+                            e.currentTarget.style.transform = 'translateY(0)';
                           }}
                           title="Add Vehicle Images"
                         >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke="currentColor" strokeWidth="2"/>
                             <circle cx="8.5" cy="8.5" r="1.5" stroke="currentColor" strokeWidth="2"/>
                             <polyline points="21,15 16,10 5,21" stroke="currentColor" strokeWidth="2"/>
@@ -549,28 +688,30 @@ const AdminAppointments = () => {
                         <button 
                           onClick={() => handleEditAppointment(appointment)}
                           style={{
-                            backgroundColor: '#f59e0b',
+                            backgroundColor: colors.warning,
                             color: 'white',
                             border: 'none',
-                            width: '36px',
-                            height: '36px',
-                            borderRadius: '6px',
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: '8px',
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            transition: 'background-color 0.2s ease',
-                            boxShadow: 'none'
+                            transition: 'all 0.3s ease',
+                            boxShadow: `0 4px 15px ${colors.warning}40`
                           }}
                           onMouseEnter={(e) => {
                             e.currentTarget.style.backgroundColor = '#d97706';
+                            e.currentTarget.style.transform = 'translateY(-2px)';
                           }}
                           onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = '#f59e0b';
+                            e.currentTarget.style.backgroundColor = colors.warning;
+                            e.currentTarget.style.transform = 'translateY(0)';
                           }}
                           title="Edit Appointment"
                         >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="m18 2 4 4-14 14H4v-4L18 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                           </svg>
                         </button>
@@ -578,28 +719,30 @@ const AdminAppointments = () => {
                         <button 
                           onClick={() => handleDeleteAppointment(appointment.id)}
                           style={{
-                            backgroundColor: '#ef4444',
+                            backgroundColor: colors.error,
                             color: 'white',
                             border: 'none',
-                            width: '36px',
-                            height: '36px',
-                            borderRadius: '6px',
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: '8px',
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            transition: 'background-color 0.2s ease',
-                            boxShadow: 'none'
+                            transition: 'all 0.3s ease',
+                            boxShadow: `0 4px 15px ${colors.error}40`
                           }}
                           onMouseEnter={(e) => {
                             e.currentTarget.style.backgroundColor = '#dc2626';
+                            e.currentTarget.style.transform = 'translateY(-2px)';
                           }}
                           onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = '#ef4444';
+                            e.currentTarget.style.backgroundColor = colors.error;
+                            e.currentTarget.style.transform = 'translateY(0)';
                           }}
                           title="Delete Appointment"
                         >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <polyline points="3,6 5,6 21,6" stroke="currentColor" strokeWidth="2"/>
                             <path d="m19,6v14a2,2 0 0,1-2,2H7a2,2 0 0,1-2-2V6m3,0V4a2,2 0 0,1,2-2h4a2,2 0 0,1,2,2v2" stroke="currentColor" strokeWidth="2"/>
                           </svg>
@@ -609,75 +752,82 @@ const AdminAppointments = () => {
                     
                     <div style={{ marginBottom: '1.5rem' }}>
                       <h3 style={{ 
-                        color: '#f97316', 
+                        color: colors.primary, 
                         marginBottom: '1rem', 
-                        fontSize: '1.2rem',
-                        fontWeight: '600',
+                        fontSize: '1.4rem',
+                        fontWeight: '700',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '0.5rem'
+                        gap: '0.75rem'
                       }}>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" strokeWidth="2"/>
                           <circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth="2"/>
                         </svg>
-                        {appointment.customerName}
+                        {appointment.name}
                       </h3>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                        <p style={{ margin: 0, color: '#cbd5e1', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9L18 10h-1.3l-.8-2H12" stroke="currentColor" strokeWidth="2"/>
-                            <circle cx="9" cy="19" r="2" stroke="currentColor" strokeWidth="2"/>
-                            <circle cx="20" cy="19" r="2" stroke="currentColor" strokeWidth="2"/>
-                            <path d="M9 19H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6l2 2h7a2 2 0 0 1 2 2v4.5" stroke="currentColor" strokeWidth="2"/>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                        <p style={{ margin: 0, color: colors.text, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '500' }}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9L18 10h-1.3l-.8-2H12" stroke={colors.primary} strokeWidth="2"/>
+                            <circle cx="9" cy="19" r="2" stroke={colors.primary} strokeWidth="2"/>
+                            <circle cx="20" cy="19" r="2" stroke={colors.primary} strokeWidth="2"/>
+                            <path d="M9 19H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6l2 2h7a2 2 0 0 1 2 2v4.5" stroke={colors.primary} strokeWidth="2"/>
                           </svg>
-                          <strong>Vehicle:</strong> {appointment.vehicle}
+                          <strong style={{ color: colors.primary }}>Vehicle:</strong> {appointment.vehicle_type}
                         </p>
-                        <p style={{ margin: 0, color: '#cbd5e1', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" stroke="currentColor" strokeWidth="2"/>
+                        <p style={{ margin: 0, color: colors.text, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '500' }}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke={colors.primary} strokeWidth="2"/>
+                            <polyline points="22,6 12,13 2,6" stroke={colors.primary} strokeWidth="2"/>
                           </svg>
-                          <strong>Phone:</strong> {appointment.phone}
+                          <strong style={{ color: colors.primary }}>Email:</strong> {appointment.email}
                         </p>
-                        <p style={{ margin: 0, color: '#cbd5e1', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
-                            <path d="M12 8V16M8 12h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        <p style={{ margin: 0, color: colors.text, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '500' }}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" stroke={colors.primary} strokeWidth="2"/>
                           </svg>
-                          <strong>Service:</strong> {appointment.service}
+                          <strong style={{ color: colors.primary }}>Phone:</strong> {appointment.phone}
                         </p>
-                        <p style={{ margin: 0, color: '#cbd5e1', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2"/>
-                            <path d="M12 6V12L16 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <p style={{ margin: 0, color: colors.text, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '500' }}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="12" cy="12" r="10" stroke={colors.primary} strokeWidth="2"/>
+                            <path d="M12 8V16M8 12h8" stroke={colors.primary} strokeWidth="2" strokeLinecap="round"/>
                           </svg>
-                          <strong>Duration:</strong> {appointment.estimatedDuration}
+                          <strong style={{ color: colors.primary }}>Service:</strong> {appointment.service_type}
                         </p>
                       </div>
-                      {appointment.notes && (
-                        <p style={{ margin: '1rem 0 0', color: '#cbd5e1', fontSize: '0.95rem', fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M14 2H6C5.46957 2 4.96265 2.21071 4.58579 2.58579C4.21071 2.96265 4 3.46957 4 4V20C4 20.5304 4.21071 21.0373 4.58579 21.4142C4.96265 21.7893 5.46957 22 6 22H18C18.5304 22 19.0373 21.7893 19.4142 21.4142C19.7893 21.0373 20 20.5304 20 20V8L14 2Z" stroke="currentColor" strokeWidth="2"/>
-                            <path d="M14 2V8H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                            <line x1="8" y1="13" x2="16" y2="13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                            <line x1="8" y1="17" x2="16" y2="17" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                            <line x1="8" y1="9" x2="10" y2="9" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      {appointment.message && (
+                        <p style={{ margin: '1rem 0 0', color: colors.text, fontSize: '1rem', fontStyle: 'italic', display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontWeight: '500' }}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M14 2H6C5.46957 2 4.96265 2.21071 4.58579 2.58579C4.21071 2.96265 4 3.46957 4 4V20C4 20.5304 4.21071 21.0373 4.58579 21.4142C4.96265 21.7893 5.46957 22 6 22H18C18.5304 22 19.0373 21.7893 19.4142 21.4142C19.7893 21.0373 20 20.5304 20 20V8L14 2Z" stroke={colors.primary} strokeWidth="2"/>
+                            <path d="M14 2V8H20" stroke={colors.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <line x1="8" y1="13" x2="16" y2="13" stroke={colors.primary} strokeWidth="2" strokeLinecap="round"/>
+                            <line x1="8" y1="17" x2="16" y2="17" stroke={colors.primary} strokeWidth="2" strokeLinecap="round"/>
+                            <line x1="8" y1="9" x2="10" y2="9" stroke={colors.primary} strokeWidth="2" strokeLinecap="round"/>
                           </svg>
-                          <strong>Notes:</strong> {appointment.notes}
+                          <strong style={{ color: colors.primary }}>Customer Notes:</strong> {appointment.message}
                         </p>
                       )}
                     </div>
                     
                     {appointment.images && appointment.images.length > 0 && (
                       <div>
-                        <h4 style={{ color: '#f97316', fontSize: '1.1rem', fontWeight: '600', marginBottom: '0.75rem' }}>Vehicle Images:</h4>
+                        <h4 style={{ color: colors.primary, fontSize: '1.2rem', fontWeight: '700', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke="currentColor" strokeWidth="2"/>
+                            <circle cx="8.5" cy="8.5" r="1.5" stroke="currentColor" strokeWidth="2"/>
+                            <polyline points="21,15 16,10 5,21" stroke="currentColor" strokeWidth="2"/>
+                          </svg>
+                          Vehicle Images:
+                        </h4>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
                           {appointment.images.map((image, i) => (
                             <img 
                               key={i} 
                               src={image} 
                               alt={`Vehicle image ${i + 1}`} 
-                              style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #475569' }} 
+                              style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px', border: `2px solid ${colors.primary}`, boxShadow: `0 4px 15px ${colors.primary}40` }} 
                             />
                           ))}
                         </div>
@@ -687,9 +837,27 @@ const AdminAppointments = () => {
                 ))}
               </div>
             ) : (
-              <p style={{ textAlign: 'center', color: '#94a3b8', fontSize: '1.2rem', padding: '3rem', border: '1px dashed #475569', borderRadius: '8px' }}>
-                No appointments found for this date.
-              </p>
+              <div style={{ 
+                textAlign: 'center', 
+                color: colors.textLight, 
+                fontSize: '1.3rem', 
+                padding: '4rem', 
+                border: `2px dashed ${colors.border}`, 
+                borderRadius: '12px',
+                backgroundColor: colors.card
+              }}>
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ margin: '0 auto 1rem', opacity: 0.5 }}>
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke="currentColor" strokeWidth="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6" stroke="currentColor" strokeWidth="2"/>
+                  <line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" strokeWidth="2"/>
+                  <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" strokeWidth="2"/>
+                </svg>
+                No appointments found for {formatDate(selectedDate)}.
+                <br />
+                <span style={{ fontSize: '1rem', color: colors.textLight }}>
+                  Total appointments in system: {appointments.length}
+                </span>
+              </div>
             )}
           </div>
 
@@ -698,24 +866,35 @@ const AdminAppointments = () => {
             <button
               onClick={handleBackToDashboard}
               style={{
-                backgroundColor: '#f97316',
+                backgroundColor: colors.primary,
                 color: 'white',
                 border: 'none',
-                padding: '1rem 2rem',
-                borderRadius: '8px',
+                padding: '1.2rem 2.5rem',
+                borderRadius: '12px',
                 cursor: 'pointer',
-                fontWeight: '600',
-                fontSize: '1.1rem',
-                transition: 'background-color 0.2s ease',
-                boxShadow: 'none'
+                fontWeight: '700',
+                fontSize: '1.2rem',
+                transition: 'all 0.3s ease',
+                boxShadow: `0 6px 20px ${colors.primary}40`,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                margin: '0 auto'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#ea580c';
+                e.currentTarget.style.backgroundColor = colors.primaryDark;
+                e.currentTarget.style.transform = 'translateY(-3px)';
+                e.currentTarget.style.boxShadow = `0 10px 30px ${colors.primary}60`;
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#f97316';
+                e.currentTarget.style.backgroundColor = colors.primary;
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = `0 6px 20px ${colors.primary}40`;
               }}
             >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
               Back to Dashboard
             </button>
           </div>
@@ -725,11 +904,12 @@ const AdminAppointments = () => {
       {/* Footer */}
       <footer style={{
         padding: '1.5rem 2rem',
-        backgroundColor: '#1e293b',
-        borderTop: '1px solid #334155',
-        textAlign: 'center'
+        backgroundColor: colors.card,
+        borderTop: `2px solid ${colors.primary}`,
+        textAlign: 'center',
+        marginTop: '3rem'
       }}>
-        <p style={{ margin: 0, color: '#94a3b8', fontSize: '0.9rem' }}>
+        <p style={{ margin: 0, color: colors.primary, fontSize: '1rem', fontWeight: '600' }}>
           &copy; 2025 Sunny Auto. All rights reserved.
         </p>
       </footer>
@@ -749,14 +929,17 @@ const AdminAppointments = () => {
           zIndex: 100
         }}>
           <div style={{
-            backgroundColor: '#1e293b',
-            padding: '2rem',
-            borderRadius: '12px',
+            backgroundColor: colors.background,
+            padding: '2.5rem',
+            borderRadius: '15px',
             width: '90%',
             maxWidth: '500px',
-            border: '1px solid #475569'
+            border: `2px solid ${colors.primary}`,
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
           }}>
-            <h3 style={{ color: '#f97316', marginTop: 0, marginBottom: '1.5rem' }}>Upload Images for {selectedAppointment.customerName}</h3>
+            <h3 style={{ color: colors.primary, marginTop: 0, marginBottom: '1.5rem', fontSize: '1.5rem', fontWeight: '700' }}>
+              Upload Images for {selectedAppointment.name}
+            </h3>
             <div style={{ marginBottom: '1.5rem' }}>
               <input 
                 type="file" 
@@ -766,26 +949,37 @@ const AdminAppointments = () => {
                 style={{
                   display: 'block',
                   width: '100%',
-                  color: 'white',
-                  padding: '0.75rem',
-                  backgroundColor: '#334155',
-                  borderRadius: '8px',
-                  border: '1px solid #f97316'
+                  color: colors.text,
+                  padding: '1rem',
+                  backgroundColor: colors.background,
+                  borderRadius: '10px',
+                  border: `2px solid ${colors.primary}`,
+                  fontSize: '1rem',
+                  fontWeight: '500'
                 }}
               />
-              <p style={{ color: '#94a3b8', fontSize: '0.85rem', marginTop: '0.5rem' }}>Select one or more images to upload.</p>
+              <p style={{ color: colors.textLight, fontSize: '0.9rem', marginTop: '0.75rem' }}>
+                Select one or more images to upload for vehicle documentation.
+              </p>
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
               <button 
                 onClick={handleCloseImageModal}
                 style={{
-                  backgroundColor: '#64748b',
+                  backgroundColor: colors.textLight,
                   color: 'white',
                   border: 'none',
                   padding: '0.75rem 1.5rem',
                   borderRadius: '8px',
                   cursor: 'pointer',
-                  boxShadow: 'none'
+                  fontWeight: '600',
+                  transition: 'all 0.3s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = colors.text;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = colors.textLight;
                 }}
               >
                 Close
@@ -795,8 +989,8 @@ const AdminAppointments = () => {
         </div>
       )}
 
-      {/* Edit/Add Modal */}
-      {(showEditModal || showAddModal) && editFormData && (
+      {/* Edit Modal */}
+      {showEditModal && editFormData && (
         <div style={{
           position: 'fixed',
           top: 0,
@@ -810,120 +1004,133 @@ const AdminAppointments = () => {
           zIndex: 100
         }}>
           <div style={{
-            backgroundColor: '#1e293b',
-            padding: '2rem',
-            borderRadius: '12px',
+            backgroundColor: colors.background,
+            padding: '2.5rem',
+            borderRadius: '15px',
             width: '90%',
             maxWidth: '600px',
-            border: '1px solid #475569'
+            border: `2px solid ${colors.primary}`,
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+            maxHeight: '90vh',
+            overflowY: 'auto'
           }}>
-            <h3 style={{ color: '#f97316', marginTop: 0, marginBottom: '1.5rem' }}>{showAddModal ? 'Add New Appointment' : 'Edit Appointment'}</h3>
-            <form onSubmit={(e) => { e.preventDefault(); showAddModal ? handleSaveAdd() : handleSaveEdit(); }}>
+            <h3 style={{ color: colors.primary, marginTop: 0, marginBottom: '1.5rem', fontSize: '1.5rem', fontWeight: '700' }}>
+              Edit Appointment
+            </h3>
+            <form onSubmit={(e) => { e.preventDefault(); handleSaveEdit(); }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <label style={{ color: '#cbd5e1', marginBottom: '0.5rem' }}>Customer Name</label>
+                  <label style={{ color: colors.text, marginBottom: '0.5rem', fontWeight: '600' }}>Customer Name *</label>
                   <input 
                     type="text"
-                    value={editFormData.customerName}
-                    onChange={(e) => setEditFormData({...editFormData, customerName: e.target.value})}
+                    value={editFormData.name}
+                    onChange={(e) => setEditFormData({...editFormData, name: e.target.value})}
                     required
-                    style={inputStyle}
+                    style={inputStyle(colors)}
                   />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <label style={{ color: '#cbd5e1', marginBottom: '0.5rem' }}>Vehicle</label>
+                  <label style={{ color: colors.text, marginBottom: '0.5rem', fontWeight: '600' }}>Email *</label>
                   <input 
-                    type="text"
-                    value={editFormData.vehicle}
-                    onChange={(e) => setEditFormData({...editFormData, vehicle: e.target.value})}
+                    type="email"
+                    value={editFormData.email}
+                    onChange={(e) => setEditFormData({...editFormData, email: e.target.value})}
                     required
-                    style={inputStyle}
+                    style={inputStyle(colors)}
                   />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <label style={{ color: '#cbd5e1', marginBottom: '0.5rem' }}>Service</label>
-                  <input 
-                    type="text"
-                    value={editFormData.service}
-                    onChange={(e) => setEditFormData({...editFormData, service: e.target.value})}
-                    required
-                    style={inputStyle}
-                  />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <label style={{ color: '#cbd5e1', marginBottom: '0.5rem' }}>Phone</label>
+                  <label style={{ color: colors.text, marginBottom: '0.5rem', fontWeight: '600' }}>Phone *</label>
                   <input 
                     type="tel"
                     value={editFormData.phone}
                     onChange={(e) => setEditFormData({...editFormData, phone: e.target.value})}
                     required
-                    style={inputStyle}
+                    style={inputStyle(colors)}
                   />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <label style={{ color: '#cbd5e1', marginBottom: '0.5rem' }}>Date</label>
-                  <input 
-                    type="date"
-                    value={editFormData.date}
-                    onChange={(e) => setEditFormData({...editFormData, date: e.target.value})}
-                    required
-                    style={inputStyle}
-                  />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <label style={{ color: '#cbd5e1', marginBottom: '0.5rem' }}>Time</label>
-                  <input 
-                    type="time"
-                    value={editFormData.time}
-                    onChange={(e) => setEditFormData({...editFormData, time: e.target.value})}
-                    required
-                    style={inputStyle}
-                  />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <label style={{ color: '#cbd5e1', marginBottom: '0.5rem' }}>Estimated Duration</label>
+                  <label style={{ color: colors.text, marginBottom: '0.5rem', fontWeight: '600' }}>Vehicle Type *</label>
                   <input 
                     type="text"
-                    value={editFormData.estimatedDuration}
-                    onChange={(e) => setEditFormData({...editFormData, estimatedDuration: e.target.value})}
-                    style={inputStyle}
+                    value={editFormData.vehicle_type}
+                    onChange={(e) => setEditFormData({...editFormData, vehicle_type: e.target.value})}
+                    required
+                    style={inputStyle(colors)}
                   />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <label style={{ color: '#cbd5e1', marginBottom: '0.5rem' }}>Status</label>
+                  <label style={{ color: colors.text, marginBottom: '0.5rem', fontWeight: '600' }}>Service Type *</label>
+                  <input 
+                    type="text"
+                    value={editFormData.service_type}
+                    onChange={(e) => setEditFormData({...editFormData, service_type: e.target.value})}
+                    required
+                    style={inputStyle(colors)}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <label style={{ color: colors.text, marginBottom: '0.5rem', fontWeight: '600' }}>Preferred Date *</label>
+                  <input 
+                    type="date"
+                    value={editFormData.preferred_date}
+                    onChange={(e) => setEditFormData({...editFormData, preferred_date: e.target.value})}
+                    required
+                    style={inputStyle(colors)}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <label style={{ color: colors.text, marginBottom: '0.5rem', fontWeight: '600' }}>Preferred Time *</label>
+                  <input 
+                    type="time"
+                    value={editFormData.preferred_time}
+                    onChange={(e) => setEditFormData({...editFormData, preferred_time: e.target.value})}
+                    required
+                    style={inputStyle(colors)}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <label style={{ color: colors.text, marginBottom: '0.5rem', fontWeight: '600' }}>Status</label>
                   <select
                     value={editFormData.status}
                     onChange={(e) => setEditFormData({...editFormData, status: e.target.value as any})}
-                    style={inputStyle}
+                    style={inputStyle(colors)}
                   >
-                    <option value="Scheduled">Scheduled</option>
-                    <option value="In Progress">In Progress</option>
-                    <option value="Completed">Completed</option>
-                    <option value="Cancelled">Cancelled</option>
+                    <option value="pending">Pending</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
                   </select>
                 </div>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '1rem' }}>
-                <label style={{ color: '#cbd5e1', marginBottom: '0.5rem' }}>Notes</label>
+              <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '1.5rem' }}>
+                <label style={{ color: colors.text, marginBottom: '0.5rem', fontWeight: '600' }}>Customer Message</label>
                 <textarea
-                  value={editFormData.notes || ''}
-                  onChange={(e) => setEditFormData({...editFormData, notes: e.target.value})}
-                  rows={3}
-                  style={{ ...inputStyle, resize: 'vertical' }}
+                  value={editFormData.message}
+                  onChange={(e) => setEditFormData({...editFormData, message: e.target.value})}
+                  rows={4}
+                  style={{ ...inputStyle(colors), resize: 'vertical' }}
                 />
               </div>
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
                 <button 
                   type="button"
-                  onClick={() => { setShowEditModal(false); setShowAddModal(false); setEditFormData(null); }}
+                  onClick={() => { setShowEditModal(false); setEditFormData(null); }}
                   style={{
-                    backgroundColor: '#64748b',
+                    backgroundColor: colors.textLight,
                     color: 'white',
                     border: 'none',
                     padding: '0.75rem 1.5rem',
                     borderRadius: '8px',
                     cursor: 'pointer',
-                    boxShadow: 'none'
+                    fontWeight: '600',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = colors.text;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = colors.textLight;
                   }}
                 >
                   Cancel
@@ -931,34 +1138,49 @@ const AdminAppointments = () => {
                 <button 
                   type="submit"
                   style={{
-                    backgroundColor: '#10b981',
+                    backgroundColor: colors.primary,
                     color: 'white',
                     border: 'none',
                     padding: '0.75rem 1.5rem',
                     borderRadius: '8px',
                     cursor: 'pointer',
                     fontWeight: '600',
-                    boxShadow: 'none'
+                    transition: 'all 0.3s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = colors.primaryDark;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = colors.primary;
                   }}
                 >
-                  {showAddModal ? 'Add Appointment' : 'Save Changes'}
+                  Save Changes
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
+
+      <style jsx>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 };
 
-const inputStyle = {
-  backgroundColor: '#334155',
-  color: 'white',
-  border: '1px solid #475569',
-  borderRadius: '8px',
+const inputStyle = (colors: any) => ({
+  backgroundColor: colors.background,
+  color: colors.text,
+  border: `2px solid ${colors.border}`,
+  borderRadius: '10px',
   padding: '0.75rem 1rem',
-  fontSize: '1rem'
-};
+  fontSize: '1rem',
+  fontWeight: '500',
+  transition: 'all 0.3s ease'
+});
 
 export default AdminAppointments;
