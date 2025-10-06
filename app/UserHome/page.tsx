@@ -1,57 +1,128 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { gsap } from 'gsap';
 
 const AutoServiceShop = () => {
   const [showWelcome, setShowWelcome] = useState(true);
   const [isClient, setIsClient] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
   const router = useRouter();
+
+  // Refs for GSAP animations
+  const navRef = useRef(null);
+  const logoRef = useRef(null);
+  const titleRef = useRef(null);
+  const subtitleRef = useRef(null);
+  const buttonsRef = useRef<(HTMLButtonElement | null)[]>([]);
+  const brandsRef = useRef<HTMLDivElement>(null);
+  const statsRef = useRef(null);
+  const servicesRef = useRef(null);
+
+  const heroSlides = [
+    {
+      image: "https://images.unsplash.com/photo-1580273916550-e323be2ae537?q=80&w=2000&auto=format&fit=crop",
+      title: "SunnyAuto",
+      subtitle: "Our experienced and certified technicians are dedicated to providing you with the highest quality repairs, so you can feel safe and secure on the road."
+    },
+    {
+      image: "https://images.unsplash.com/photo-1553440569-bcc63803a83d?q=80&w=2000&auto=format&fit=crop",
+      title: "SunnyAuto",
+      subtitle: "State-of-the-art diagnostics and repair for optimal performance"
+    },
+    {
+      image: "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=2000&auto=format&fit=crop",
+      title: "SunnyAuto",
+      subtitle: "ASE certified technicians with decades of combined experience"
+    }
+  ];
+
+  const brands = ['TESLA', 'TOYOTA', 'HYUNDAI', 'Mercedes-Benz', 'SUZUKI', 'JAGUAR'];
 
   useEffect(() => {
     setIsClient(true);
-    
+
     const timer = setTimeout(() => {
       setShowWelcome(false);
-    }, 3000);
-    
-    return () => clearTimeout(timer);
-  }, []);
+    }, 2500);
 
-  const handleBookAppointment = () => {
-    router.push('/Appointment');
-  };
+    const slideInterval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+    }, 5000);
 
-  const handlepropfile = () => {
-    router.push('/UserProfile');
+    if (!showWelcome) {
+      const tl = gsap.timeline();
+
+      // Navigation animation
+      tl.fromTo(navRef.current, 
+        { y: -100, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.8, ease: "power2.out" }
+      ).fromTo(logoRef.current,
+        { x: -30, opacity: 0 },
+        { x: 0, opacity: 1, duration: 0.6, ease: "power2.out" },
+        "-=0.3"
+      );
+
+      // Hero content animation
+      tl.fromTo(titleRef.current,
+        { y: 30, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.8, ease: "power2.out" },
+        "-=0.3"
+      ).fromTo(subtitleRef.current,
+        { y: 20, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.6, ease: "power2.out" },
+        "-=0.5"
+      ).fromTo(buttonsRef.current,
+        { y: 25, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.5, stagger: 0.1, ease: "power2.out" },
+        "-=0.3"
+      );
+
+      // Brands animation
+      if (brandsRef.current) {
+        gsap.fromTo(brandsRef.current.children,
+          { x: -50, opacity: 0 },
+          {
+            x: 0,
+            opacity: 1,
+            duration: 0.6,
+            stagger: 0.1,
+            ease: "power2.out",
+            delay: 1
+          }
+        );
+      }
+    }
+
+    return () => {
+      clearTimeout(timer);
+      clearInterval(slideInterval);
+    };
+  }, [showWelcome, heroSlides.length]);
+
+  const handleBookAppointment = () => router.push('/Appointment');
+  const handleProfile = () => router.push('/UserProfile');
+  const handleViewServices = () => router.push('/Services');
+  interface NavigationPath {
+    path: string;
   }
-  const handleViewServices = () => {
-    router.push('/Services');
-  };
 
-  const handleNavigation = (path: string) => {
-    router.push(path);
-  };
+  const handleNavigation = (path: string): void => router.push(path);
 
-  // Prevent rendering until client-side to avoid hydration mismatches
   if (!isClient) {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: 'linear-gradient(to bottom, #0a2540 0%, #1a4b78 100%)',
-        color: 'white',
-        fontFamily: 'Arial, sans-serif'
-      }} />
-    );
+    return null;
   }
 
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(to bottom, #0a2540 0%, #1a4b78 100%)',
+      background: '#0a0a0a',
       color: 'white',
-      fontFamily: 'Arial, sans-serif'
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+      overflowX: 'hidden'
     }} suppressHydrationWarning>
+
       {/* Welcome Animation */}
       {showWelcome && (
         <div style={{
@@ -60,31 +131,34 @@ const AutoServiceShop = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: '#0a2540',
+          background: '#000000',
           zIndex: 1000
         }}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ animation: 'fadeIn 1.5s ease-in-out' }}>
+            <div style={{ animation: 'fadeIn 1s ease-in-out' }}>
               <h1 style={{
-                fontSize: '3.5rem',
-                fontWeight: 'bold',
-                marginBottom: '1rem',
-                color: 'white'
+                fontSize: '2.5rem',
+                fontWeight: '600',
+                marginBottom: '0.75rem',
+                letterSpacing: '1px'
               }}>
-                SUNNY AUTO
+                <span style={{ color: '#dc2626' }}>Sunny</span>
+                <span style={{ color: '#ffffff' }}>Auto</span>
               </h1>
               <div style={{
-                width: '16rem',
+                width: '120px',
                 height: '2px',
-                background: '#fbbf24',
-                margin: '0 auto 1rem'
+                background: 'linear-gradient(90deg, transparent, #dc2626, transparent)',
+                margin: '0 auto 0.75rem'
               }}></div>
               <p style={{
-                fontSize: '1.5rem',
+                fontSize: '1rem',
                 opacity: 0,
-                animation: 'fadeIn 2s ease-in-out 1s forwards'
+                animation: 'fadeIn 1.5s ease-in-out 0.5s forwards',
+                color: '#9ca3af',
+                fontWeight: '300'
               }}>
-                Your Trusted Auto Care Partner
+                Premium Automotive Care
               </p>
             </div>
           </div>
@@ -92,105 +166,76 @@ const AutoServiceShop = () => {
       )}
 
       {/* Navigation */}
-      <nav style={{
-        background: 'rgba(10, 37, 64, 0.9)',
-        padding: '1rem 1.5rem',
+      <nav ref={navRef} style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        background: 'rgba(0, 0, 0, 0.95)',
+        backdropFilter: 'blur(10px)',
+        padding: '1.5rem 3rem',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        position: 'sticky',
-        top: 0,
-        zIndex: 40
+        zIndex: 1000
       }}>
-        <div>
+        <div ref={logoRef} style={{ cursor: 'pointer' }} onClick={() => handleNavigation('/UserHome')}>
           <h1 style={{
             fontSize: '1.5rem',
-            fontWeight: 'bold',
-            color: '#fbbf24'
+            fontWeight: '600',
+            margin: 0
           }}>
-            SUNNY AUTO
+            <span style={{ color: '#dc2626' }}>Sunny</span>
+            <span style={{ color: '#ffffff' }}>Auto</span>
           </h1>
         </div>
-        <div style={{ display: 'flex', gap: '1.5rem' }}>
+
+        <div style={{ 
+          display: 'flex', 
+          gap: '2.5rem',
+          alignItems: 'center'
+        }}>
+          {['Home', 'Services', 'About', 'Gallery', 'Contact'].map((item) => (
+            <button
+              key={item}
+              style={{
+                color: 'rgba(255, 255, 255, 0.8)',
+                fontSize: '0.95rem',
+                fontWeight: '400',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '0.5rem 0',
+                transition: 'color 0.3s ease'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.color = '#ffffff'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.8)'}
+              onClick={() => handleNavigation(item === 'Home' ? '/UserHome' : `/${item}`)}
+            >
+              {item}
+            </button>
+          ))}
           <button style={{
+            background: 'rgba(255, 255, 255, 0.1)',
             color: 'white',
-            fontSize: '1.25rem',
-            fontWeight: '300',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            padding: '0.75rem 1.5rem',
-            transition: 'all 0.3s ease',
-            letterSpacing: '0.5px',
-            textTransform: 'uppercase'
-          }} onMouseOver={(e) => e.currentTarget.style.color = '#fbbf24'}
-          onMouseOut={(e) => e.currentTarget.style.color = 'white'}
-          onClick={() => handleNavigation('/UserHome')}>
-            Home
-          </button>
-          <button style={{
-            color: 'white',
-            fontSize: '1.25rem',
-            fontWeight: '300',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            padding: '0.75rem 1.5rem',
-            transition: 'all 0.3s ease',
-            letterSpacing: '0.5px',
-            textTransform: 'uppercase'
-          }} onMouseOver={(e) => e.currentTarget.style.color = '#fbbf24'}
-          onMouseOut={(e) => e.currentTarget.style.color = 'white'}
-          onClick={handleViewServices}>
-            Services
-          </button>
-          <button style={{
-            color: 'white',
-            fontSize: '1.25rem',
-            fontWeight: '300',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            padding: '0.75rem 1.5rem',
-            transition: 'all 0.3s ease',
-            letterSpacing: '0.5px',
-            textTransform: 'uppercase'
-          }} onMouseOver={(e) => e.currentTarget.style.color = '#fbbf24'}
-          onMouseOut={(e) => e.currentTarget.style.color = 'white'}
-          onClick={() => handleNavigation('/About')}>
-            About
-          </button>
-          <button style={{
-            color: 'white',
-            fontSize: '1.25rem',
-            fontWeight: '300',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            padding: '0.75rem 1.5rem',
-            transition: 'all 0.3s ease',
-            letterSpacing: '0.5px',
-            textTransform: 'uppercase'
-          }} onMouseOver={(e) => e.currentTarget.style.color = '#fbbf24'}
-          onMouseOut={(e) => e.currentTarget.style.color = 'white'}
-          onClick={() => handleNavigation('/Contactus')}>
-            Contact
-          </button>
-        </div>
-        <div>
-          <button style={{
-            background: '#fbbf24',
-            color: '#0a2540',
             padding: '0.5rem 1.5rem',
-            borderRadius: '9999px',
-            fontWeight: 600,
-            border: 'none',
+            borderRadius: '6px',
+            fontWeight: '500',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
             cursor: 'pointer',
-            transition: 'background-color 0.3s'
-          }} onMouseOver={(e) => e.currentTarget.style.background = '#f59e0b'}
-          onMouseOut={(e) => e.currentTarget.style.background = '#fbbf24'}
-          onClick={handlepropfile}>
-            proflie
+            transition: 'all 0.2s ease',
+            fontSize: '0.9rem'
+          }} 
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = '#dc2626';
+            e.currentTarget.style.borderColor = '#dc2626';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+          }}
+          onClick={handleProfile}>
+            Profile
           </button>
         </div>
       </nav>
@@ -199,367 +244,624 @@ const AutoServiceShop = () => {
       <section style={{
         position: 'relative',
         height: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
+        width: '100%',
         overflow: 'hidden'
       }}>
+        {/* Background Image */}
         <div style={{
           position: 'absolute',
           inset: 0,
-          backgroundImage: 'url(https://cdn.gobankingrates.com/wp-content/uploads/2020/03/50-1930-Cadillac-V-16-Sport-Phaeton-by-Fleetwood-RM-Sothebys.jpg)',
+          backgroundImage: `url(${heroSlides[currentSlide].image})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          opacity: 0.3
+          transition: 'background-image 1.5s ease-in-out',
+          filter: 'brightness(0.6)'
+        }}></div>
+
+        {/* Gradient Overlay */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'linear-gradient(90deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 40%, transparent 100%)',
+          pointerEvents: 'none'
         }}></div>
         
+        {/* Hero Content - Left Aligned */}
         <div style={{
-          position: 'relative',
-          zIndex: 10,
-          textAlign: 'center',
-          padding: '0 1.5rem',
-          maxWidth: '64rem'
+          position: 'absolute',
+          top: '50%',
+          left: '8%',
+          transform: 'translateY(-50%)',
+          maxWidth: '600px',
+          zIndex: 10
         }}>
-          <h1 style={{
-            fontSize: '3rem',
-            fontWeight: 'bold',
-            marginBottom: '1.5rem',
-            lineHeight: 1.2
+          {/* Red Accent Line */}
+          <div style={{
+            width: '3px',
+            height: '200px',
+            background: '#dc2626',
+            position: 'absolute',
+            left: '-40px',
+            top: '50%',
+            transform: 'translateY(-50%)'
+          }}></div>
+
+          <h1 ref={titleRef} style={{
+            fontSize: '3.5rem',
+            fontWeight: '500',
+            lineHeight: 1.2,
+            marginBottom: '1.5rem'
           }}>
-            Premium Auto Care <br /> For All Makes & Models
+            <span style={{ color: '#dc2626' }}>{heroSlides[currentSlide].title}</span>
+            <span style={{ color: '#ffffff', display: 'block' }}>- Drive with Confidence</span>
           </h1>
-          <p style={{
-            fontSize: '1.5rem',
-            marginBottom: '2.5rem',
-            color: '#dbeafe'
+          <p ref={subtitleRef} style={{
+            fontSize: '1.1rem',
+            color: 'rgba(255, 255, 255, 0.7)',
+            fontWeight: '300',
+            lineHeight: '1.6',
+            marginBottom: '2rem'
           }}>
-            Experience the difference of expert automotive service with a personal touch
+            {heroSlides[currentSlide].subtitle}
           </p>
+          
+          {/* CTA Buttons */}
           <div style={{
             display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '1rem'
+            gap: '1rem',
+            alignItems: 'center'
           }}>
-            <button style={{
-              background: '#fbbf24',
-              color: '#0a2540',
-              padding: '1rem 2rem',
-              borderRadius: '9999px',
-              fontWeight: 600,
-              border: 'none',
-              cursor: 'pointer',
-              transition: 'all 0.3s',
-              fontSize: '1.125rem'
-            }} onMouseOver={(e) => {
-              e.currentTarget.style.background = '#f59e0b';
-              e.currentTarget.style.transform = 'scale(1.05)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.background = '#fbbf24';
-              e.currentTarget.style.transform = 'scale(1)';
-            }}
-            onClick={handleBookAppointment}>
+            <button
+              ref={el => { buttonsRef.current[0] = el }}
+              style={{
+                background: '#dc2626',
+                color: 'white',
+                padding: '0.875rem 2rem',
+                borderRadius: '6px',
+                fontWeight: '600',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '0.95rem',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#b91c1c';
+                e.currentTarget.style.transform = 'translateY(-1px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = '#dc2626';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
+              onClick={handleBookAppointment}
+            >
               Book Appointment
             </button>
-            <button style={{
-              background: 'transparent',
-              color: '#fbbf24',
-              padding: '1rem 2rem',
-              borderRadius: '9999px',
-              fontWeight: 600,
-              border: '2px solid #fbbf24',
-              cursor: 'pointer',
-              transition: 'all 0.3s',
-              fontSize: '1.125rem'
-            }} onMouseOver={(e) => {
-              e.currentTarget.style.background = '#fbbf24';
-              e.currentTarget.style.color = '#0a2540';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.background = 'transparent';
-              e.currentTarget.style.color = '#fbbf24';
-            }}
-            onClick={handleViewServices}>
-              Our Services
+            <button
+              ref={el => { buttonsRef.current[1] = el }}
+              style={{
+                background: 'transparent',
+                color: 'white',
+                padding: '0.875rem 2rem',
+                borderRadius: '6px',
+                fontWeight: '600',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                cursor: 'pointer',
+                fontSize: '0.95rem',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                e.currentTarget.style.transform = 'translateY(-1px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
+              onClick={handleViewServices}
+            >
+              View Services
             </button>
           </div>
         </div>
 
+        {/* Slide Indicators */}
         <div style={{
           position: 'absolute',
-          bottom: '2.5rem',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          animation: 'bounce 1s infinite'
+          bottom: '3rem',
+          left: '8%',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '1rem',
+          zIndex: 10
         }}>
-          <svg style={{
-            width: '2rem',
-            height: '2rem',
-            color: '#fbbf24'
-          }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
-          </svg>
+          <span style={{
+            color: 'rgba(255, 255, 255, 0.8)',
+            fontSize: '0.9rem',
+            fontWeight: '500'
+          }}>
+            {String(currentSlide + 1).padStart(2, '0')}/{String(heroSlides.length).padStart(2, '0')}
+          </span>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            {heroSlides.map((_, index) => (
+              <div
+                key={index}
+                style={{
+                  width: '40px',
+                  height: '2px',
+                  background: index === currentSlide ? '#dc2626' : 'rgba(255, 255, 255, 0.3)',
+                  transition: 'background 0.3s ease',
+                  cursor: 'pointer'
+                }}
+                onClick={() => setCurrentSlide(index)}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Social Icons */}
+        <div style={{
+          position: 'fixed',
+          right: '3rem',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '1.5rem',
+          zIndex: 100
+        }}>
+          {['f', 't', 'in', 'ig'].map((icon) => (
+            <div key={icon} style={{
+              width: '40px',
+              height: '40px',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              color: 'rgba(255, 255, 255, 0.6)',
+              fontSize: '0.9rem'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.4)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent';
+              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+            }}>
+              {icon}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Brands Section */}
+      <section style={{
+        background: '#0a0a0a',
+        padding: '4rem 3rem',
+        borderTop: '1px solid rgba(255, 255, 255, 0.1)'
+      }}>
+        <div style={{
+          maxWidth: '1400px',
+          margin: '0 auto'
+        }}>
+          <div ref={brandsRef} style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '3rem'
+          }}>
+            {brands.map((brand) => (
+              <div key={brand} style={{
+                opacity: 0.5,
+                transition: 'opacity 0.3s ease',
+                fontSize: '1.2rem',
+                fontWeight: '300',
+                letterSpacing: '2px',
+                cursor: 'default'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
+              onMouseLeave={(e) => e.currentTarget.style.opacity = '0.5'}>
+                {brand}
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* About Section */}
       <section style={{
-        padding: '5rem 1.5rem',
-        background: '#1a4b78'
+        padding: '5rem 2rem',
+        background: '#000000'
       }}>
         <div style={{
-          maxWidth: '72rem',
-          margin: '0 auto'
+          maxWidth: '1000px',
+          margin: '0 auto',
+          textAlign: 'center'
         }}>
           <h2 style={{
-            fontSize: '2.25rem',
-            fontWeight: 'bold',
-            marginBottom: '3rem',
-            textAlign: 'center'
+            fontSize: '2rem',
+            fontWeight: '700',
+            marginBottom: '1.5rem',
+            background: 'linear-gradient(135deg, #ffffff 0%, #9ca3af 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text'
           }}>
-            Welcome to Sunny Auto
+            Why Choose Sunny Auto?
           </h2>
+          <p style={{
+            fontSize: '1rem',
+            color: '#9ca3af',
+            lineHeight: '1.7',
+            marginBottom: '2rem',
+            maxWidth: '700px',
+            margin: '0 auto 2rem'
+          }}>
+            With over a decade of experience, Sunny Auto has established itself as the premier automotive service center 
+            in the region. Our commitment to excellence, combined with state-of-the-art diagnostic equipment and factory-trained 
+            technicians, ensures your vehicle receives the highest quality care.
+          </p>
+          
           <div style={{
             display: 'grid',
-            gridTemplateColumns: '1fr',
-            gap: '3rem',
-            alignItems: 'center'
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+            gap: '2rem',
+            marginTop: '3rem'
           }}>
-            <div>
-              <p style={{
-                fontSize: '1.125rem',
-                marginBottom: '1.5rem'
+            {[
+              {
+                title: 'Expert Technicians',
+                description: 'Our ASE-certified technicians have an average of 10+ years experience with specialized training.'
+              },
+              {
+                title: 'Advanced Diagnostics',
+                description: 'We utilize the latest diagnostic technology to accurately identify and solve complex problems.'
+              },
+              {
+                title: 'Quality Parts',
+                description: 'We source only OEM and premium aftermarket parts backed by comprehensive warranties.'
+              },
+              {
+                title: 'Transparent Pricing',
+                description: 'No hidden fees or surprises. Detailed estimates provided before any work begins.'
+              }
+            ].map((feature, index) => (
+              <div key={index} style={{
+                background: 'rgba(255, 255, 255, 0.03)',
+                padding: '2rem 1.5rem',
+                borderRadius: '8px',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                textAlign: 'left'
               }}>
-                Located in the heart of the community, Sunny Auto has been serving drivers with reliable and affordable auto repair services for over a decade. We pride ourselves on being more than just a repair shop — we're your trusted automotive care partner.
-              </p>
-              <p style={{
-                fontSize: '1.125rem',
-                marginBottom: '1.5rem'
-              }}>
-                Our team of certified technicians combines modern technology with old-fashioned customer care. We use the latest diagnostic tools and high-quality parts, but we never lose sight of what matters most — building trust with our customers.
-              </p>
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <button style={{
-                  background: '#fbbf24',
-                  color: '#0a2540',
-                  padding: '0.75rem 1.5rem',
-                  borderRadius: '9999px',
-                  fontWeight: 600,
-                  border: 'none',
-                  cursor: 'pointer',
-                  transition: 'background-color 0.3s'
-                }} onMouseOver={(e) => e.currentTarget.style.background = '#f59e0b'}
-                onMouseOut={(e) => e.currentTarget.style.background = '#fbbf24'}
-                onClick={() => handleNavigation('/about')}>
-                  Learn More
-                </button>
-                <button style={{
-                  background: 'transparent',
-                  color: '#fbbf24',
-                  padding: '0.75rem 1.5rem',
-                  borderRadius: '9999px',
-                  fontWeight: 600,
-                  border: '2px solid #fbbf24',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s'
-                }} onMouseOver={(e) => {
-                  e.currentTarget.style.background = '#fbbf24';
-                  e.currentTarget.style.color = '#0a2540';
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.color = '#fbbf24';
-                }}
-                onClick={() => handleNavigation('/About')}>
-                  Meet Our Team
-                </button>
+                <h3 style={{
+                  fontSize: '1.1rem',
+                  fontWeight: '600',
+                  marginBottom: '0.75rem',
+                  color: 'white'
+                }}>
+                  {feature.title}
+                </h3>
+                <p style={{ 
+                  color: '#9ca3af',
+                  lineHeight: '1.6',
+                  fontSize: '0.9rem',
+                  margin: 0
+                }}>
+                  {feature.description}
+                </p>
               </div>
-            </div>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: '1rem'
-            }}>
-              <div style={{
-                background: '#1e3a8a',
-                padding: '1.5rem',
-                borderRadius: '0.75rem',
-                textAlign: 'center'
-              }}>
-                <div style={{
-                  fontSize: '2.25rem',
-                  fontWeight: 'bold',
-                  color: '#fbbf24',
-                  marginBottom: '0.5rem'
-                }}>10+</div>
-                <div>Years Experience</div>
-              </div>
-              <div style={{
-                background: '#1e3a8a',
-                padding: '1.5rem',
-                borderRadius: '0.75rem',
-                textAlign: 'center'
-              }}>
-                <div style={{
-                  fontSize: '2.25rem',
-                  fontWeight: 'bold',
-                  color: '#fbbf24',
-                  marginBottom: '0.5rem'
-                }}>5,000+</div>
-                <div>Happy Customers</div>
-              </div>
-              <div style={{
-                background: '#1e3a8a',
-                padding: '1.5rem',
-                borderRadius: '0.75rem',
-                textAlign: 'center'
-              }}>
-                <div style={{
-                  fontSize: '2.25rem',
-                  fontWeight: 'bold',
-                  color: '#fbbf24',
-                  marginBottom: '0.5rem'
-                }}>100%</div>
-                <div>Satisfaction Guarantee</div>
-              </div>
-              <div style={{
-                background: '#1e3a8a',
-                padding: '1.5rem',
-                borderRadius: '0.75rem',
-                textAlign: 'center'
-              }}>
-                <div style={{
-                  fontSize: '2.25rem',
-                  fontWeight: 'bold',
-                  color: '#fbbf24',
-                  marginBottom: '0.5rem'
-                }}>24/7</div>
-                <div>Roadside Assistance</div>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Services Section */}
+      {/* Stats Section */}
       <section style={{
-        padding: '5rem 1.5rem',
-        background: '#0a2540'
+        padding: '4rem 2rem',
+        background: '#111827'
       }}>
         <div style={{
-          maxWidth: '72rem',
+          maxWidth: '1000px',
+          margin: '0 auto'
+        }}>
+          <div ref={statsRef} style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '1.5rem'
+          }}>
+            {[
+              { number: '12+', label: 'Years of Excellence' },
+              { number: '8,500+', label: 'Satisfied Customers' },
+              { number: '98.7%', label: 'Customer Satisfaction' },
+              { number: '24/7', label: 'Emergency Support' }
+            ].map((stat, index) => (
+              <div key={index} style={{
+                background: 'rgba(255, 255, 255, 0.05)',
+                padding: '2rem 1rem',
+                borderRadius: '8px',
+                textAlign: 'center',
+                border: '1px solid rgba(255, 255, 255, 0.1)'
+              }}>
+                <div style={{
+                  fontSize: '2rem',
+                  fontWeight: '700',
+                  background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  marginBottom: '0.5rem'
+                }}>
+                  {stat.number}
+                </div>
+                <div style={{
+                  color: '#9ca3af',
+                  fontSize: '0.9rem',
+                  fontWeight: '500'
+                }}>
+                  {stat.label}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Popular Services Section */}
+      <section ref={servicesRef} style={{
+        padding: '5rem 2rem',
+        background: '#000000'
+      }}>
+        <div style={{
+          maxWidth: '1200px',
           margin: '0 auto'
         }}>
           <h2 style={{
-            fontSize: '2.25rem',
-            fontWeight: 'bold',
-            marginBottom: '1rem',
-            textAlign: 'center'
-          }}>
-            Our Popular Services
-          </h2>
-          <p style={{
-            fontSize: '1.25rem',
-            color: '#93c5fd',
+            fontSize: '2rem',
+            fontWeight: '700',
             marginBottom: '3rem',
-            textAlign: 'center'
+            textAlign: 'center',
+            color: '#ffffff'
           }}>
-            Quality service for all your automotive needs
-          </p>
+            Popular Services
+          </h2>
           
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
             gap: '2rem'
           }}>
-            {/* Service 1 */}
-            <div style={{
-              background: '#1a4b78',
-              borderRadius: '0.75rem',
-              overflow: 'hidden',
-              transition: 'transform 0.3s',
-              cursor: 'pointer'
-            }} onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-            onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
-            onClick={handleViewServices}>
-              <div style={{ height: '12rem', overflow: 'hidden' }}>
-                <img 
-                  src="https://www.carkeys.co.uk/media/1083/oil_change.jpg?anchor=center&mode=crop&width=1200&height=800"
-                  alt="Oil Change" 
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-              </div>
-              <div style={{ padding: '1.5rem' }}>
+            {[
+              { 
+                title: 'Oil Change & Filter', 
+                price: 'From $39.99',
+                description: 'Full synthetic oil change with premium filter replacement'
+              },
+              { 
+                title: 'Brake Service', 
+                price: 'From $149.99',
+                description: 'Complete brake inspection, pad replacement, and rotor resurfacing'
+              },
+              { 
+                title: 'Tire Rotation', 
+                price: 'From $24.99',
+                description: 'Professional tire rotation and pressure adjustment'
+              },
+              { 
+                title: 'Engine Diagnostic', 
+                price: 'From $89.99',
+                description: 'Comprehensive computer diagnostic and system check'
+              },
+              { 
+                title: 'AC Service', 
+                price: 'From $129.99',
+                description: 'AC system inspection, recharge, and leak detection'
+              },
+              { 
+                title: 'Transmission Service', 
+                price: 'From $189.99',
+                description: 'Fluid exchange and transmission system maintenance'
+              }
+            ].map((service, index) => (
+              <div key={index} style={{
+                background: 'rgba(255, 255, 255, 0.05)',
+                padding: '2rem',
+                borderRadius: '8px',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                transition: 'all 0.3s ease',
+                cursor: 'pointer'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-4px)';
+                e.currentTarget.style.borderColor = '#dc2626';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+              }}>
                 <h3 style={{
-                  fontSize: '1.25rem',
-                  fontWeight: 600,
-                  marginBottom: '0.5rem'
-                }}>Oil Change</h3>
-                <p style={{ color: '#d1d5db' }}>
-                  Professional oil change service to keep your engine running smoothly and efficiently.
+                  fontSize: '1.2rem',
+                  fontWeight: '600',
+                  marginBottom: '0.5rem',
+                  color: 'white'
+                }}>
+                  {service.title}
+                </h3>
+                <p style={{
+                  color: '#dc2626',
+                  fontSize: '1.1rem',
+                  fontWeight: '600',
+                  marginBottom: '0.75rem'
+                }}>
+                  {service.price}
+                </p>
+                <p style={{
+                  color: '#9ca3af',
+                  fontSize: '0.9rem',
+                  lineHeight: '1.5'
+                }}>
+                  {service.description}
                 </p>
               </div>
-            </div>
-
-            {/* Service 2 */}
-            <div style={{
-              background: '#1a4b78',
-              borderRadius: '0.75rem',
-              overflow: 'hidden',
-              transition: 'transform 0.3s',
-              cursor: 'pointer'
-            }} onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-            onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
-            onClick={handleViewServices}>
-              <div style={{ height: '12rem', overflow: 'hidden' }}>
-                <img 
-                  src="https://edmorsecadillacbrandonservice.com/wp-content/uploads/2018/10/brakes.jpg" 
-                  alt="Brake Service" 
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-              </div>
-              <div style={{ padding: '1.5rem' }}>
-                <h3 style={{
-                  fontSize: '1.25rem',
-                  fontWeight: 600,
-                  marginBottom: '0.5rem'
-                }}>Brake Service</h3>
-                <p style={{ color: '#d1d5db' }}>
-                  Complete brake inspection and repair services for your safety on the road.
-                </p>
-              </div>
-            </div>
-
-            {/* Service 3 */}
-            <div style={{
-              background: '#1a4b78',
-              borderRadius: '0.75rem',
-              overflow: 'hidden',
-              transition: 'transform 0.3s',
-              cursor: 'pointer'
-            }} onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-            onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
-            onClick={handleViewServices}>
-              <div style={{ height: '12rem', overflow: 'hidden' }}>
-                <img 
-                  src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80" 
-                  alt="Tire Service" 
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-              </div>
-              <div style={{ padding: '1.5rem' }}>
-                <h3 style={{
-                  fontSize: '1.25rem',
-                  fontWeight: 600,
-                  marginBottom: '0.5rem'
-                }}>Tire Service</h3>
-                <p style={{ color: '#d1d5db' }}>
-                  Tire rotation, balancing, and replacement services for optimal performance.
-                </p>
-              </div>
-            </div>
+            ))}
           </div>
+
+          <div style={{
+            textAlign: 'center',
+            marginTop: '3rem'
+          }}>
+            <button style={{
+              background: '#dc2626',
+              color: 'white',
+              padding: '1rem 2.5rem',
+              borderRadius: '6px',
+              fontWeight: '600',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '1rem',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = '#b91c1c';
+              e.currentTarget.style.transform = 'translateY(-2px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = '#dc2626';
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
+            onClick={handleViewServices}>
+              View All Services
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section style={{
+        padding: '5rem 2rem',
+        background: '#111827'
+      }}>
+        <div style={{
+          maxWidth: '1000px',
+          margin: '0 auto'
+        }}>
+          <h2 style={{
+            fontSize: '2rem',
+            fontWeight: '700',
+            marginBottom: '3rem',
+            textAlign: 'center',
+            color: '#ffffff'
+          }}>
+            What Our Customers Say
+          </h2>
+          
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gap: '2rem'
+          }}>
+            {[
+              {
+                name: 'Sarah Johnson',
+                review: 'Outstanding service! They diagnosed and fixed my car\'s issue quickly. Fair pricing and honest recommendations.',
+                rating: 5
+              },
+              {
+                name: 'Michael Chen',
+                review: 'Best auto shop in town. Professional staff, quality work, and they always explain everything clearly.',
+                rating: 5
+              },
+              {
+                name: 'Emily Rodriguez',
+                review: 'I\'ve been coming here for years. Trustworthy, reliable, and they stand behind their work. Highly recommend!',
+                rating: 5
+              }
+            ].map((testimonial, index) => (
+              <div key={index} style={{
+                background: 'rgba(255, 255, 255, 0.05)',
+                padding: '2rem',
+                borderRadius: '8px',
+                border: '1px solid rgba(255, 255, 255, 0.1)'
+              }}>
+                <div style={{ marginBottom: '1rem' }}>
+                  {[...Array(testimonial.rating)].map((_, i) => (
+                    <span key={i} style={{ color: '#dc2626', fontSize: '1.2rem' }}>★</span>
+                  ))}
+                </div>
+                <p style={{
+                  color: '#d1d5db',
+                  fontSize: '0.95rem',
+                  lineHeight: '1.6',
+                  marginBottom: '1rem',
+                  fontStyle: 'italic'
+                }}>
+                  "{testimonial.review}"
+                </p>
+                <p style={{
+                  color: '#ffffff',
+                  fontWeight: '600',
+                  fontSize: '0.9rem'
+                }}>
+                  - {testimonial.name}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Meet Your Team Section */}
+      <section style={{
+        padding: '5rem 2rem',
+        background: '#000000'
+      }}>
+        <div style={{
+          maxWidth: '1200px',
+          margin: '0 auto',
+          textAlign: 'center'
+        }}>
+          <h2 style={{
+            fontSize: '2rem',
+            fontWeight: '700',
+            marginBottom: '1rem',
+            color: '#ffffff'
+          }}>
+            Meet Your Expert Team
+          </h2>
+          <p style={{
+            fontSize: '1rem',
+            color: '#9ca3af',
+            marginBottom: '3rem',
+            maxWidth: '600px',
+            margin: '0 auto 3rem'
+          }}>
+            Our certified technicians bring decades of combined experience to every service
+          </p>
+          
+          <button style={{
+            background: 'transparent',
+            color: '#dc2626',
+            padding: '0.875rem 2rem',
+            borderRadius: '6px',
+            fontWeight: '600',
+            border: '2px solid #dc2626',
+            cursor: 'pointer',
+            fontSize: '0.95rem',
+            transition: 'all 0.2s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = '#dc2626';
+            e.currentTarget.style.color = 'white';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent';
+            e.currentTarget.style.color = '#dc2626';
+          }}>
+            Meet Our Team
+          </button>
         </div>
       </section>
 
@@ -567,11 +869,6 @@ const AutoServiceShop = () => {
         @keyframes fadeIn {
           from { opacity: 0; }
           to { opacity: 1; }
-        }
-        @keyframes bounce {
-          0%, 20%, 50%, 80%, 100% { transform: translateY(0) translateX(-50%); }
-          40% { transform: translateY(-30px) translateX(-50%); }
-          60% { transform: translateY(-15px) translateX(-50%); }
         }
       `}</style>
     </div>
