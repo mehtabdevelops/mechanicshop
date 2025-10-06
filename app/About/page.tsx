@@ -1,46 +1,46 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { gsap } from 'gsap';
 
 const About = () => {
   const router = useRouter();
+  
+  // Simple refs for subtle animations
+  const heroRef = useRef<HTMLDivElement>(null);
+  const statsRef = useRef<HTMLDivElement>(null);
+  const storyRef = useRef<HTMLDivElement>(null);
+  const valuesRef = useRef<HTMLDivElement>(null);
+  const teamRef = useRef<HTMLDivElement>(null);
 
   const teamMembers = [
     {
-      id: 1,
       name: 'Michael Rodriguez',
       position: 'Head Mechanic',
       experience: '15+ years',
-      specialty: 'Engine Specialist',
-      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
       quote: 'Every car tells a story. I listen and fix.'
     },
     {
-      id: 2,
       name: 'Sarah Johnson',
       position: 'Service Manager',
-      experience: '12+ years',
-      specialty: 'Customer Relations',
-      image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+      experience: '12+ years', 
+      image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
       quote: 'Your satisfaction is our top priority.'
     },
     {
-      id: 3,
       name: 'David Chen',
       position: 'Electrical Systems Expert',
       experience: '10+ years',
-      specialty: 'Diagnostics & Electronics',
-      image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+      image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
       quote: 'Solving complex problems is my passion.'
     },
     {
-      id: 4,
-      name: 'Emily Williams',
+      name: 'Emily Williams', 
       position: 'Brake & Suspension Specialist',
       experience: '8+ years',
-      specialty: 'Safety Systems',
-      image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+      image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
       quote: 'Keeping your family safe on the road.'
     }
   ];
@@ -49,22 +49,22 @@ const About = () => {
     {
       icon: '⚡',
       title: 'Quick Service',
-      description: 'We value your time and strive to complete most services within 2 hours.'
+      description: 'Most services completed within 2 hours'
     },
     {
-      icon: '✅',
+      icon: '✅', 
       title: 'Quality Work',
-      description: 'Every repair comes with a 12-month/12,000-mile warranty.'
+      description: '12-month/12,000-mile warranty on all repairs'
     },
     {
       icon: '💎',
       title: 'Honest Pricing',
-      description: 'No hidden fees. Transparent pricing with upfront estimates.'
+      description: 'Transparent pricing with no hidden fees'
     },
     {
       icon: '🤝',
       title: 'Trustworthy',
-      description: 'We only recommend necessary repairs and use quality parts.'
+      description: 'We only recommend necessary repairs'
     }
   ];
 
@@ -75,59 +75,91 @@ const About = () => {
     { number: '24/7', label: 'Roadside Support' }
   ];
 
+  useEffect(() => {
+    // Simple fade-in animations
+    const elements = [
+      heroRef.current,
+      statsRef.current,
+      storyRef.current, 
+      valuesRef.current,
+      teamRef.current
+    ].filter(Boolean);
+
+    gsap.fromTo(elements, 
+      { opacity: 0, y: 30 },
+      { 
+        opacity: 1, 
+        y: 0, 
+        duration: 1,
+        stagger: 0.2,
+        ease: "power2.out"
+      }
+    );
+
+    // Subtle hover effects for cards
+    const cards = document.querySelectorAll('.hover-card');
+    cards.forEach(card => {
+      card.addEventListener('mouseenter', () => {
+        gsap.to(card, { y: -5, duration: 0.3, ease: "power2.out" });
+      });
+      card.addEventListener('mouseleave', () => {
+        gsap.to(card, { y: 0, duration: 0.3, ease: "power2.out" });
+      });
+    });
+  }, []);
+
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#172554',
-      color: 'white',
-      fontFamily: 'Arial, sans-serif',
-      padding: '2rem 0'
+      background: '#F5F5DC',
+      color: '#2F4F4F',
+      fontFamily: 'Inter, sans-serif'
     }}>
       {/* Navigation */}
       <nav style={{
-        background: 'rgba(10, 37, 64, 0.95)',
+        background: 'rgba(47, 79, 79, 0.95)',
         padding: '1.5rem 2rem',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
         position: 'sticky',
         top: 0,
-        zIndex: 40,
+        zIndex: 100,
         backdropFilter: 'blur(10px)',
-        marginBottom: '3rem'
+        borderBottom: '1px solid rgba(212, 175, 55, 0.2)'
       }}>
-        <div>
-          <h1 style={{
-            fontSize: '2rem',
-            fontWeight: 'bold',
-            color: '#fbbf24',
-            letterSpacing: '1px',
-            cursor: 'pointer'
-          }} onClick={() => router.push('/')}>
-            SUNNY AUTO
-          </h1>
-        </div>
+        <h1 style={{
+          fontSize: '2rem',
+          fontWeight: '700',
+          background: 'linear-gradient(135deg, #d4af37, #f4e5b8)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text',
+          cursor: 'pointer'
+        }} onClick={() => router.push('/')}>
+          SUNNY AUTO
+        </h1>
         
-        <button style={{
-          background: 'transparent',
-          color: '#ffffff',
-          padding: '0.75rem 1.5rem',
-          borderRadius: '50px',
-          fontWeight: '400',
- 
-          cursor: 'pointer',
-          transition: 'all 0.3s ease',
-          fontSize: '1.1rem'
-        }} 
-        onMouseOver={(e) => {
-          e.currentTarget.style.background = 'black';
-          e.currentTarget.style.color = '#fbbf24';
-        }}
-        onMouseOut={(e) => {
-          e.currentTarget.style.background = 'transparent';
-          e.currentTarget.style.color = '#ffffff';
-        }}
-        onClick={() => router.push('/UserHome')}>
+        <button 
+          onClick={() => router.push('/UserHome')}
+          style={{
+            background: 'rgba(212, 175, 55, 0.1)',
+            color: '#d4af37',
+            padding: '0.75rem 1.5rem',
+            borderRadius: '8px',
+            border: '1px solid rgba(212, 175, 55, 0.3)',
+            cursor: 'pointer',
+            fontSize: '1rem',
+            fontWeight: '500',
+            transition: 'all 0.3s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(212, 175, 55, 0.2)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'rgba(212, 175, 55, 0.1)';
+          }}
+        >
           Back to Home
         </button>
       </nav>
@@ -136,174 +168,169 @@ const About = () => {
       <div style={{
         maxWidth: '1200px',
         margin: '0 auto',
-        padding: '0 2rem'
+        padding: '2rem'
       }}>
         {/* Hero Section */}
-        <div style={{
-          textAlign: 'center',
-          marginBottom: '5rem'
-        }}>
+        <div ref={heroRef} style={{ opacity: 0, textAlign: 'center', marginBottom: '4rem' }}>
           <h1 style={{
-            fontSize: '4rem',
-            fontWeight: 'bold',
-            marginBottom: '1.5rem',
-            background: 'linear-gradient(45deg, #fbbf24, #f59e0b)',
-            backgroundClip: 'text',
+            fontSize: '3.5rem',
+            fontWeight: '700',
+            background: 'linear-gradient(135deg, #d4af37, #f4e5b8)',
             WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent'
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            marginBottom: '1.5rem'
           }}>
             About Sunny Auto
           </h1>
           <p style={{
-            fontSize: '1.5rem',
-            color: '#dbeafe',
-            maxWidth: '800px',
+            fontSize: '1.25rem',
+            color: '#2F4F4F',
+            maxWidth: '600px',
             margin: '0 auto',
             lineHeight: '1.6'
           }}>
             For over 15 years, we've been the trusted auto care partner for thousands of drivers. 
-            Our commitment to excellence and customer satisfaction sets us apart.
+            Excellence and customer satisfaction drive everything we do.
           </p>
         </div>
 
         {/* Stats Section */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-          gap: '2rem',
-          marginBottom: '5rem'
-        }}>
-          {stats.map((stat, index) => (
-            <div key={index} style={{
-              background: 'rgba(255, 255, 255, 0.05)',
-              padding: '2rem',
-              borderRadius: '15px',
-              textAlign: 'center',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              transition: 'transform 0.3s ease'
-            }} onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
-            onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
-              <div style={{
-                fontSize: '3rem',
-                fontWeight: 'bold',
-                color: '#fbbf24',
-                marginBottom: '0.5rem'
-              }}>
-                {stat.number}
+        <div ref={statsRef} style={{ opacity: 0, marginBottom: '4rem' }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '1.5rem'
+          }}>
+            {stats.map((stat, index) => (
+              <div 
+                key={index}
+                className="hover-card"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  padding: '2rem 1rem',
+                  borderRadius: '12px',
+                  textAlign: 'center',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                <div style={{
+                  fontSize: '2.5rem',
+                  fontWeight: '700',
+                  color: '#d4af37',
+                  marginBottom: '0.5rem'
+                }}>
+                  {stat.number}
+                </div>
+                <div style={{ color: 'rgba(47, 79, 79, 0.7)' }}>
+                  {stat.label}
+                </div>
               </div>
-              <div style={{ color: '#dbeafe', fontSize: '1.1rem' }}>
-                {stat.label}
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
         {/* Story Section */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: '4rem',
-          alignItems: 'center',
-          marginBottom: '5rem'
-        }}>
-          <div>
-            <h2 style={{
-              fontSize: '2.5rem',
-              fontWeight: 'bold',
-              color: '#fbbf24',
-              marginBottom: '1.5rem'
-            }}>
-              Our Story
-            </h2>
-            <p style={{
-              fontSize: '1.1rem',
-              color: '#dbeafe',
-              lineHeight: '1.7',
-              marginBottom: '1.5rem'
-            }}>
-              Founded in 2009 by automotive enthusiast James Wilson, Sunny Auto started as a small 
-              neighborhood garage with a big dream: to provide honest, reliable auto care that 
-              customers could trust.
-            </p>
-            <p style={{
-              fontSize: '1.1rem',
-              color: '#dbeafe',
-              lineHeight: '1.7',
-              marginBottom: '1.5rem'
-            }}>
-              Today, we've grown into a full-service automotive center with state-of-the-art 
-              equipment and a team of certified technicians, but we've never lost sight of our 
-              core values: integrity, quality, and customer satisfaction.
-            </p>
-            <div style={{
-              display: 'flex',
-              gap: '1rem',
-              marginTop: '2rem'
-            }}>
-              <button style={{
-                background: 'linear-gradient(45deg, #fbbf24, #f59e0b)',
-                color: '#0a2540',
-                padding: '1rem 2rem',
-                borderRadius: '50px',
-                fontWeight: '600',
-                border: 'none',
-                cursor: 'pointer',
-                fontSize: '1.1rem',
-                transition: 'all 0.3s ease'
-              }}
-              onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-              onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-              onClick={() => router.push('/Services')}>
-                Our Services
-              </button>
-              <button style={{
-                background: 'transparent',
-                color: '#fbbf24',
-                padding: '1rem 2rem',
-                borderRadius: '50px',
-                fontWeight: '600',
-                border: '2px solid #fbbf24',
-                cursor: 'pointer',
-                fontSize: '1.1rem',
-                transition: 'all 0.3s ease'
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.background = '#fbbf24';
-                e.currentTarget.style.color = '#0a2540';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.color = '#fbbf24';
-              }}
-              onClick={() => router.push('/Contactus')}>
-                Contact Us
-              </button>
-            </div>
-          </div>
+        <div ref={storyRef} style={{ opacity: 0, marginBottom: '4rem' }}>
           <div style={{
-            background: 'rgba(255, 255, 255, 0.05)',
-            padding: '2rem',
-            borderRadius: '20px',
-            border: '1px solid rgba(255, 255, 255, 0.1)'
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '3rem',
+            alignItems: 'center'
           }}>
-            <img 
-              src="https://img.freepik.com/premium-photo/modern-car-car-service-lift_972478-89.jpg"
-              alt="Our Workshop"
-              style={{
-                width: '100%',
-                borderRadius: '15px',
-                boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)'
-              }}
-            />
+            <div>
+              <h2 style={{
+                fontSize: '2.5rem',
+                fontWeight: '600',
+                color: '#d4af37',
+                marginBottom: '1.5rem'
+              }}>
+                Our Story
+              </h2>
+              <p style={{
+                color: 'rgba(47, 79, 79, 0.8)',
+                lineHeight: '1.6',
+                marginBottom: '1.5rem'
+              }}>
+                Founded in 2009 by automotive enthusiast James Wilson, Sunny Auto started as a small 
+                neighborhood garage with a big dream: to provide honest, reliable auto care that 
+                customers could trust.
+              </p>
+              <p style={{
+                color: 'rgba(47, 79, 79, 0.8)',
+                lineHeight: '1.6',
+                marginBottom: '2rem'
+              }}>
+                Today, we've grown into a full-service automotive center with state-of-the-art 
+                equipment and a team of certified technicians, maintaining our core values of 
+                integrity, quality, and customer satisfaction.
+              </p>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <button 
+                  onClick={() => router.push('/Services')}
+                  style={{
+                    background: '#d4af37',
+                    color: '#2F4F4F',
+                    padding: '1rem 2rem',
+                    borderRadius: '8px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontWeight: '600',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }}
+                >
+                  Our Services
+                </button>
+                <button 
+                  onClick={() => router.push('/Contactus')}
+                  style={{
+                    background: 'transparent',
+                    color: '#d4af37',
+                    padding: '1rem 2rem',
+                    borderRadius: '8px',
+                    border: '1px solid #d4af37',
+                    cursor: 'pointer',
+                    fontWeight: '600',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(212, 175, 55, 0.1)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent';
+                  }}
+                >
+                  Contact Us
+                </button>
+              </div>
+            </div>
+            <div className="hover-card">
+              <img 
+                src="https://images.unsplash.com/photo-1603712610490-8dfb147f0dc1?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+                alt="Our Workshop"
+                style={{
+                  width: '100%',
+                  borderRadius: '12px',
+                  boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)'
+                }}
+              />
+            </div>
           </div>
         </div>
 
         {/* Values Section */}
-        <div style={{ marginBottom: '5rem' }}>
+        <div ref={valuesRef} style={{ opacity: 0, marginBottom: '4rem' }}>
           <h2 style={{
             fontSize: '2.5rem',
-            fontWeight: 'bold',
-            color: '#fbbf24',
+            fontWeight: '600',
+            color: '#d4af37',
             textAlign: 'center',
             marginBottom: '3rem'
           }}>
@@ -311,37 +338,34 @@ const About = () => {
           </h2>
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-            gap: '2rem'
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+            gap: '1.5rem'
           }}>
             {values.map((value, index) => (
-              <div key={index} style={{
-                background: 'rgba(255, 255, 255, 0.05)',
-                padding: '2rem',
-                borderRadius: '15px',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                textAlign: 'center',
-                transition: 'transform 0.3s ease'
-              }} onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
-              onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
-                <div style={{
-                  fontSize: '3rem',
-                  marginBottom: '1rem'
-                }}>
+              <div 
+                key={index}
+                className="hover-card"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  padding: '2rem',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  textAlign: 'center',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>
                   {value.icon}
                 </div>
                 <h3 style={{
-                  fontSize: '1.5rem',
+                  fontSize: '1.25rem',
                   fontWeight: '600',
-                  color: '#fbbf24',
+                  color: '#d4af37',
                   marginBottom: '1rem'
                 }}>
                   {value.title}
                 </h3>
-                <p style={{
-                  color: '#dbeafe',
-                  lineHeight: '1.6'
-                }}>
+                <p style={{ color: 'rgba(47, 79, 79, 0.7)', lineHeight: '1.5' }}>
                   {value.description}
                 </p>
               </div>
@@ -350,11 +374,11 @@ const About = () => {
         </div>
 
         {/* Team Section */}
-        <div style={{ marginBottom: '5rem' }}>
+        <div ref={teamRef} style={{ opacity: 0, marginBottom: '4rem' }}>
           <h2 style={{
             fontSize: '2.5rem',
-            fontWeight: 'bold',
-            color: '#fbbf24',
+            fontWeight: '600',
+            color: '#d4af37',
             textAlign: 'center',
             marginBottom: '3rem'
           }}>
@@ -365,16 +389,19 @@ const About = () => {
             gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
             gap: '2rem'
           }}>
-            {teamMembers.map((member) => (
-              <div key={member.id} style={{
-                background: 'rgba(255, 255, 255, 0.05)',
-                padding: '2rem',
-                borderRadius: '20px',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                textAlign: 'center',
-                transition: 'transform 0.3s ease'
-              }} onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
-              onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
+            {teamMembers.map((member, index) => (
+              <div 
+                key={index}
+                className="hover-card"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  padding: '2rem',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  textAlign: 'center',
+                  transition: 'all 0.3s ease'
+                }}
+              >
                 <img 
                   src={member.image}
                   alt={member.name}
@@ -384,39 +411,31 @@ const About = () => {
                     borderRadius: '50%',
                     objectFit: 'cover',
                     margin: '0 auto 1.5rem',
-                    border: '3px solid #fbbf24'
+                    border: '3px solid #d4af37'
                   }}
                 />
                 <h3 style={{
-                  fontSize: '1.5rem',
+                  fontSize: '1.25rem',
                   fontWeight: '600',
-                  color: '#fbbf24',
+                  color: '#d4af37',
                   marginBottom: '0.5rem'
                 }}>
                   {member.name}
                 </h3>
-                <p style={{
-                  color: '#ffffff',
-                  fontWeight: '500',
-                  marginBottom: '0.5rem'
-                }}>
+                <p style={{ color: '#2F4F4F', fontWeight: '500', marginBottom: '0.5rem' }}>
                   {member.position}
                 </p>
-                <p style={{
-                  color: '#93c5fd',
-                  marginBottom: '0.5rem',
-                  fontSize: '0.9rem'
-                }}>
-                  {member.experience} • {member.specialty}
+                <p style={{ color: 'rgba(47, 79, 79, 0.6)', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+                  {member.experience}
                 </p>
                 <p style={{
-                  color: '#dbeafe',
+                  color: 'rgba(47, 79, 79, 0.8)',
                   fontStyle: 'italic',
                   marginTop: '1rem',
                   padding: '1rem',
-                  background: 'rgba(251, 191, 36, 0.1)',
-                  borderRadius: '10px',
-                  borderLeft: '4px solid #fbbf24'
+                  background: 'rgba(212, 175, 55, 0.1)',
+                  borderRadius: '8px',
+                  borderLeft: '3px solid #d4af37'
                 }}>
                   "{member.quote}"
                 </p>
@@ -427,43 +446,48 @@ const About = () => {
 
         {/* Call to Action */}
         <div style={{
-          background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(245, 158, 11, 0.1))',
-          borderRadius: '20px',
-          padding: '4rem 2rem',
+          background: 'rgba(212, 175, 55, 0.1)',
+          borderRadius: '12px',
+          padding: '3rem 2rem',
           textAlign: 'center',
-          border: '1px solid rgba(251, 191, 36, 0.2)',
-          marginBottom: '4rem'
+          border: '1px solid rgba(212, 175, 55, 0.2)'
         }}>
           <h2 style={{
-            fontSize: '2.5rem',
-            fontWeight: 'bold',
-            color: '#fbbf24',
-            marginBottom: '1.5rem'
+            fontSize: '2rem',
+            fontWeight: '600',
+            color: '#d4af37',
+            marginBottom: '1rem'
           }}>
             Ready to Experience the Sunny Auto Difference?
           </h2>
           <p style={{
-            fontSize: '1.25rem',
-            color: '#dbeafe',
+            color: 'rgba(47, 79, 79, 0.8)',
             marginBottom: '2rem',
-            maxWidth: '600px',
+            maxWidth: '500px',
             margin: '0 auto 2rem'
           }}>
-            Join thousands of satisfied customers who trust us with their vehicles. 
-            Book your appointment today!
+            Join thousands of satisfied customers who trust us with their vehicles.
           </p>
-          <button style={{
-            background: '#172554',
-            color: '#fbbf24',
-            padding: '1.25rem 3rem',
-            borderRadius: '50px',
-            fontWeight: '600',
-            border: 'none',
-            cursor: 'pointer',
-            fontSize: '1.25rem',
-            transition: 'all 0.3s ease'
-          }}
-          onClick={() => router.push('/Appointment')}>
+          <button 
+            onClick={() => router.push('/Appointment')}
+            style={{
+              background: '#d4af37',
+              color: '#2F4F4F',
+              padding: '1rem 2.5rem',
+              borderRadius: '8px',
+              border: 'none',
+              cursor: 'pointer',
+              fontWeight: '600',
+              fontSize: '1.1rem',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
+          >
             Book Your Appointment
           </button>
         </div>
