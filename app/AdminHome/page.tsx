@@ -2,65 +2,112 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 // Define types for our appointment data
 interface Appointment {
-  id: number;
+  id: string;
   name: string;
   email: string;
   phone: string;
-  vehicleType: string;
-  serviceType: string;
-  preferredDate: string;
-  preferredTime: string;
+  vehicle_type: string;
+  service_type: string;
+  preferred_date: string;
+  preferred_time: string;
   message: string;
   status: string;
+  created_at: string;
 }
 
 const AdminHome = () => {
   const router = useRouter();
+  const supabase = createClientComponentClient();
+  
   const [currentTime, setCurrentTime] = useState(new Date());
   const [notificationsCount, setNotificationsCount] = useState(3);
   const [searchQuery, setSearchQuery] = useState('');
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [filteredAppointments, setFilteredAppointments] = useState<Appointment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch appointments from localStorage on component mount
+  // Color scheme - Orange dominant (60-70%) with white (30-40%)
+  const colors = {
+    primary: '#FF6B35',
+    primaryLight: '#FF8C42',
+    primaryDark: '#E55A2B',
+    primaryExtraLight: '#FFE4D6',
+    background: '#FFFFFF',
+    surface: '#FFF5F0',
+    surfaceLight: '#FFECE6',
+    surfaceDark: '#FFD9CC',
+    text: '#1E293B',
+    textSecondary: '#475569',
+    textMuted: '#64748B',
+    success: '#10B981',
+    warning: '#F59E0B',
+    error: '#EF4444',
+    info: '#3B82F6'
+  };
+
+  // Fetch appointments from Supabase
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
 
-    // Load appointments from localStorage
-    const loadAppointments = () => {
+    const fetchAppointments = async () => {
       try {
-        const storedAppointments = localStorage.getItem('appointments');
-        if (storedAppointments) {
-          const parsedAppointments = JSON.parse(storedAppointments);
-          setAppointments(parsedAppointments);
-          setFilteredAppointments(parsedAppointments);
+        setIsLoading(true);
+        
+        const { data: appointmentsData, error } = await supabase
+          .from('appointments')
+          .select('*')
+          .order('preferred_date', { ascending: true })
+          .order('preferred_time', { ascending: true });
+
+        if (error) {
+          console.error('Error fetching appointments:', error);
+          // Fallback to localStorage if Supabase fails
+          const storedAppointments = localStorage.getItem('appointments');
+          if (storedAppointments) {
+            const parsedAppointments = JSON.parse(storedAppointments);
+            setAppointments(parsedAppointments);
+            setFilteredAppointments(parsedAppointments);
+          }
+        } else {
+          console.log('Fetched appointments from Supabase:', appointmentsData);
+          setAppointments(appointmentsData || []);
+          setFilteredAppointments(appointmentsData || []);
         }
       } catch (error) {
         console.error('Error loading appointments:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    loadAppointments();
+    fetchAppointments();
 
-    // Set up listener for storage changes (in case another tab makes changes)
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'appointments') {
-        loadAppointments();
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
+    // Set up real-time subscription for appointments
+    const subscription = supabase
+      .channel('appointments-changes')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'appointments' 
+        }, 
+        () => {
+          fetchAppointments(); // Refresh appointments when changes occur
+        }
+      )
+      .subscribe();
 
     return () => {
       clearInterval(timer);
-      window.removeEventListener('storage', handleStorageChange);
+      subscription.unsubscribe();
     };
-  }, []);
+  }, [supabase]);
 
   // Filter appointments based on search query
   useEffect(() => {
@@ -72,88 +119,71 @@ const AdminHome = () => {
         appt.name.toLowerCase().includes(query) ||
         appt.email.toLowerCase().includes(query) ||
         appt.phone.includes(query) ||
-        appt.vehicleType.toLowerCase().includes(query) ||
-        appt.serviceType.toLowerCase().includes(query) ||
-        appt.preferredDate.includes(query) ||
+        appt.vehicle_type.toLowerCase().includes(query) ||
+        appt.service_type.toLowerCase().includes(query) ||
+        appt.preferred_date.includes(query) ||
         appt.status.toLowerCase().includes(query)
       );
       setFilteredAppointments(filtered);
     }
   }, [searchQuery, appointments]);
 
+  // Navigation handlers
   const handleLogout = () => {
     if (window.confirm('Are you sure you want to logout?')) {
-      alert('Logging out...');
       router.push('/');
-      // In a real app, this would navigate to /
     }
   };
 
-  const handleProfile = () => {
-    router.push('/Adminprofile');
-    // In a real app, this would navigate to /Adminprofile
-  };
-  
-  const handleInventory = () => {
-    router.push('/AdminInventory');
-  };
-  
-  const handleAdminAppointments = () => {
-    router.push('/AdminAppointment');
-  };
-  
-  const handleEmployees = () => {
-    router.push('/AdminEmployees');
-  };
-
-  const handleCustomers = () => {
-    router.push('/AdminCustomers');
-  };
-
-  const handleReports = () => {
-    router.push('/AdminReports');
-  };
-
-  const handleFinance = () => {
-    router.push('/AdminFinance');
-  };
-
-  const handleNotifications = () => {
-    router.push('/AdminNotifications');
-  };
+  const handleProfile = () => router.push('/Adminprofile');
+  const handleInventory = () => router.push('/AdminInventory');
+  const handleAdminAppointments = () => router.push('/AdminAppointment');
+  const handleEmployees = () => router.push('/AdminEmployees');
+  const handleCustomers = () => router.push('/AC');
+  const handleReports = () => router.push('/AdminReports');
+  const handleFinance = () => router.push('/AdminFinances');
+  const handleNotifications = () => router.push('/AdminNotification');
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // Search is handled in the useEffect above
   };
 
   // Get today's appointments
   const getTodaysAppointments = () => {
     const today = new Date().toISOString().split('T')[0];
-    return appointments.filter(appt => appt.preferredDate === today);
+    return appointments.filter(appt => appt.preferred_date === today);
   };
 
-  // Get upcoming appointments (next 7 days)
-  const getUpcomingAppointments = () => {
+  // Get appointments for the next 7 days
+  const getWeekAppointments = () => {
     const today = new Date();
     const nextWeek = new Date();
     nextWeek.setDate(today.getDate() + 7);
     
     return appointments
       .filter(appt => {
-        const apptDate = new Date(appt.preferredDate);
-        return apptDate >= today && apptDate <= nextWeek;
+        const apptDate = new Date(appt.preferred_date);
+        return apptDate >= today && apptDate <= nextWeek && appt.status !== 'completed';
       })
-      .slice(0, 5); // Limit to 5 appointments
+      .sort((a, b) => new Date(a.preferred_date).getTime() - new Date(b.preferred_date).getTime());
+  };
+
+  // Get real-time appointments (today's appointments)
+  const getRealtimeAppointments = () => {
+    const today = new Date().toISOString().split('T')[0];
+    return appointments
+      .filter(appt => appt.preferred_date === today && appt.status !== 'completed')
+      .sort((a, b) => a.preferred_time.localeCompare(b.preferred_time))
+      .slice(0, 6); // Limit to 6 appointments
   };
 
   // Format date for display
   const formatDisplayDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
+      weekday: 'short',
       month: 'short',
-      day: 'numeric',
-      year: 'numeric'
+      day: 'numeric'
     });
   };
 
@@ -167,57 +197,139 @@ const AdminHome = () => {
     return `${formattedHour}:${minutes} ${period}`;
   };
 
-  // Sample data for recent activity
-  const recentActivities = [
-    { id: 1, action: 'New appointment booked', time: '2 minutes ago', user: 'John Doe' },
-    { id: 2, action: 'Oil change completed', time: '15 minutes ago', user: 'Service Team' },
-    { id: 3, action: 'Inventory item low stock', time: '1 hour ago', user: 'System' },
-    { id: 4, action: 'New employee registered', time: '2 hours ago', user: 'HR Manager' },
-    { id: 5, action: 'Monthly report generated', time: '3 hours ago', user: 'Finance System' }
-  ];
+  // Get status color
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed': return colors.success;
+      case 'pending': return colors.warning;
+      case 'cancelled': return colors.error;
+      default: return colors.info;
+    }
+  };
 
-  // Get real upcoming appointments from user data
-  const upcomingAppointments = getUpcomingAppointments().map(appt => ({
-    id: appt.id,
-    customer: appt.name,
-    service: appt.serviceType,
-    time: formatDisplayTime(appt.preferredTime),
-    date: formatDisplayDate(appt.preferredDate),
-    vehicle: appt.vehicleType
-  }));
+  // Get status background color (lighter version)
+  const getStatusBgColor = (status: string) => {
+    switch (status) {
+      case 'completed': return '#D1FAE5';
+      case 'pending': return '#FEF3C7';
+      case 'cancelled': return '#FEE2E2';
+      default: return '#DBEAFE';
+    }
+  };
 
   // Get today's stats
   const todaysAppointments = getTodaysAppointments();
+  const realtimeAppointments = getRealtimeAppointments();
+  const weekAppointments = getWeekAppointments();
   const completedServices = appointments.filter(appt => appt.status === 'completed').length;
   const newAppointmentsCount = todaysAppointments.length;
+  const pendingAppointments = appointments.filter(appt => appt.status === 'pending').length;
+
+  // Dashboard cards data
+  const dashboardCards = [
+    {
+      title: 'Inventory',
+      description: 'Manage parts, tools, and stock levels',
+      icon: '📦',
+      onClick: handleInventory,
+    },
+    {
+      title: 'Appointments',
+      description: 'View and manage service bookings',
+      icon: '📅',
+      onClick: handleAdminAppointments,
+    },
+    {
+      title: 'Employees',
+      description: 'Manage staff and work schedules',
+      icon: '👥',
+      onClick: handleEmployees,
+    },
+    {
+      title: 'Customers',
+      description: 'Manage customer database and history',
+      icon: '👤',
+      onClick: handleCustomers,
+    },
+    {
+      title: 'Reports',
+      description: 'Generate business reports and insights',
+      icon: '📊',
+      onClick: handleReports,
+    },
+    {
+      title: 'Finance',
+      description: 'Manage payments and accounting',
+      icon: '💰',
+      onClick: handleFinance,
+    }
+  ];
+
+  if (isLoading) {
+    return (
+      <div style={{ 
+        background: colors.background,
+        minHeight: '100vh', 
+        color: colors.text,
+        fontFamily: 'Inter, sans-serif',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{
+            width: '50px',
+            height: '50px',
+            border: `3px solid ${colors.surfaceLight}`,
+            borderTop: `3px solid ${colors.primary}`,
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 1rem'
+          }} />
+          <p style={{ color: colors.primary, fontSize: '1.1rem' }}>Loading Dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ 
-      background: '#0f172a',
+      background: colors.background,
       minHeight: '100vh', 
-      color: 'white',
+      color: colors.text,
       fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     }}>
-      {/* Header */}
+      {/* Header - Orange Dominant */}
       <header style={{
         padding: '1.5rem 2rem',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        backgroundColor: '#1e293b',
-        borderBottom: '1px solid #334155',
+        backgroundColor: colors.primary,
         position: 'sticky',
         top: 0,
         zIndex: 50
       }}>
-        <h1 style={{ 
-          fontSize: '2rem', 
-          fontWeight: '700',
-          color: '#f97316',
-          margin: 0
-        }}>
-          SUNNY AUTO ADMIN
-        </h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <h1 style={{ 
+            fontSize: '1.8rem', 
+            fontWeight: '800',
+            color: colors.background,
+            margin: 0,
+          }}>
+            SUNNY AUTO
+          </h1>
+          <div style={{ 
+            color: colors.primary, 
+            fontSize: '0.9rem',
+            fontWeight: '500',
+            padding: '0.25rem 0.75rem',
+            backgroundColor: colors.background,
+            borderRadius: '20px'
+          }}>
+            ADMIN PANEL
+          </div>
+        </div>
         
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           <form onSubmit={handleSearch} style={{ display: 'flex', alignItems: 'center' }}>
@@ -227,49 +339,28 @@ const AdminHome = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{
-                padding: '0.6rem 1rem',
-                borderRadius: '8px',
-                border: '1px solid #475569',
-                backgroundColor: '#334155',
-                color: 'white',
-                width: '250px',
-                outline: 'none'
+                padding: '0.75rem 1rem',
+                borderRadius: '12px',
+                backgroundColor: colors.background,
+                color: colors.text,
+                width: '280px',
+                outline: 'none',
+                border: `2px solid ${colors.primaryLight}`,
+                fontSize: '0.9rem'
               }}
             />
-            <button 
-              type="submit"
-              style={{
-                backgroundColor: '#f97316',
-                color: 'white',
-                border: 'none',
-                padding: '0.6rem 1rem',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                marginLeft: '0.5rem',
-                fontWeight: '600',
-                transition: 'background-color 0.2s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#ea580c';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#f97316';
-              }}
-            >
-              Search
-            </button>
           </form>
           
           <div style={{ position: 'relative' }}>
             <button 
               onClick={handleNotifications}
               style={{
-                backgroundColor: 'transparent',
-                color: '#f97316',
-                width: '45px',
-                height: '45px',
-                borderRadius: '8px',
-                border: '1px solid #f97316',
+                backgroundColor: colors.background,
+                color: colors.primary,
+                width: '48px',
+                height: '48px',
+                borderRadius: '12px',
+                border: `2px solid ${colors.background}`,
                 cursor: 'pointer',
                 fontSize: '1.2rem',
                 display: 'flex',
@@ -278,12 +369,12 @@ const AdminHome = () => {
                 transition: 'all 0.2s ease'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#f97316';
-                e.currentTarget.style.color = 'white';
+                e.currentTarget.style.backgroundColor = colors.primaryLight;
+                e.currentTarget.style.color = colors.background;
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-                e.currentTarget.style.color = '#f97316';
+                e.currentTarget.style.backgroundColor = colors.background;
+                e.currentTarget.style.color = colors.primary;
               }}
               title="Notifications"
             >
@@ -294,17 +385,18 @@ const AdminHome = () => {
               {notificationsCount > 0 && (
                 <span style={{
                   position: 'absolute',
-                  top: '-5px',
-                  right: '-5px',
-                  backgroundColor: '#ef4444',
-                  color: 'white',
+                  top: '-2px',
+                  right: '-2px',
+                  backgroundColor: colors.error,
+                  color: colors.background,
                   borderRadius: '50%',
-                  width: '20px',
-                  height: '20px',
-                  fontSize: '0.75rem',
+                  width: '18px',
+                  height: '18px',
+                  fontSize: '0.7rem',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center'
+                  justifyContent: 'center',
+                  fontWeight: '600'
                 }}>
                   {notificationsCount}
                 </span>
@@ -315,11 +407,11 @@ const AdminHome = () => {
           <button 
             onClick={handleProfile}
             style={{
-              backgroundColor: '#f97316',
-              color: 'white',
-              width: '45px',
-              height: '45px',
-              borderRadius: '8px',
+              backgroundColor: colors.background,
+              color: colors.primary,
+              width: '48px',
+              height: '48px',
+              borderRadius: '12px',
               border: 'none',
               cursor: 'pointer',
               fontSize: '1.2rem',
@@ -329,10 +421,12 @@ const AdminHome = () => {
               transition: 'background-color 0.2s ease'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#ea580c';
+              e.currentTarget.style.backgroundColor = colors.primaryLight;
+              e.currentTarget.style.color = colors.background;
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#f97316';
+              e.currentTarget.style.backgroundColor = colors.background;
+              e.currentTarget.style.color = colors.primary;
             }}
             title="Admin Profile"
           >
@@ -345,22 +439,22 @@ const AdminHome = () => {
             onClick={handleLogout}
             style={{
               backgroundColor: 'transparent',
-              color: '#f97316',
+              color: colors.background,
               padding: '0.75rem 1.5rem',
-              border: '1px solid #f97316',
-              borderRadius: '8px',
+              border: `2px solid ${colors.background}`,
+              borderRadius: '12px',
               cursor: 'pointer',
               fontWeight: '600',
-              fontSize: '1rem',
+              fontSize: '0.9rem',
               transition: 'all 0.2s ease'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#f97316';
-              e.currentTarget.style.color = 'white';
+              e.currentTarget.style.backgroundColor = colors.background;
+              e.currentTarget.style.color = colors.primary;
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = 'transparent';
-              e.currentTarget.style.color = '#f97316';
+              e.currentTarget.style.color = colors.background;
             }}
           >
             Logout
@@ -374,580 +468,470 @@ const AdminHome = () => {
         minHeight: 'calc(100vh - 100px)'
       }}>
         <div style={{ 
-          backgroundColor: '#1e293b',
-          padding: '2.5rem',
-          borderRadius: '12px',
           maxWidth: '1400px',
-          margin: '0 auto',
-          border: '1px solid #334155'
+          margin: '0 auto'
         }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+          {/* Welcome Section */}
+          <div style={{ 
+            textAlign: 'center',
+            marginBottom: '3rem'
+          }}>
             <h2 style={{ 
-              fontSize: '2rem', 
-              fontWeight: '700',
-              color: '#f97316',
-              margin: 0
+              fontSize: '2.5rem', 
+              fontWeight: '800',
+              color: colors.primary,
+              margin: '0 0 1rem 0',
             }}>
-              ADMIN DASHBOARD
+              Welcome to <span style={{ color: colors.primaryDark }}>Sunny Auto</span> Admin
             </h2>
-            
-            <div style={{ 
-              color: '#f97316', 
+            <p style={{ 
               fontSize: '1.1rem',
+              color: colors.textSecondary,
+              margin: 0,
               fontWeight: '500'
             }}>
-              {currentTime.toLocaleTimeString('en-US', { 
-                hour: '2-digit', 
-                minute: '2-digit', 
-                second: '2-digit' 
-              })}
+              Manage your automotive business with real-time insights and control
+            </p>
+            <div style={{ 
+              color: colors.primary, 
+              fontSize: '1rem',
+              fontWeight: '600',
+              marginTop: '0.5rem'
+            }}>
+              {currentTime.toLocaleDateString('en-US', { 
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              })} • {currentTime.toLocaleTimeString()}
             </div>
           </div>
-          
-          <p style={{ 
-            fontSize: '3.0rem', 
-            marginBottom: '3rem',
-            fontWeight: '500',
-            color: '#cbd5e1',
-            maxWidth: '800px',
-            marginLeft: 'auto',
-            marginRight: 'auto',
-            lineHeight: '1.6',
-            textAlign: 'center'
-          }}>
-            Welcome to Sunny Auto Admin Panel - Manage everything in one place
-          </p>
 
-          {/* Quick Stats Section */}
+          {/* Stats Overview - Orange Dominant */}
           <div style={{
-            backgroundColor: '#334155',
-            padding: '2rem',
-            borderRadius: '8px',
-            border: '1px solid #475569',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+            gap: '1.5rem',
             marginBottom: '2.5rem'
           }}>
-            <h3 style={{ 
-              color: '#f97316', 
-              marginBottom: '1.5rem',
-              fontSize: '1.3rem',
-              fontWeight: '600',
-              textAlign: 'left'
-            }}>Today's Overview</h3>
-            
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: '1.5rem'
-            }}>
-              <div style={{ 
+            {[
+              { 
+                label: "Today's Appointments", 
+                value: newAppointmentsCount, 
+                color: colors.primary,
+                icon: '📅',
+                bgColor: colors.surface
+              },
+              { 
+                label: "Completed Services", 
+                value: completedServices, 
+                color: colors.success,
+                icon: '✅',
+                bgColor: colors.surface
+              },
+              { 
+                label: "Pending Appointments", 
+                value: pendingAppointments, 
+                color: colors.warning,
+                icon: '⏳',
+                bgColor: colors.surface
+              },
+              { 
+                label: "Total Revenue", 
+                value: `$${(completedServices * 149.99).toLocaleString()}`, 
+                color: colors.info,
+                icon: '💰',
+                bgColor: colors.surface
+              }
+            ].map((stat, index) => (
+              <div key={index} style={{ 
+                backgroundColor: stat.bgColor,
+                padding: '2rem',
+                borderRadius: '16px',
                 textAlign: 'center',
-                padding: '1.5rem',
-                backgroundColor: '#475569',
-                borderRadius: '8px',
-                border: '1px solid #f97316'
-              }}>
-                <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#f97316' }}>{newAppointmentsCount}</div>
-                <div style={{ color: '#cbd5e1', fontSize: '0.9rem' }}>New Appointments</div>
+                transition: 'transform 0.2s ease',
+                border: `2px solid ${colors.primaryLight}`
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-5px)';
+                e.currentTarget.style.borderColor = colors.primary;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.borderColor = colors.primaryLight;
+              }}
+              >
+                <div style={{ 
+                  fontSize: '2.5rem', 
+                  marginBottom: '0.5rem' 
+                }}>
+                  {stat.icon}
+                </div>
+                <div style={{ 
+                  fontSize: '2.5rem', 
+                  fontWeight: '800',
+                  color: stat.color,
+                  marginBottom: '0.5rem'
+                }}>
+                  {stat.value}
+                </div>
+                <div style={{ 
+                  color: colors.textSecondary,
+                  fontSize: '0.9rem',
+                  fontWeight: '600'
+                }}>
+                  {stat.label}
+                </div>
               </div>
-              
-              <div style={{ 
-                textAlign: 'center',
-                padding: '1.5rem',
-                backgroundColor: '#475569',
-                borderRadius: '8px',
-                border: '1px solid #10b981'
-              }}>
-                <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#10b981' }}>{completedServices}</div>
-                <div style={{ color: '#cbd5e1', fontSize: '0.9rem' }}>Completed Services</div>
-              </div>
-              
-              <div style={{ 
-                textAlign: 'center',
-                padding: '1.5rem',
-                backgroundColor: '#475569',
-                borderRadius: '8px',
-                border: '1px solid #3b82f6'
-              }}>
-                <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#3b82f6' }}>${(completedServices * 149.99).toLocaleString()}</div>
-                <div style={{ color: '#cbd5e1', fontSize: '0.9rem' }}>Today's Revenue</div>
-              </div>
-              
-              <div style={{ 
-                textAlign: 'center',
-                padding: '1.5rem',
-                backgroundColor: '#475569',
-                borderRadius: '8px',
-                border: '1px solid #f59e0b'
-              }}>
-                <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#f59e0b' }}>{appointments.filter(a => a.status === 'pending').length}</div>
-                <div style={{ color: '#cbd5e1', fontSize: '0.9rem' }}>Pending Appointments</div>
-              </div>
-            </div>
+            ))}
           </div>
 
-          {/* Search Results */}
-          {searchQuery && (
-            <div style={{
-              backgroundColor: '#334155',
-              padding: '1.5rem',
-              borderRadius: '8px',
-              border: '1px solid #475569',
-              marginBottom: '2rem',
-              textAlign: 'left'
-            }}>
+          {/* Main Content Grid */}
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: '2fr 1fr', 
+            gap: '2rem',
+            alignItems: 'start'
+          }}>
+            {/* Left Column - Dashboard Cards & Today's Appointments */}
+            <div>
               <h3 style={{ 
-                color: '#f97316', 
-                marginBottom: '1rem',
-                fontSize: '1.2rem',
-                fontWeight: '600'
+                color: colors.primary,
+                marginBottom: '1.5rem',
+                fontSize: '1.5rem',
+                fontWeight: '700'
               }}>
-                Search Results ({filteredAppointments.length})
+                Quick Access
               </h3>
               
-              {filteredAppointments.length > 0 ? (
-                <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
-                  {filteredAppointments.map(appt => (
-                    <div key={appt.id} style={{
-                      padding: '1rem',
-                      marginBottom: '0.8rem',
-                      backgroundColor: '#475569',
-                      borderRadius: '8px',
-                      border: '1px solid #334155'
-                    }}>
-                      <div style={{ fontWeight: '600', color: '#f97316', marginBottom: '0.5rem' }}>
-                        {appt.name} - {appt.serviceType}
-                      </div>
-                      <div style={{ fontSize: '0.9rem', color: '#cbd5e1', marginBottom: '0.3rem' }}>
-                        {appt.vehicleType} • {formatDisplayDate(appt.preferredDate)} at {formatDisplayTime(appt.preferredTime)}
-                      </div>
-                      <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
-                        Status: <span style={{ 
-                          color: appt.status === 'completed' ? '#10b981' : 
-                                 appt.status === 'pending' ? '#f59e0b' : '#ef4444',
-                          fontWeight: '600'
-                        }}>{appt.status}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div style={{ color: '#94a3b8', textAlign: 'center', padding: '1rem' }}>
-                  No appointments found matching your search.
-                </div>
-              )}
-            </div>
-          )}
-
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem', marginBottom: '2.5rem' }}>
-            {/* Dashboard Grid */}
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-              gap: '1.5rem'
-            }}>
-              {/* Inventory */}
-              <div 
-                style={{
-                  backgroundColor: '#334155',
-                  padding: '2rem',
-                  borderRadius: '8px',
-                  border: '1px solid #475569',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  textAlign: 'center',
-                  height: '100%'
-                }}
-                onClick={handleInventory}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-5px)';
-                  e.currentTarget.style.borderColor = '#f97316';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.borderColor = '#475569';
-                }}
-              >
-                <div style={{ 
-                  fontSize: '3rem', 
-                  marginBottom: '1.2rem',
-                  color: '#f97316'
-                }}>
-                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2"/>
-                    <path d="M9 9h6M9 12h6M9 15h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                  </svg>
-                </div>
-                <h3 style={{ 
-                  color: '#f97316', 
-                  marginBottom: '1rem', 
-                  fontSize: '1.3rem',
-                  fontWeight: '600'
-                }}>Inventory Management</h3>
-                <p style={{ color: '#cbd5e1', lineHeight: '1.5', fontSize: '0.9rem' }}>
-                  Manage parts, tools, and stock levels
-                </p>
-              </div>
-              
-              {/* Appointments */}
-              <div 
-                style={{
-                  backgroundColor: '#334155',
-                  padding: '2rem',
-                  borderRadius: '8px',
-                  border: '1px solid #475569',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  textAlign: 'center',
-                  height: '100%'
-                }}
-                onClick={handleAdminAppointments}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-5px)';
-                  e.currentTarget.style.borderColor = '#f97316';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.borderColor = '#475569';
-                }}
-              >
-                <div style={{ 
-                  fontSize: '3rem', 
-                  marginBottom: '1.2rem',
-                  color: '#f97316'
-                }}>
-                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2"/>
-                    <line x1="16" y1="2" x2="16" y2="6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                    <line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                    <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                  </svg>
-                </div>
-                <h3 style={{ 
-                  color: '#f97316', 
-                  marginBottom: '1rem', 
-                  fontSize: '1.3rem',
-                  fontWeight: '600'
-                }}>Appointments</h3>
-                <p style={{ color: '#cbd5e1', lineHeight: '1.5', fontSize: '0.9rem' }}>
-                  View and manage service bookings
-                </p>
-              </div>
-              
-              {/* Employees */}
-              <div 
-                style={{
-                  backgroundColor: '#334155',
-                  padding: '2rem',
-                  borderRadius: '8px',
-                  border: '1px solid #475569',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  textAlign: 'center',
-                  height: '100%'
-                }}
-                onClick={handleEmployees}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-5px)';
-                  e.currentTarget.style.borderColor = '#f97316';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.borderColor = '#475569';
-                }}
-              >
-                <div style={{ 
-                  fontSize: '3rem', 
-                  marginBottom: '1.2rem',
-                  color: '#f97316'
-                }}>
-                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <circle cx="9" cy="7" r="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </div>
-                <h3 style={{ 
-                  color: '#f97316', 
-                  marginBottom: '1rem', 
-                  fontSize: '1.3rem',
-                  fontWeight: '600'
-                }}>Employees</h3>
-                <p style={{ color: '#cbd5e1', lineHeight: '1.5', fontSize: '0.9rem' }}>
-                  Manage staff and work schedules
-                </p>
-              </div>
-              
-              {/* Customers */}
-              <div 
-                style={{
-                  backgroundColor: '#334155',
-                  padding: '2rem',
-                  borderRadius: '8px',
-                  border: '1px solid #475569',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  textAlign: 'center',
-                  height: '100%'
-                }}
-                onClick={handleCustomers}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-5px)';
-                  e.currentTarget.style.borderColor = '#f97316';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.borderColor = '#475569';
-                }}
-              >
-                <div style={{ 
-                  fontSize: '3rem', 
-                  marginBottom: '1.2rem',
-                  color: '#f97316'
-                }}>
-                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </div>
-                <h3 style={{ 
-                  color: '#f97316', 
-                  marginBottom: '1rem', 
-                  fontSize: '1.3rem',
-                  fontWeight: '600'
-                }}>Customers</h3>
-                <p style={{ color: '#cbd5e1', lineHeight: '1.5', fontSize: '0.9rem' }}>
-                  Manage customer database and history
-                </p>
-              </div>
-
-              {/* Reports */}
-              <div 
-                style={{
-                  backgroundColor: '#334155',
-                  padding: '2rem',
-                  borderRadius: '8px',
-                  border: '1px solid #475569',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  textAlign: 'center',
-                  height: '100%'
-                }}
-                onClick={handleReports}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-5px)';
-                  e.currentTarget.style.borderColor = '#f97316';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.borderColor = '#475569';
-                }}
-              >
-                <div style={{ 
-                  fontSize: '3rem', 
-                  marginBottom: '1.2rem',
-                  color: '#f97316'
-                }}>
-                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <polyline points="14,2 14,8 20,8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <line x1="16" y1="13" x2="8" y2="13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <polyline points="10,9 9,9 8,9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </div>
-                <h3 style={{ 
-                  color: '#f97316', 
-                  marginBottom: '1rem', 
-                  fontSize: '1.3rem',
-                  fontWeight: '600'
-                }}>Reports & Analytics</h3>
-                <p style={{ color: '#cbd5e1', lineHeight: '1.5', fontSize: '0.9rem' }}>
-                  Generate business reports and insights
-                </p>
-              </div>
-
-              {/* Finance */}
-              <div 
-                style={{
-                  backgroundColor: '#334155',
-                  padding: '2rem',
-                  borderRadius: '8px',
-                  border: '1px solid #475569',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  textAlign: 'center',
-                  height: '100%'
-                }}
-                onClick={handleFinance}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-5px)';
-                  e.currentTarget.style.borderColor = '#f97316';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.borderColor = '#475569';
-                }}
-              >
-                <div style={{ 
-                  fontSize: '3rem', 
-                  marginBottom: '1.2rem',
-                  color: '#f97316'
-                }}>
-                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="2" y="6" width="20" height="12" rx="2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M16 10a2 2 0 1 1 0 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M12 10v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M8 10v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M2 10h20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </div>
-                <h3 style={{ 
-                  color: '#f97316', 
-                  marginBottom: '1rem', 
-                  fontSize: '1.3rem',
-                  fontWeight: '600'
-                }}>Finance</h3>
-                <p style={{ color: '#cbd5e1', lineHeight: '1.5', fontSize: '0.9rem' }}>
-                  Manage payments, invoices, and accounting
-                </p>
-              </div>
-            </div>
-
-            {/* Upcoming Appointments Sidebar */}
-            <div style={{
-              backgroundColor: '#334155',
-              padding: '1.5rem',
-              borderRadius: '8px',
-              border: '1px solid #475569',
-              height: 'fit-content'
-            }}>
-              <h3 style={{ 
-                color: '#f97316', 
-                marginBottom: '1.5rem',
-                fontSize: '1.2rem',
-                fontWeight: '600'
-              }}>Upcoming Appointments</h3>
-              
-              {upcomingAppointments.length > 0 ? (
-                <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                  {upcomingAppointments.map(appointment => (
-                    <div key={appointment.id} style={{
-                      padding: '1rem',
-                      marginBottom: '0.8rem',
-                      backgroundColor: '#475569',
-                      borderRadius: '8px',
-                      border: '1px solid #334155',
-                      textAlign: 'left'
-                    }}>
-                      <div style={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'center',
-                        marginBottom: '0.5rem'
-                      }}>
-                        <span style={{ fontWeight: '600', color: '#f97316' }}>{appointment.customer}</span>
-                        <span style={{ 
-                          backgroundColor: 'rgba(249, 115, 22, 0.2)',
-                          padding: '0.2rem 0.5rem',
-                          borderRadius: '4px',
-                          fontSize: '0.8rem',
-                          color: '#f97316',
-                          fontWeight: '600'
-                        }}>
-                          {appointment.time}
-                        </span>
-                      </div>
-                      <div style={{ fontSize: '0.9rem', color: '#cbd5e1', marginBottom: '0.3rem' }}>
-                        {appointment.service} • {appointment.vehicle}
-                      </div>
-                      <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
-                        {appointment.date}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div style={{ color: '#94a3b8', textAlign: 'center', padding: '1rem' }}>
-                  No upcoming appointments.
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Recent Activity Section */}
-          <div style={{
-            backgroundColor: '#334155',
-            padding: '2rem',
-            borderRadius: '8px',
-            border: '1px solid #475569',
-          }}>
-            <h3 style={{ 
-              color: '#f97316', 
-              marginBottom: '1.5rem',
-              fontSize: '1.3rem',
-              fontWeight: '600'
-            }}>Recent Activity</h3>
-            
-            <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
-              {recentActivities.map(activity => (
-                <div key={activity.id} style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: '1rem',
-                  borderBottom: '1px solid #475569'
-                }}>
-                  <div style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: '50%',
-                    backgroundColor: 'rgba(249, 115, 22, 0.2)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginRight: '1rem',
-                    flexShrink: 0
-                  }}>
-                    <span style={{ color: '#f97316' }}>
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </span>
-                  </div>
-                  <div style={{ flexGrow: 1 }}>
-                    <div style={{ color: '#f97316', fontWeight: '600' }}>{activity.action}</div>
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                gap: '1.5rem',
+                marginBottom: '2.5rem'
+              }}>
+                {dashboardCards.map((card, index) => (
+                  <div 
+                    key={index}
+                    style={{
+                      backgroundColor: colors.surface,
+                      padding: '2rem',
+                      borderRadius: '16px',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      textAlign: 'center',
+                      border: `2px solid ${colors.primaryLight}`
+                    }}
+                    onClick={card.onClick}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = colors.surfaceLight;
+                      e.currentTarget.style.transform = 'translateY(-5px)';
+                      e.currentTarget.style.borderColor = colors.primary;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = colors.surface;
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.borderColor = colors.primaryLight;
+                    }}
+                  >
                     <div style={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'center',
-                      marginTop: '0.3rem'
+                      fontSize: '3rem', 
+                      marginBottom: '1rem',
+                      color: colors.primary
                     }}>
-                      <span style={{ color: '#94a3b8', fontSize: '0.9rem' }}>
-                        By {activity.user}
+                      {card.icon}
+                    </div>
+                    <h4 style={{ 
+                      color: colors.primary, 
+                      marginBottom: '0.75rem', 
+                      fontSize: '1.2rem',
+                      fontWeight: '700'
+                    }}>
+                      {card.title}
+                    </h4>
+                    <p style={{ 
+                      color: colors.textSecondary, 
+                      lineHeight: '1.5', 
+                      fontSize: '0.9rem',
+                      margin: 0
+                    }}>
+                      {card.description}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Today's Appointments */}
+              <div style={{ marginTop: '2.5rem' }}>
+                <h3 style={{ 
+                  color: colors.primary,
+                  marginBottom: '1.5rem',
+                  fontSize: '1.5rem',
+                  fontWeight: '700'
+                }}>
+                  Today's Appointments
+                </h3>
+                
+                <div style={{
+                  backgroundColor: colors.surface,
+                  borderRadius: '16px',
+                  overflow: 'hidden',
+                  border: `2px solid ${colors.primaryLight}`
+                }}>
+                  {realtimeAppointments.length > 0 ? (
+                    <div>
+                      {realtimeAppointments.map((appt, index) => (
+                        <div key={appt.id} style={{
+                          padding: '1.5rem',
+                          borderBottom: index < realtimeAppointments.length - 1 ? `1px solid ${colors.surfaceDark}` : 'none',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          transition: 'background-color 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = colors.surfaceLight;
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = colors.surface;
+                        }}
+                        >
+                          <div style={{ flex: 1 }}>
+                            <div style={{ 
+                              display: 'flex', 
+                              alignItems: 'center',
+                              gap: '1rem',
+                              marginBottom: '0.5rem'
+                            }}>
+                              <span style={{ 
+                                fontWeight: '700', 
+                                color: colors.text,
+                                fontSize: '1.1rem'
+                              }}>
+                                {appt.name}
+                              </span>
+                              <span style={{
+                                backgroundColor: getStatusBgColor(appt.status),
+                                color: getStatusColor(appt.status),
+                                padding: '0.25rem 0.75rem',
+                                borderRadius: '20px',
+                                fontSize: '0.75rem',
+                                fontWeight: '600',
+                                border: `1px solid ${getStatusColor(appt.status)}20`
+                              }}>
+                                {appt.status.toUpperCase()}
+                              </span>
+                            </div>
+                            <div style={{ color: colors.textSecondary, fontSize: '0.9rem' }}>
+                              {appt.service_type} • {appt.vehicle_type}
+                            </div>
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ 
+                              color: colors.primary,
+                              fontWeight: '700',
+                              fontSize: '1rem'
+                            }}>
+                              {formatDisplayTime(appt.preferred_time)}
+                            </div>
+                            <div style={{ 
+                              color: colors.textMuted,
+                              fontSize: '0.8rem'
+                            }}>
+                              Today
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{ 
+                      padding: '3rem', 
+                      textAlign: 'center',
+                      color: colors.textSecondary
+                    }}>
+                      <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📅</div>
+                      <p style={{ margin: 0, fontWeight: '600' }}>No appointments for today</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column - Week Appointments & Quick Stats */}
+            <div>
+              <h3 style={{ 
+                color: colors.primary,
+                marginBottom: '1.5rem',
+                fontSize: '1.5rem',
+                fontWeight: '700'
+              }}>
+                This Week's Appointments
+              </h3>
+              
+              <div style={{
+                backgroundColor: colors.surface,
+                borderRadius: '16px',
+                overflow: 'hidden',
+                border: `2px solid ${colors.primaryLight}`,
+                marginBottom: '2rem'
+              }}>
+                {weekAppointments.length > 0 ? (
+                  <div style={{ maxHeight: '500px', overflowY: 'auto' }}>
+                    {weekAppointments.map((appt, index) => (
+                      <div key={appt.id} style={{
+                        padding: '1.5rem',
+                        borderBottom: index < weekAppointments.length - 1 ? `1px solid ${colors.surfaceDark}` : 'none',
+                        transition: 'background-color 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = colors.surfaceLight;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = colors.surface;
+                      }}
+                      >
+                        <div style={{ 
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: '1rem',
+                          marginBottom: '0.75rem'
+                        }}>
+                          <div style={{
+                            backgroundColor: colors.primary,
+                            color: colors.background,
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: '10px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontWeight: '700',
+                            fontSize: '0.9rem',
+                            flexShrink: 0
+                          }}>
+                            {new Date(appt.preferred_date).getDate()}
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ 
+                              fontWeight: '700', 
+                              color: colors.text,
+                              marginBottom: '0.25rem'
+                            }}>
+                              {appt.name}
+                            </div>
+                            <div style={{ 
+                              color: colors.textSecondary, 
+                              fontSize: '0.85rem',
+                              marginBottom: '0.5rem'
+                            }}>
+                              {appt.service_type}
+                            </div>
+                            <div style={{ 
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.5rem',
+                              flexWrap: 'wrap'
+                            }}>
+                              <span style={{
+                                backgroundColor: getStatusBgColor(appt.status),
+                                color: getStatusColor(appt.status),
+                                padding: '0.2rem 0.6rem',
+                                borderRadius: '12px',
+                                fontSize: '0.75rem',
+                                fontWeight: '600',
+                                border: `1px solid ${getStatusColor(appt.status)}20`
+                              }}>
+                                {appt.status}
+                              </span>
+                              <span style={{
+                                color: colors.primary,
+                                fontSize: '0.8rem',
+                                fontWeight: '600'
+                              }}>
+                                {formatDisplayTime(appt.preferred_time)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <div style={{ 
+                          color: colors.textMuted,
+                          fontSize: '0.8rem',
+                          paddingLeft: '3.5rem'
+                        }}>
+                          {appt.vehicle_type} • {formatDisplayDate(appt.preferred_date)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ 
+                    padding: '3rem', 
+                    textAlign: 'center',
+                    color: colors.textSecondary
+                  }}>
+                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⏰</div>
+                    <p style={{ margin: 0, fontWeight: '600' }}>No appointments this week</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Quick Stats */}
+              <div style={{ 
+                backgroundColor: colors.surface,
+                padding: '1.5rem',
+                borderRadius: '16px',
+                border: `2px solid ${colors.primaryLight}`
+              }}>
+                <h4 style={{ 
+                  color: colors.primary,
+                  marginBottom: '1rem',
+                  fontSize: '1.2rem',
+                  fontWeight: '700'
+                }}>
+                  Quick Stats
+                </h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {[
+                    { label: 'Total Appointments', value: appointments.length, color: colors.primary },
+                    { label: 'Service Completion Rate', value: `${appointments.length > 0 ? Math.round((completedServices / appointments.length) * 100) : 0}%`, color: colors.success },
+                    { label: 'Average Service Time', value: '45min', color: colors.info },
+                    { label: 'Customer Satisfaction', value: '98%', color: colors.warning }
+                  ].map((stat, index) => (
+                    <div key={index} style={{ 
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '0.75rem',
+                      backgroundColor: colors.background,
+                      borderRadius: '10px',
+                      border: `1px solid ${colors.primaryLight}`
+                    }}>
+                      <span style={{ color: colors.textSecondary, fontSize: '0.9rem' }}>
+                        {stat.label}
                       </span>
-                      <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>
-                        {activity.time}
+                      <span style={{ 
+                        color: stat.color, 
+                        fontWeight: '700',
+                        fontSize: '0.9rem'
+                      }}>
+                        {stat.value}
                       </span>
                     </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Footer */}
-      <footer style={{
-        padding: '1.5rem 2rem',
-        backgroundColor: '#1e293b',
-        borderTop: '1px solid #334155',
-        textAlign: 'center'
-      }}>
-        <p style={{ margin: 0, color: '#94a3b8', fontSize: '0.9rem' }}>
-          &copy; 2025 Sunny Auto. All rights reserved.
-        </p>
-      </footer>
+      <style jsx>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 };
