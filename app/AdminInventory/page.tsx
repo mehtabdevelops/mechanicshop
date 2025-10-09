@@ -1,124 +1,89 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 interface InventoryItem {
-  id: number;
+  id: string;
   name: string;
   category: string;
   description: string;
   quantity: number;
-  image: string;
+  price: number | null;
+  min_stock_level: number;
+  image_url: string;
+  sku: string | null;
+  created_at: string;
 }
 
 const AdminInventory = () => {
   const router = useRouter();
-  const [inventory, setInventory] = useState<InventoryItem[]>([
-    {
-      id: 1,
-      name: "5W20 Engine Oil",
-      category: "Engine Oils",
-      description: "High-performance synthetic engine oil for modern engines",
-      quantity: 42,
-      image: "https://i5.walmartimages.ca/images/Large/089/620/6000207089620.jpg?odnHeight=580&odnWidth=580&odnBg=FFFFFF" 
-    },
-    {
-      id: 2,
-      name: "5W30 Engine Oil",
-      category: "Engine Oils",
-      description: "Premium synthetic blend for all-season protection",
-      quantity: 38,
-      image: "https://assets-eu-01.kc-usercontent.com/f6cd2b46-8bba-0192-295a-67d84f619e7a/628c62a5-57f2-4349-919f-d9ae727bf81a/Website%20products%20shotsWL_Engine%20oil%20Engine%20oil.jpg"
-    },
-    {
-      id: 3,
-      name: "75W90 Engine Oil",
-      category: "Engine Oils",
-      description: "Heavy-duty engine oil for high-mileage vehicles",
-      quantity: 15,
-      image: "https://assets-eu-01.kc-usercontent.com/f6cd2b46-8bba-0192-295a-67d84f619e7a/a1dcb710-eca6-4668-b27f-669cce5204bf/Website%20products%20shotsWL_Haudralic%20Transmission%20HD%20%281%29.jpg?auto=format"  
-    },
-    {
-      id: 4,
-      name: "Oil Filter",
-      category: "Filters",
-      description: "Premium oil filter for extended engine life",
-      quantity: 64,
-      image: "https://media-www.canadiantire.ca/product/automotive/light-auto-parts/oil-filters/0275522/ph6017a-fram-extra-guard-oil-filter-c293be9e-1811-4866-a8bf-81530f4e3ca0-jpgrendition.jpg?imdensity=1&imwidth=1244&impolicy=gZoom" 
-    },
-    {
-      id: 5,
-      name: "Air Filter",
-      category: "Filters",
-      description: "High-flow air filter for improved engine performance",
-      quantity: 52,
-      image: "https://www.highfil.com/UpLoadFile/ProductImages/202306/e2a5f4542a214ba38b72ef4e736066f5_water.jpg" 
-    },
-    {
-      id: 6,
-      name: "Cabin Air Filter",
-      category: "Filters",
-      description: "Charcoal cabin air filter for improved air quality",
-      quantity: 28,
-      image: "https://www.fcpeuro.com/public/assets/products/566352/large/F2324083-5B84-4F9E-A931-F58B466DB596-2.jpg?1693491945"   
-    },
-    {
-      id: 7,
-      name: "Brake Pads",
-      category: "Brake Systems",
-      description: "Ceramic brake pads for quiet operation and clean performance",
-      quantity: 22,
-      image: "https://www.aftermarket.astemo.com/emea/en/motorcycle/assets/img/nissin/brakepads/2P-202NS.jpg" 
-    },
-    {
-      id: 8,
-      name: "Brake Rotors",
-      category: "Brake Systems",
-      description: "Premium drilled and slotted brake rotors for improved cooling",
-      quantity: 18,
-      image: "https://www.minitruckusa.com/media/catalog/product/cache/1/image/9df78eab33525d08d6e5fb8d27136e95/i/m/image1_7_.jpeg" 
-    },
-    {
-      id: 9,
-      name: "Multi-Purpose Grease",
-      category: "Lubricants",
-      description: "High-temperature grease for chassis and bearing applications",
-      quantity: 35,
-      image: "https://media-www.canadiantire.ca/product/automotive/auto-maintenance/auto-fluids/0381537/wd-40-lube-3-78l-6f67ebb8-d764-482c-bc95-f996ecde1e5b-jpgrendition.jpg?imdensity=1&imwidth=1244&impolicy=gZoom"  
-    },
-    {
-      id: 10,
-      name: " Gear Oil",
-      category: "Lubricants",
-      description: "75W-90 synthetic gear oil for differentials and transmissions",
-      quantity: 24,
-      image: "https://media-www.canadiantire.ca/product/automotive/auto-maintenance/specialty-oil-lubricants/0280248/motomaster-5l-synthetic-gear-oil-jug-e0f6ff9b-7a1a-4fe5-ae2f-f811d1c12171-jpgrendition.jpg?imdensity=1&imwidth=1244&impolicy=gZoom"
-    }
-  ]);
-
+  const supabase = createClientComponentClient();
+  
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [editQuantity, setEditQuantity] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newItem, setNewItem] = useState({
+    name: '',
+    category: '',
+    description: '',
+    quantity: 0,
+    price: '',
+    min_stock_level: 10,
+    image_url: '',
+    sku: ''
+  });
 
-  // Color scheme - Orange dominant (60-70%) with white (30-40%)
+  // Color scheme - Red accent (#dc2626) with dark theme
   const colors = {
-    primary: '#FF6B35',
-    primaryLight: '#FF8C42',
-    primaryDark: '#E55A2B',
-    primaryExtraLight: '#FFE4D6',
-    background: '#FFFFFF',
-    surface: '#FFF5F0',
-    surfaceLight: '#FFECE6',
-    surfaceDark: '#FFD9CC',
-    text: '#1E293B',
-    textSecondary: '#475569',
-    textMuted: '#64748B',
-    success: '#10B981',
-    warning: '#F59E0B',
-    error: '#EF4444',
-    info: '#3B82F6'
+    primary: '#dc2626',
+    primaryLight: '#ef4444',
+    primaryDark: '#b91c1c',
+    background: '#0a0a0a',
+    surface: 'rgba(255, 255, 255, 0.05)',
+    surfaceLight: 'rgba(255, 255, 255, 0.08)',
+    surfaceDark: 'rgba(255, 255, 255, 0.02)',
+    text: '#ffffff',
+    textSecondary: 'rgba(255, 255, 255, 0.7)',
+    textMuted: 'rgba(255, 255, 255, 0.5)',
+    success: '#10b981',
+    warning: '#f59e0b',
+    error: '#ef4444',
+    info: '#3b82f6',
+    border: 'rgba(255, 255, 255, 0.1)',
+    borderLight: 'rgba(255, 255, 255, 0.2)'
+  };
+
+  // Fetch inventory from Supabase
+  useEffect(() => {
+    fetchInventory();
+  }, []);
+
+  const fetchInventory = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('inventory')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching inventory:', error);
+        throw error;
+      }
+
+      setInventory(data || []);
+    } catch (error) {
+      console.error('Error loading inventory:', error);
+      alert('Error loading inventory data');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleBackToDashboard = () => {
@@ -140,13 +105,94 @@ const AdminInventory = () => {
     setEditingItem(null);
   };
 
-  const saveQuantity = () => {
+  const saveQuantity = async () => {
     if (editingItem) {
-      const updatedInventory = inventory.map(item => 
-        item.id === editingItem.id ? { ...item, quantity: editQuantity } : item
-      );
-      setInventory(updatedInventory);
-      closeEditModal();
+      try {
+        const { error } = await supabase
+          .from('inventory')
+          .update({ quantity: editQuantity })
+          .eq('id', editingItem.id);
+
+        if (error) throw error;
+
+        // Update local state
+        setInventory(prev => prev.map(item => 
+          item.id === editingItem.id ? { ...item, quantity: editQuantity } : item
+        ));
+        closeEditModal();
+        alert('Quantity updated successfully!');
+      } catch (error) {
+        console.error('Error updating quantity:', error);
+        alert('Error updating quantity');
+      }
+    }
+  };
+
+  const handleDeleteItem = async (itemId: string, itemName: string) => {
+    if (window.confirm(`Are you sure you want to delete "${itemName}"?`)) {
+      try {
+        const { error } = await supabase
+          .from('inventory')
+          .delete()
+          .eq('id', itemId);
+
+        if (error) throw error;
+
+        // Update local state
+        setInventory(prev => prev.filter(item => item.id !== itemId));
+        alert('Item deleted successfully!');
+      } catch (error) {
+        console.error('Error deleting item:', error);
+        alert('Error deleting item');
+      }
+    }
+  };
+
+  const handleAddItem = async () => {
+    // Basic validation
+    if (!newItem.name || !newItem.category || !newItem.description) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('inventory')
+        .insert([{
+          name: newItem.name,
+          category: newItem.category,
+          description: newItem.description,
+          quantity: newItem.quantity,
+          price: newItem.price ? parseFloat(newItem.price) : null,
+          min_stock_level: newItem.min_stock_level,
+          image_url: newItem.image_url,
+          sku: newItem.sku || null
+        }])
+        .select();
+
+      if (error) throw error;
+
+      // Update local state
+      if (data && data[0]) {
+        setInventory(prev => [data[0], ...prev]);
+      }
+
+      // Reset form and close modal
+      setNewItem({
+        name: '',
+        category: '',
+        description: '',
+        quantity: 0,
+        price: '',
+        min_stock_level: 10,
+        image_url: '',
+        sku: ''
+      });
+      setShowAddModal(false);
+      alert('Item added successfully!');
+    } catch (error) {
+      console.error('Error adding item:', error);
+      alert('Error adding item');
     }
   };
 
@@ -161,41 +207,86 @@ const AdminInventory = () => {
   // Get unique categories for filter dropdown
   const categories = ['All Categories', ...new Set(inventory.map(item => item.category))];
 
+  // Sample categories for new items
+  const sampleCategories = [
+    'Engine Oils',
+    'Filters',
+    'Brake Systems',
+    'Lubricants',
+    'Electrical',
+    'Suspension',
+    'Cooling System',
+    'Exhaust System',
+    'Transmission',
+    'Accessories'
+  ];
+
+  if (loading) {
+    return (
+      <div style={{ 
+        background: colors.background,
+        minHeight: '100vh', 
+        color: colors.text,
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{
+            width: '50px',
+            height: '50px',
+            border: `4px solid ${colors.border}`,
+            borderTop: `4px solid ${colors.primary}`,
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 1rem'
+          }} />
+          <p style={{ color: colors.primary, fontSize: '1.2rem', fontWeight: '600' }}>Loading Inventory...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ 
       background: colors.background,
       minHeight: '100vh', 
       color: colors.text,
-      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
     }}>
-      {/* Header - Orange Dominant */}
+      {/* Header - Dark with Red Accent */}
       <header style={{
         padding: '1.5rem 2rem',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        backgroundColor: colors.primary,
+        backgroundColor: 'rgba(0, 0, 0, 0.95)',
+        borderBottom: `1px solid ${colors.border}`,
         position: 'sticky',
         top: 0,
-        zIndex: 50
+        zIndex: 50,
+        backdropFilter: 'blur(10px)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <h1 style={{ 
             fontSize: '1.8rem', 
-            fontWeight: '800',
-            color: colors.background,
+            fontWeight: '700',
+            color: colors.primary,
             margin: 0,
             cursor: 'pointer'
           }} onClick={handleBackToDashboard}>
-            SUNNY AUTO
+            <span style={{ color: colors.primary }}>Sunny</span>
+            <span style={{ color: colors.text }}>Auto</span>
           </h1>
           <div style={{ 
             color: colors.primary, 
             fontSize: '0.9rem',
             fontWeight: '500',
             padding: '0.25rem 0.75rem',
-            backgroundColor: colors.background,
-            borderRadius: '20px'
+            backgroundColor: 'rgba(220, 38, 38, 0.2)',
+            borderRadius: '20px',
+            border: `1px solid ${colors.primary}`
           }}>
             INVENTORY MANAGEMENT
           </div>
@@ -203,25 +294,50 @@ const AdminInventory = () => {
         
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           <button 
+            onClick={() => setShowAddModal(true)}
+            style={{
+              backgroundColor: colors.primary,
+              color: colors.text,
+              padding: '0.75rem 1.5rem',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: '600',
+              fontSize: '0.9rem',
+              transition: 'all 0.2s ease',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = colors.primaryDark}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = colors.primary}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+            Add New Item
+          </button>
+          
+          <button 
             onClick={handleLogout}
             style={{
               backgroundColor: 'transparent',
-              color: colors.background,
+              color: colors.primary,
               padding: '0.75rem 1.5rem',
-              border: `2px solid ${colors.background}`,
-              borderRadius: '12px',
+              border: `1px solid ${colors.primary}`,
+              borderRadius: '8px',
               cursor: 'pointer',
               fontWeight: '600',
               fontSize: '0.9rem',
               transition: 'all 0.2s ease'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = colors.background;
-              e.currentTarget.style.color = colors.primary;
+              e.currentTarget.style.backgroundColor = colors.primary;
+              e.currentTarget.style.color = colors.text;
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = 'transparent';
-              e.currentTarget.style.color = colors.background;
+              e.currentTarget.style.color = colors.primary;
             }}
           >
             Logout
@@ -250,7 +366,7 @@ const AdminInventory = () => {
             <div>
               <h2 style={{ 
                 fontSize: '2rem', 
-                fontWeight: '800',
+                fontWeight: '700',
                 color: colors.primary,
                 margin: '0 0 0.5rem 0'
               }}>
@@ -270,12 +386,22 @@ const AdminInventory = () => {
               <div style={{ 
                 display: 'flex', 
                 alignItems: 'center', 
-                backgroundColor: colors.background,
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
                 padding: '0.5rem 1rem',
-                borderRadius: '12px',
-                border: `2px solid ${colors.primaryLight}`,
-                width: '280px'
-              }}>
+                borderRadius: '8px',
+                border: `1px solid ${colors.border}`,
+                width: '280px',
+                transition: 'all 0.2s ease'
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = colors.primary;
+                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = colors.border;
+                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+              }}
+              >
                 <input 
                   type="text" 
                   placeholder="Search inventory..." 
@@ -301,13 +427,20 @@ const AdminInventory = () => {
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
                 style={{ 
-                  backgroundColor: colors.background, 
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)', 
                   color: colors.text, 
-                  border: `2px solid ${colors.primaryLight}`, 
-                  borderRadius: '12px',
+                  border: `1px solid ${colors.border}`, 
+                  borderRadius: '8px',
                   padding: '0.5rem 1rem',
                   fontSize: '0.9rem',
-                  fontWeight: '500'
+                  fontWeight: '500',
+                  transition: 'all 0.2s ease'
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = colors.primary;
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = colors.border;
                 }}
               >
                 {categories.map(category => (
@@ -328,9 +461,20 @@ const AdminInventory = () => {
               backgroundColor: colors.surface,
               padding: '1.5rem',
               borderRadius: '12px',
-              border: `2px solid ${colors.primary}`,
-              textAlign: 'center'
-            }}>
+              border: `1px solid ${colors.primary}`,
+              textAlign: 'center',
+              backdropFilter: 'blur(10px)',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-5px)';
+              e.currentTarget.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.3)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}
+            >
               <div style={{ fontSize: '2rem', fontWeight: '800', color: colors.primary }}>
                 {inventory.length}
               </div>
@@ -343,11 +487,22 @@ const AdminInventory = () => {
               backgroundColor: colors.surface,
               padding: '1.5rem',
               borderRadius: '12px',
-              border: `2px solid ${colors.success}`,
-              textAlign: 'center'
-            }}>
+              border: `1px solid ${colors.success}`,
+              textAlign: 'center',
+              backdropFilter: 'blur(10px)',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-5px)';
+              e.currentTarget.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.3)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}
+            >
               <div style={{ fontSize: '2rem', fontWeight: '800', color: colors.success }}>
-                {inventory.filter(item => item.quantity < 20).length}
+                {inventory.filter(item => item.quantity < item.min_stock_level).length}
               </div>
               <div style={{ fontSize: '0.9rem', color: colors.textSecondary, fontWeight: '600' }}>
                 Low Stock Items
@@ -358,9 +513,20 @@ const AdminInventory = () => {
               backgroundColor: colors.surface,
               padding: '1.5rem',
               borderRadius: '12px',
-              border: `2px solid ${colors.warning}`,
-              textAlign: 'center'
-            }}>
+              border: `1px solid ${colors.warning}`,
+              textAlign: 'center',
+              backdropFilter: 'blur(10px)',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-5px)';
+              e.currentTarget.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.3)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}
+            >
               <div style={{ fontSize: '2rem', fontWeight: '800', color: colors.warning }}>
                 {categories.length - 1}
               </div>
@@ -383,30 +549,33 @@ const AdminInventory = () => {
                 style={{
                   backgroundColor: colors.surface,
                   padding: '1.5rem',
-                  borderRadius: '16px',
-                  border: `2px solid ${colors.primaryLight}`,
+                  borderRadius: '12px',
+                  border: `1px solid ${colors.border}`,
                   textAlign: 'center',
                   transition: 'all 0.3s ease',
                   cursor: 'pointer',
                   position: 'relative',
-                  overflow: 'hidden'
+                  overflow: 'hidden',
+                  backdropFilter: 'blur(10px)'
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-5px)';
                   e.currentTarget.style.borderColor = colors.primary;
+                  e.currentTarget.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.3)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.borderColor = colors.primaryLight;
+                  e.currentTarget.style.borderColor = colors.border;
+                  e.currentTarget.style.boxShadow = 'none';
                 }}
               >      
                 <div 
                   style={{ 
                     height: '180px', 
                     overflow: 'hidden', 
-                    borderRadius: '12px', 
+                    borderRadius: '8px', 
                     marginBottom: '1rem',
-                    border: `2px solid ${colors.surfaceDark}`
+                    border: `1px solid ${colors.border}`
                   }}
                   onMouseEnter={(e) => {
                     const img = e.currentTarget.querySelector('img');
@@ -418,7 +587,7 @@ const AdminInventory = () => {
                   }}
                 >
                   <img 
-                    src={item.image} 
+                    src={item.image_url || 'https://via.placeholder.com/300x180/1f2937/6b7280?text=No+Image'} 
                     alt={item.name}
                     style={{ 
                       width: '100%', 
@@ -431,7 +600,7 @@ const AdminInventory = () => {
                 
                 <div style={{ 
                   display: 'inline-block',
-                  backgroundColor: colors.primaryExtraLight, 
+                  backgroundColor: 'rgba(220, 38, 38, 0.2)', 
                   color: colors.primary, 
                   padding: '0.25rem 0.75rem', 
                   borderRadius: '20px', 
@@ -461,6 +630,17 @@ const AdminInventory = () => {
                 }}>
                   {item.description}
                 </p>
+
+                {item.price && (
+                  <div style={{ 
+                    color: colors.success, 
+                    fontWeight: '700',
+                    fontSize: '1rem',
+                    marginBottom: '0.5rem'
+                  }}>
+                    ${item.price}
+                  </div>
+                )}
                 
                 <div style={{ 
                   display: 'flex', 
@@ -468,38 +648,61 @@ const AdminInventory = () => {
                   alignItems: 'center', 
                   marginTop: '1rem',
                   paddingTop: '1rem',
-                  borderTop: `1px solid ${colors.surfaceDark}`
+                  borderTop: `1px solid ${colors.border}`
                 }}>
                   <div>
                     <span style={{ 
                       fontWeight: '700', 
-                      color: item.quantity < 20 ? colors.error : colors.primary,
+                      color: item.quantity < item.min_stock_level ? colors.error : colors.primary,
                       fontSize: '1rem'
                     }}>
-                      Quantity: {item.quantity}
+                      Stock: {item.quantity}
                     </span>
                   </div>
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openEditModal(item);
-                    }}
-                    style={{
-                      backgroundColor: colors.primary,
-                      color: colors.background,
-                      border: 'none',
-                      padding: '0.5rem 1rem',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      fontWeight: '600',
-                      fontSize: '0.9rem',
-                      transition: 'background-color 0.2s ease'
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = colors.primaryDark}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = colors.primary}
-                  >
-                    Edit Stock
-                  </button>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openEditModal(item);
+                      }}
+                      style={{
+                        backgroundColor: colors.primary,
+                        color: colors.text,
+                        border: 'none',
+                        padding: '0.5rem 0.75rem',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontWeight: '600',
+                        fontSize: '0.8rem',
+                        transition: 'background-color 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = colors.primaryDark}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = colors.primary}
+                    >
+                      Edit
+                    </button>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteItem(item.id, item.name);
+                      }}
+                      style={{
+                        backgroundColor: colors.error,
+                        color: colors.text,
+                        border: 'none',
+                        padding: '0.5rem 0.75rem',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontWeight: '600',
+                        fontSize: '0.8rem',
+                        transition: 'background-color 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = colors.error}
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -512,10 +715,11 @@ const AdminInventory = () => {
               padding: '3rem', 
               color: colors.textSecondary,
               backgroundColor: colors.surface,
-              borderRadius: '16px',
-              border: `2px solid ${colors.primaryLight}`
+              borderRadius: '12px',
+              border: `1px solid ${colors.border}`,
+              backdropFilter: 'blur(10px)'
             }}>
-              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: colors.primary, marginBottom: '1rem' }}>
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: colors.primary, marginBottom: '1rem', opacity: 0.5 }}>
                 <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
                 <line x1="8" y1="8" x2="16" y2="16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                 <line x1="16" y1="8" x2="8" y2="16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
@@ -532,9 +736,9 @@ const AdminInventory = () => {
               style={{
                 backgroundColor: 'transparent',
                 color: colors.primary,
-                border: `2px solid ${colors.primary}`,
+                border: `1px solid ${colors.primary}`,
                 padding: '0.75rem 1.5rem',
-                borderRadius: '12px',
+                borderRadius: '8px',
                 cursor: 'pointer',
                 fontWeight: '600',
                 fontSize: '1rem',
@@ -545,7 +749,7 @@ const AdminInventory = () => {
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = colors.primary;
-                e.currentTarget.style.color = colors.background;
+                e.currentTarget.style.color = colors.text;
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = 'transparent';
@@ -561,7 +765,7 @@ const AdminInventory = () => {
         </div>
       </div>
 
-      {/* Edit Modal */}
+      {/* Edit Quantity Modal */}
       {editingItem && (
         <div style={{
           position: 'fixed',
@@ -579,16 +783,17 @@ const AdminInventory = () => {
           <div style={{
             backgroundColor: colors.background,
             padding: '2rem',
-            borderRadius: '16px',
-            border: `2px solid ${colors.primary}`,
+            borderRadius: '12px',
+            border: `1px solid ${colors.primary}`,
             width: '400px',
-            maxWidth: '90%'
+            maxWidth: '90%',
+            backdropFilter: 'blur(10px)'
           }}>
             <h2 style={{ 
               color: colors.primary, 
               marginBottom: '1.5rem', 
               textAlign: 'center',
-              fontSize: '1.5rem',
+              fontSize: '1.3rem',
               fontWeight: '700'
             }}>
               Update Stock Level
@@ -611,8 +816,8 @@ const AdminInventory = () => {
                 style={{
                   width: '100%',
                   padding: '0.75rem',
-                  backgroundColor: colors.surface,
-                  border: `2px solid ${colors.primaryLight}`,
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                  border: `1px solid ${colors.border}`,
                   borderRadius: '8px',
                   color: colors.text,
                   fontWeight: '500'
@@ -638,8 +843,8 @@ const AdminInventory = () => {
                 style={{
                   width: '100%',
                   padding: '0.75rem',
-                  backgroundColor: colors.surface,
-                  border: `2px solid ${colors.primaryLight}`,
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                  border: `1px solid ${colors.border}`,
                   borderRadius: '8px',
                   color: colors.text,
                   fontSize: '1.1rem',
@@ -654,7 +859,7 @@ const AdminInventory = () => {
                 style={{
                   backgroundColor: 'transparent',
                   color: colors.primary,
-                  border: `2px solid ${colors.primary}`,
+                  border: `1px solid ${colors.primary}`,
                   padding: '0.75rem 1.5rem',
                   borderRadius: '8px',
                   cursor: 'pointer',
@@ -664,7 +869,7 @@ const AdminInventory = () => {
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = colors.primary;
-                  e.currentTarget.style.color = colors.background;
+                  e.currentTarget.style.color = colors.text;
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = 'transparent';
@@ -678,7 +883,7 @@ const AdminInventory = () => {
                 onClick={saveQuantity}
                 style={{
                   backgroundColor: colors.primary,
-                  color: colors.background,
+                  color: colors.text,
                   padding: '0.75rem 1.5rem',
                   border: 'none',
                   borderRadius: '8px',
@@ -696,6 +901,326 @@ const AdminInventory = () => {
           </div>
         </div>
       )}
+
+      {/* Add New Item Modal */}
+      {showAddModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000,
+          padding: '1rem'
+        }}>
+          <div style={{
+            backgroundColor: colors.background,
+            padding: '2rem',
+            borderRadius: '12px',
+            border: `1px solid ${colors.primary}`,
+            width: '500px',
+            maxWidth: '90%',
+            maxHeight: '90vh',
+            overflowY: 'auto',
+            backdropFilter: 'blur(10px)'
+          }}>
+            <h2 style={{ 
+              color: colors.primary, 
+              marginBottom: '1.5rem', 
+              textAlign: 'center',
+              fontSize: '1.3rem',
+              fontWeight: '700'
+            }}>
+              Add New Inventory Item
+            </h2>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={{ 
+                  display: 'block', 
+                  color: colors.text, 
+                  marginBottom: '0.5rem', 
+                  fontWeight: '600',
+                  fontSize: '0.9rem'
+                }}>
+                  Product Name *
+                </label>
+                <input 
+                  type="text" 
+                  value={newItem.name}
+                  onChange={(e) => setNewItem(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Enter product name"
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    border: `1px solid ${colors.border}`,
+                    borderRadius: '8px',
+                    color: colors.text,
+                    fontSize: '0.9rem'
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ 
+                  display: 'block', 
+                  color: colors.text, 
+                  marginBottom: '0.5rem', 
+                  fontWeight: '600',
+                  fontSize: '0.9rem'
+                }}>
+                  Category *
+                </label>
+                <select 
+                  value={newItem.category}
+                  onChange={(e) => setNewItem(prev => ({ ...prev, category: e.target.value }))}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    border: `1px solid ${colors.border}`,
+                    borderRadius: '8px',
+                    color: colors.text,
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  <option value="">Select Category</option>
+                  {sampleCategories.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label style={{ 
+                  display: 'block', 
+                  color: colors.text, 
+                  marginBottom: '0.5rem', 
+                  fontWeight: '600',
+                  fontSize: '0.9rem'
+                }}>
+                  Description *
+                </label>
+                <textarea 
+                  value={newItem.description}
+                  onChange={(e) => setNewItem(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Enter product description"
+                  rows={3}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    border: `1px solid ${colors.border}`,
+                    borderRadius: '8px',
+                    color: colors.text,
+                    fontSize: '0.9rem',
+                    resize: 'vertical'
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label style={{ 
+                    display: 'block', 
+                    color: colors.text, 
+                    marginBottom: '0.5rem', 
+                    fontWeight: '600',
+                    fontSize: '0.9rem'
+                  }}>
+                    Quantity
+                  </label>
+                  <input 
+                    type="number" 
+                    value={newItem.quantity}
+                    onChange={(e) => setNewItem(prev => ({ ...prev, quantity: parseInt(e.target.value) || 0 }))}
+                    min="0"
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                      border: `1px solid ${colors.border}`,
+                      borderRadius: '8px',
+                      color: colors.text,
+                      fontSize: '0.9rem'
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ 
+                    display: 'block', 
+                    color: colors.text, 
+                    marginBottom: '0.5rem', 
+                    fontWeight: '600',
+                    fontSize: '0.9rem'
+                  }}>
+                    Price ($)
+                  </label>
+                  <input 
+                    type="number" 
+                    value={newItem.price}
+                    onChange={(e) => setNewItem(prev => ({ ...prev, price: e.target.value }))}
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                      border: `1px solid ${colors.border}`,
+                      borderRadius: '8px',
+                      color: colors.text,
+                      fontSize: '0.9rem'
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label style={{ 
+                    display: 'block', 
+                    color: colors.text, 
+                    marginBottom: '0.5rem', 
+                    fontWeight: '600',
+                    fontSize: '0.9rem'
+                  }}>
+                    Min Stock Level
+                  </label>
+                  <input 
+                    type="number" 
+                    value={newItem.min_stock_level}
+                    onChange={(e) => setNewItem(prev => ({ ...prev, min_stock_level: parseInt(e.target.value) || 10 }))}
+                    min="1"
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                      border: `1px solid ${colors.border}`,
+                      borderRadius: '8px',
+                      color: colors.text,
+                      fontSize: '0.9rem'
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ 
+                    display: 'block', 
+                    color: colors.text, 
+                    marginBottom: '0.5rem', 
+                    fontWeight: '600',
+                    fontSize: '0.9rem'
+                  }}>
+                    SKU
+                  </label>
+                  <input 
+                    type="text" 
+                    value={newItem.sku}
+                    onChange={(e) => setNewItem(prev => ({ ...prev, sku: e.target.value }))}
+                    placeholder="Product SKU"
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                      border: `1px solid ${colors.border}`,
+                      borderRadius: '8px',
+                      color: colors.text,
+                      fontSize: '0.9rem'
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ 
+                  display: 'block', 
+                  color: colors.text, 
+                  marginBottom: '0.5rem', 
+                  fontWeight: '600',
+                  fontSize: '0.9rem'
+                }}>
+                  Image URL
+                </label>
+                <input 
+                  type="text" 
+                  value={newItem.image_url}
+                  onChange={(e) => setNewItem(prev => ({ ...prev, image_url: e.target.value }))}
+                  placeholder="https://example.com/image.jpg"
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    border: `1px solid ${colors.border}`,
+                    borderRadius: '8px',
+                    color: colors.text,
+                    fontSize: '0.9rem'
+                  }}
+                />
+              </div>
+            </div>
+            
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '2rem' }}>
+              <button 
+                onClick={() => setShowAddModal(false)}
+                style={{
+                  backgroundColor: 'transparent',
+                  color: colors.primary,
+                  border: `1px solid ${colors.primary}`,
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  transition: 'all 0.2s ease',
+                  flex: 1
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = colors.primary;
+                  e.currentTarget.style.color = colors.text;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = colors.primary;
+                }}
+              >
+                Cancel
+              </button>
+              
+              <button 
+                onClick={handleAddItem}
+                style={{
+                  backgroundColor: colors.primary,
+                  color: colors.text,
+                  padding: '0.75rem 1.5rem',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  transition: 'background-color 0.2s ease',
+                  flex: 1
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = colors.primaryDark}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = colors.primary}
+              >
+                Add Item
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style jsx>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 };
