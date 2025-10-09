@@ -30,23 +30,24 @@ const AdminHome = () => {
   const [filteredAppointments, setFilteredAppointments] = useState<Appointment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Color scheme - Orange dominant (60-70%) with white (30-40%)
+  // Color scheme - Red accent (#dc2626) with dark theme
   const colors = {
-    primary: '#FF6B35',
-    primaryLight: '#FF8C42',
-    primaryDark: '#E55A2B',
-    primaryExtraLight: '#FFE4D6',
-    background: '#FFFFFF',
-    surface: '#FFF5F0',
-    surfaceLight: '#FFECE6',
-    surfaceDark: '#FFD9CC',
-    text: '#1E293B',
-    textSecondary: '#475569',
-    textMuted: '#64748B',
-    success: '#10B981',
-    warning: '#F59E0B',
-    error: '#EF4444',
-    info: '#3B82F6'
+    primary: '#dc2626',
+    primaryLight: '#ef4444',
+    primaryDark: '#b91c1c',
+    background: '#0a0a0a',
+    surface: 'rgba(255, 255, 255, 0.05)',
+    surfaceLight: 'rgba(255, 255, 255, 0.08)',
+    surfaceDark: 'rgba(255, 255, 255, 0.02)',
+    text: '#ffffff',
+    textSecondary: 'rgba(255, 255, 255, 0.7)',
+    textMuted: 'rgba(255, 255, 255, 0.5)',
+    success: '#10b981',
+    warning: '#f59e0b',
+    error: '#ef4444',
+    info: '#3b82f6',
+    border: 'rgba(255, 255, 255, 0.1)',
+    borderLight: 'rgba(255, 255, 255, 0.2)'
   };
 
   // Fetch appointments from Supabase
@@ -210,10 +211,10 @@ const AdminHome = () => {
   // Get status background color (lighter version)
   const getStatusBgColor = (status: string) => {
     switch (status) {
-      case 'completed': return '#D1FAE5';
-      case 'pending': return '#FEF3C7';
-      case 'cancelled': return '#FEE2E2';
-      default: return '#DBEAFE';
+      case 'completed': return 'rgba(16, 185, 129, 0.2)';
+      case 'pending': return 'rgba(245, 158, 11, 0.2)';
+      case 'cancelled': return 'rgba(239, 68, 68, 0.2)';
+      default: return 'rgba(59, 130, 246, 0.2)';
     }
   };
 
@@ -297,35 +298,40 @@ const AdminHome = () => {
       background: colors.background,
       minHeight: '100vh', 
       color: colors.text,
-      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
     }}>
-      {/* Header - Orange Dominant */}
+      {/* Header - Dark with Red Accent */}
       <header style={{
         padding: '1.5rem 2rem',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        backgroundColor: colors.primary,
+        backgroundColor: 'rgba(0, 0, 0, 0.95)',
+        borderBottom: `1px solid ${colors.border}`,
         position: 'sticky',
         top: 0,
-        zIndex: 50
+        zIndex: 50,
+        backdropFilter: 'blur(10px)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <h1 style={{ 
             fontSize: '1.8rem', 
-            fontWeight: '800',
-            color: colors.background,
+            fontWeight: '700',
+            color: colors.primary,
             margin: 0,
-          }}>
-            SUNNY AUTO
+            cursor: 'pointer'
+          }} onClick={() => router.push('/AdminHome')}>
+            <span style={{ color: colors.primary }}>Sunny</span>
+            <span style={{ color: colors.text }}>Auto</span>
           </h1>
           <div style={{ 
             color: colors.primary, 
             fontSize: '0.9rem',
             fontWeight: '500',
             padding: '0.25rem 0.75rem',
-            backgroundColor: colors.background,
-            borderRadius: '20px'
+            backgroundColor: 'rgba(220, 38, 38, 0.2)',
+            borderRadius: '20px',
+            border: `1px solid ${colors.primary}`
           }}>
             ADMIN PANEL
           </div>
@@ -340,13 +346,22 @@ const AdminHome = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{
                 padding: '0.75rem 1rem',
-                borderRadius: '12px',
-                backgroundColor: colors.background,
+                borderRadius: '8px',
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
                 color: colors.text,
                 width: '280px',
                 outline: 'none',
-                border: `2px solid ${colors.primaryLight}`,
-                fontSize: '0.9rem'
+                border: `1px solid ${colors.border}`,
+                fontSize: '0.9rem',
+                transition: 'all 0.2s ease'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = colors.primary;
+                e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = colors.border;
+                e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
               }}
             />
           </form>
@@ -355,12 +370,12 @@ const AdminHome = () => {
             <button 
               onClick={handleNotifications}
               style={{
-                backgroundColor: colors.background,
+                backgroundColor: 'transparent',
                 color: colors.primary,
                 width: '48px',
                 height: '48px',
-                borderRadius: '12px',
-                border: `2px solid ${colors.background}`,
+                borderRadius: '8px',
+                border: `1px solid ${colors.primary}`,
                 cursor: 'pointer',
                 fontSize: '1.2rem',
                 display: 'flex',
@@ -369,11 +384,11 @@ const AdminHome = () => {
                 transition: 'all 0.2s ease'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = colors.primaryLight;
-                e.currentTarget.style.color = colors.background;
+                e.currentTarget.style.backgroundColor = colors.primary;
+                e.currentTarget.style.color = colors.text;
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = colors.background;
+                e.currentTarget.style.backgroundColor = 'transparent';
                 e.currentTarget.style.color = colors.primary;
               }}
               title="Notifications"
@@ -387,8 +402,8 @@ const AdminHome = () => {
                   position: 'absolute',
                   top: '-2px',
                   right: '-2px',
-                  backgroundColor: colors.error,
-                  color: colors.background,
+                  backgroundColor: colors.primary,
+                  color: colors.text,
                   borderRadius: '50%',
                   width: '18px',
                   height: '18px',
@@ -407,11 +422,11 @@ const AdminHome = () => {
           <button 
             onClick={handleProfile}
             style={{
-              backgroundColor: colors.background,
-              color: colors.primary,
+              backgroundColor: colors.primary,
+              color: colors.text,
               width: '48px',
               height: '48px',
-              borderRadius: '12px',
+              borderRadius: '8px',
               border: 'none',
               cursor: 'pointer',
               fontSize: '1.2rem',
@@ -421,12 +436,10 @@ const AdminHome = () => {
               transition: 'background-color 0.2s ease'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = colors.primaryLight;
-              e.currentTarget.style.color = colors.background;
+              e.currentTarget.style.backgroundColor = colors.primaryDark;
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = colors.background;
-              e.currentTarget.style.color = colors.primary;
+              e.currentTarget.style.backgroundColor = colors.primary;
             }}
             title="Admin Profile"
           >
@@ -439,22 +452,22 @@ const AdminHome = () => {
             onClick={handleLogout}
             style={{
               backgroundColor: 'transparent',
-              color: colors.background,
+              color: colors.primary,
               padding: '0.75rem 1.5rem',
-              border: `2px solid ${colors.background}`,
-              borderRadius: '12px',
+              border: `1px solid ${colors.primary}`,
+              borderRadius: '8px',
               cursor: 'pointer',
               fontWeight: '600',
               fontSize: '0.9rem',
               transition: 'all 0.2s ease'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = colors.background;
-              e.currentTarget.style.color = colors.primary;
+              e.currentTarget.style.backgroundColor = colors.primary;
+              e.currentTarget.style.color = colors.text;
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = 'transparent';
-              e.currentTarget.style.color = colors.background;
+              e.currentTarget.style.color = colors.primary;
             }}
           >
             Logout
@@ -478,11 +491,11 @@ const AdminHome = () => {
           }}>
             <h2 style={{ 
               fontSize: '2.5rem', 
-              fontWeight: '800',
-              color: colors.primary,
+              fontWeight: '700',
+              color: colors.text,
               margin: '0 0 1rem 0',
             }}>
-              Welcome to <span style={{ color: colors.primaryDark }}>Sunny Auto</span> Admin
+              Welcome to <span style={{ color: colors.primary }}>Sunny Auto</span> Admin
             </h2>
             <p style={{ 
               fontSize: '1.1rem',
@@ -507,7 +520,7 @@ const AdminHome = () => {
             </div>
           </div>
 
-          {/* Stats Overview - Orange Dominant */}
+          {/* Stats Overview - Red Accent Cards */}
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
@@ -545,20 +558,23 @@ const AdminHome = () => {
               }
             ].map((stat, index) => (
               <div key={index} style={{ 
-                backgroundColor: stat.bgColor,
+                backgroundColor: colors.surface,
                 padding: '2rem',
-                borderRadius: '16px',
+                borderRadius: '12px',
                 textAlign: 'center',
-                transition: 'transform 0.2s ease',
-                border: `2px solid ${colors.primaryLight}`
+                transition: 'all 0.3s ease',
+                border: `1px solid ${colors.border}`,
+                backdropFilter: 'blur(10px)'
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = 'translateY(-5px)';
-                e.currentTarget.style.borderColor = colors.primary;
+                e.currentTarget.style.borderColor = stat.color;
+                e.currentTarget.style.boxShadow = `0 10px 30px rgba(0, 0, 0, 0.3)`;
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.borderColor = colors.primaryLight;
+                e.currentTarget.style.borderColor = colors.border;
+                e.currentTarget.style.boxShadow = 'none';
               }}
               >
                 <div style={{ 
@@ -616,22 +632,25 @@ const AdminHome = () => {
                     style={{
                       backgroundColor: colors.surface,
                       padding: '2rem',
-                      borderRadius: '16px',
+                      borderRadius: '12px',
                       cursor: 'pointer',
                       transition: 'all 0.3s ease',
                       textAlign: 'center',
-                      border: `2px solid ${colors.primaryLight}`
+                      border: `1px solid ${colors.border}`,
+                      backdropFilter: 'blur(10px)'
                     }}
                     onClick={card.onClick}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.backgroundColor = colors.surfaceLight;
                       e.currentTarget.style.transform = 'translateY(-5px)';
                       e.currentTarget.style.borderColor = colors.primary;
+                      e.currentTarget.style.boxShadow = `0 10px 30px rgba(0, 0, 0, 0.3)`;
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.backgroundColor = colors.surface;
                       e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.borderColor = colors.primaryLight;
+                      e.currentTarget.style.borderColor = colors.border;
+                      e.currentTarget.style.boxShadow = 'none';
                     }}
                   >
                     <div style={{ 
@@ -674,16 +693,17 @@ const AdminHome = () => {
                 
                 <div style={{
                   backgroundColor: colors.surface,
-                  borderRadius: '16px',
+                  borderRadius: '12px',
                   overflow: 'hidden',
-                  border: `2px solid ${colors.primaryLight}`
+                  border: `1px solid ${colors.border}`,
+                  backdropFilter: 'blur(10px)'
                 }}>
                   {realtimeAppointments.length > 0 ? (
                     <div>
                       {realtimeAppointments.map((appt, index) => (
                         <div key={appt.id} style={{
                           padding: '1.5rem',
-                          borderBottom: index < realtimeAppointments.length - 1 ? `1px solid ${colors.surfaceDark}` : 'none',
+                          borderBottom: index < realtimeAppointments.length - 1 ? `1px solid ${colors.border}` : 'none',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
@@ -717,7 +737,7 @@ const AdminHome = () => {
                                 borderRadius: '20px',
                                 fontSize: '0.75rem',
                                 fontWeight: '600',
-                                border: `1px solid ${getStatusColor(appt.status)}20`
+                                border: `1px solid ${getStatusColor(appt.status)}`
                               }}>
                                 {appt.status.toUpperCase()}
                               </span>
@@ -750,7 +770,7 @@ const AdminHome = () => {
                       textAlign: 'center',
                       color: colors.textSecondary
                     }}>
-                      <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📅</div>
+                      <div style={{ fontSize: '3rem', marginBottom: '1rem', opacity: 0.5 }}>📅</div>
                       <p style={{ margin: 0, fontWeight: '600' }}>No appointments for today</p>
                     </div>
                   )}
@@ -771,17 +791,18 @@ const AdminHome = () => {
               
               <div style={{
                 backgroundColor: colors.surface,
-                borderRadius: '16px',
+                borderRadius: '12px',
                 overflow: 'hidden',
-                border: `2px solid ${colors.primaryLight}`,
-                marginBottom: '2rem'
+                border: `1px solid ${colors.border}`,
+                marginBottom: '2rem',
+                backdropFilter: 'blur(10px)'
               }}>
                 {weekAppointments.length > 0 ? (
                   <div style={{ maxHeight: '500px', overflowY: 'auto' }}>
                     {weekAppointments.map((appt, index) => (
                       <div key={appt.id} style={{
                         padding: '1.5rem',
-                        borderBottom: index < weekAppointments.length - 1 ? `1px solid ${colors.surfaceDark}` : 'none',
+                        borderBottom: index < weekAppointments.length - 1 ? `1px solid ${colors.border}` : 'none',
                         transition: 'background-color 0.2s ease'
                       }}
                       onMouseEnter={(e) => {
@@ -799,10 +820,10 @@ const AdminHome = () => {
                         }}>
                           <div style={{
                             backgroundColor: colors.primary,
-                            color: colors.background,
+                            color: colors.text,
                             width: '40px',
                             height: '40px',
-                            borderRadius: '10px',
+                            borderRadius: '8px',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -840,7 +861,7 @@ const AdminHome = () => {
                                 borderRadius: '12px',
                                 fontSize: '0.75rem',
                                 fontWeight: '600',
-                                border: `1px solid ${getStatusColor(appt.status)}20`
+                                border: `1px solid ${getStatusColor(appt.status)}`
                               }}>
                                 {appt.status}
                               </span>
@@ -870,7 +891,7 @@ const AdminHome = () => {
                     textAlign: 'center',
                     color: colors.textSecondary
                   }}>
-                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⏰</div>
+                    <div style={{ fontSize: '3rem', marginBottom: '1rem', opacity: 0.5 }}>⏰</div>
                     <p style={{ margin: 0, fontWeight: '600' }}>No appointments this week</p>
                   </div>
                 )}
@@ -880,8 +901,9 @@ const AdminHome = () => {
               <div style={{ 
                 backgroundColor: colors.surface,
                 padding: '1.5rem',
-                borderRadius: '16px',
-                border: `2px solid ${colors.primaryLight}`
+                borderRadius: '12px',
+                border: `1px solid ${colors.border}`,
+                backdropFilter: 'blur(10px)'
               }}>
                 <h4 style={{ 
                   color: colors.primary,
@@ -903,9 +925,9 @@ const AdminHome = () => {
                       justifyContent: 'space-between',
                       alignItems: 'center',
                       padding: '0.75rem',
-                      backgroundColor: colors.background,
-                      borderRadius: '10px',
-                      border: `1px solid ${colors.primaryLight}`
+                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                      borderRadius: '8px',
+                      border: `1px solid ${colors.border}`
                     }}>
                       <span style={{ color: colors.textSecondary, fontSize: '0.9rem' }}>
                         {stat.label}

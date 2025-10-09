@@ -33,20 +33,24 @@ const AdminAppointments = () => {
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [editFormData, setEditFormData] = useState<Appointment | null>(null);
 
-  // Color scheme
+  // Color scheme - Red accent (#dc2626) with dark theme
   const colors = {
-    primary: '#C7613C',
-    primaryLight: '#e07a4f',
-    primaryDark: '#b55536',
-    background: 'white',
-    card: '#f8f9fa',
-    text: '#333',
-    textLight: '#6b7280',
-    border: '#e5e7eb',
+    primary: '#dc2626',
+    primaryLight: '#ef4444',
+    primaryDark: '#b91c1c',
+    background: '#0a0a0a',
+    surface: 'rgba(255, 255, 255, 0.05)',
+    surfaceLight: 'rgba(255, 255, 255, 0.08)',
+    surfaceDark: 'rgba(255, 255, 255, 0.02)',
+    text: '#ffffff',
+    textSecondary: 'rgba(255, 255, 255, 0.7)',
+    textMuted: 'rgba(255, 255, 255, 0.5)',
     success: '#10b981',
     warning: '#f59e0b',
     error: '#ef4444',
-    info: '#3b82f6'
+    info: '#3b82f6',
+    border: 'rgba(255, 255, 255, 0.1)',
+    borderLight: 'rgba(255, 255, 255, 0.2)'
   };
 
   useEffect(() => {
@@ -116,7 +120,7 @@ const AdminAppointments = () => {
       case 'confirmed': return colors.info;
       case 'completed': return colors.success;
       case 'cancelled': return colors.error;
-      default: return colors.textLight;
+      default: return colors.textMuted;
     }
   };
 
@@ -245,7 +249,7 @@ const AdminAppointments = () => {
         background: colors.background,
         minHeight: '100vh', 
         color: colors.text,
-        fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center'
@@ -271,7 +275,7 @@ const AdminAppointments = () => {
       background: colors.background,
       minHeight: '100vh', 
       color: colors.text,
-      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
     }}>
       {/* Header */}
       <header style={{
@@ -279,21 +283,28 @@ const AdminAppointments = () => {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        backgroundColor: colors.background,
-        borderBottom: `2px solid ${colors.primary}`,
-        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
+        backgroundColor: 'rgba(0, 0, 0, 0.95)',
+        borderBottom: `1px solid ${colors.border}`,
         position: 'sticky',
         top: 0,
-        zIndex: 50
+        zIndex: 50,
+        backdropFilter: 'blur(10px)'
       }}>
         <h1 style={{ 
-          fontSize: '2.5rem', 
+          fontSize: '1.8rem', 
           fontWeight: '700',
           color: colors.primary,
           margin: 0,
           cursor: 'pointer'
         }} onClick={handleBackToDashboard}>
-          SUNNY AUTO ADMIN
+          <span style={{ color: colors.primary }}>Sunny</span>
+          <span style={{ color: colors.text }}>Auto</span>
+          <span style={{ 
+            color: colors.primary, 
+            fontSize: '0.9rem',
+            marginLeft: '0.5rem',
+            fontWeight: '400'
+          }}>ADMIN</span>
         </h1>
         
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
@@ -338,7 +349,7 @@ const AdminAppointments = () => {
               color: 'white',
               width: '45px',
               height: '45px',
-              borderRadius: '10px',
+              borderRadius: '8px',
               border: 'none',
               cursor: 'pointer',
               fontSize: '1.2rem',
@@ -346,7 +357,7 @@ const AdminAppointments = () => {
               alignItems: 'center',
               justifyContent: 'center',
               transition: 'all 0.3s ease',
-              boxShadow: `0 4px 15px ${colors.primary}40`
+              boxShadow: `0 4px 15px rgba(220, 38, 38, 0.4)`
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = colors.primaryDark;
@@ -371,13 +382,13 @@ const AdminAppointments = () => {
         minHeight: 'calc(100vh - 100px)'
       }}>
         <div style={{ 
-          backgroundColor: colors.background,
+          backgroundColor: 'rgba(255, 255, 255, 0.03)',
           padding: '2.5rem',
-          borderRadius: '15px',
+          borderRadius: '12px',
           maxWidth: '1400px',
           margin: '0 auto',
           border: `1px solid ${colors.border}`,
-          boxShadow: '0 10px 40px rgba(0, 0, 0, 0.08)'
+          backdropFilter: 'blur(10px)'
         }}>
           <div style={{ 
             display: 'flex', 
@@ -388,20 +399,17 @@ const AdminAppointments = () => {
             gap: '1rem'
           }}>
             <h2 style={{ 
-              fontSize: '2.5rem', 
+              fontSize: '2rem', 
               fontWeight: '700',
               color: colors.primary,
-              margin: 0,
-              background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.primaryLight} 100%)`,
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent'
+              margin: 0
             }}>
               Appointment Management
             </h2>
             
             <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ color: colors.primary, fontWeight: '600', fontSize: '1.1rem' }}>Total Appointments:</span>
+                <span style={{ color: colors.primary, fontWeight: '600', fontSize: '1rem' }}>Total Appointments:</span>
                 <span style={{ 
                   backgroundColor: colors.primary, 
                   color: 'white', 
@@ -414,25 +422,27 @@ const AdminAppointments = () => {
                 </span>
               </div>
               
-              <label style={{ color: colors.primary, fontWeight: '600', fontSize: '1.1rem' }}>Filter by Date:</label>
+              <label style={{ color: colors.primary, fontWeight: '600', fontSize: '1rem' }}>Filter by Date:</label>
               <input 
                 type="date" 
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
                 style={{ 
-                  backgroundColor: colors.background, 
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)', 
                   color: colors.text, 
-                  border: `2px solid ${colors.primary}`, 
-                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`, 
+                  borderRadius: '8px',
                   padding: '0.75rem 1rem',
                   fontSize: '1rem',
                   fontWeight: '500',
                   transition: 'all 0.3s ease'
                 }}
                 onFocus={(e) => {
-                  e.target.style.boxShadow = `0 0 0 3px ${colors.primary}20`;
+                  e.target.style.borderColor = colors.primary;
+                  e.target.style.boxShadow = `0 0 0 3px rgba(220, 38, 38, 0.2)`;
                 }}
                 onBlur={(e) => {
+                  e.target.style.borderColor = colors.border;
                   e.target.style.boxShadow = 'none';
                 }}
               />
@@ -442,9 +452,9 @@ const AdminAppointments = () => {
           {/* Debug Information */}
           {appointments.length === 0 && (
             <div style={{
-              backgroundColor: colors.warning + '20',
+              backgroundColor: 'rgba(245, 158, 11, 0.2)',
               border: `1px solid ${colors.warning}`,
-              borderRadius: '10px',
+              borderRadius: '8px',
               padding: '1.5rem',
               marginBottom: '2rem',
               textAlign: 'center'
@@ -481,12 +491,12 @@ const AdminAppointments = () => {
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
             gap: '1.5rem',
-            backgroundColor: colors.card,
+            backgroundColor: colors.surface,
             padding: '2rem',
             borderRadius: '12px',
             border: `1px solid ${colors.border}`,
             marginBottom: '2rem',
-            boxShadow: '0 5px 20px rgba(0, 0, 0, 0.05)'
+            backdropFilter: 'blur(10px)'
           }}>
             {[
               { label: 'Total Appointments', count: filteredAppointments.length, color: colors.primary, icon: 'calendar' },
@@ -498,19 +508,19 @@ const AdminAppointments = () => {
               <div key={index} style={{ 
                 textAlign: 'center', 
                 padding: '1.5rem',
-                backgroundColor: colors.background,
-                borderRadius: '10px',
-                border: `2px solid ${stat.color}`,
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                borderRadius: '8px',
+                border: `1px solid ${stat.color}`,
                 transition: 'all 0.3s ease',
-                boxShadow: '0 4px 15px rgba(0, 0, 0, 0.05)'
+                backdropFilter: 'blur(10px)'
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = 'translateY(-5px)';
-                e.currentTarget.style.boxShadow = `0 8px 25px ${stat.color}40`;
+                e.currentTarget.style.boxShadow = `0 10px 30px rgba(0, 0, 0, 0.3)`;
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.05)';
+                e.currentTarget.style.boxShadow = 'none';
               }}
               >
                 <div style={{ marginBottom: '0.5rem' }}>
@@ -549,7 +559,7 @@ const AdminAppointments = () => {
                 <div style={{ fontSize: '2.5rem', color: stat.color, fontWeight: '800', marginBottom: '0.5rem' }}>
                   {stat.count}
                 </div>
-                <div style={{ color: colors.text, fontWeight: '600', fontSize: '1.1rem' }}>{stat.label}</div>
+                <div style={{ color: colors.text, fontWeight: '600', fontSize: '1rem' }}>{stat.label}</div>
               </div>
             ))}
           </div>
@@ -559,15 +569,15 @@ const AdminAppointments = () => {
             textAlign: 'center', 
             marginBottom: '2rem',
             padding: '1.5rem',
-            backgroundColor: colors.card,
-            borderRadius: '12px',
+            backgroundColor: colors.surface,
+            borderRadius: '8px',
             border: `1px solid ${colors.border}`,
-            background: `linear-gradient(135deg, ${colors.primary}15 0%, ${colors.primaryLight}15 100%)`
+            backdropFilter: 'blur(10px)'
           }}>
             <h3 style={{ 
               color: colors.primary, 
               margin: 0, 
-              fontSize: '1.5rem',
+              fontSize: '1.3rem',
               fontWeight: '700',
               display: 'flex',
               alignItems: 'center',
@@ -582,7 +592,7 @@ const AdminAppointments = () => {
               </svg>
               {formatDate(selectedDate)}
               <span style={{ 
-                fontSize: '1rem', 
+                fontSize: '0.9rem', 
                 backgroundColor: colors.primary, 
                 color: 'white', 
                 padding: '0.25rem 0.75rem', 
@@ -602,20 +612,20 @@ const AdminAppointments = () => {
                   <div 
                     key={appointment.id}
                     style={{
-                      backgroundColor: colors.background,
+                      backgroundColor: colors.surface,
                       padding: '2rem',
                       borderRadius: '12px',
-                      border: `2px solid ${getStatusColor(appointment.status)}`,
+                      border: `1px solid ${getStatusColor(appointment.status)}`,
                       transition: 'all 0.3s ease',
-                      boxShadow: '0 5px 20px rgba(0, 0, 0, 0.08)'
+                      backdropFilter: 'blur(10px)'
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.transform = 'translateY(-5px)';
-                      e.currentTarget.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.12)';
+                      e.currentTarget.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.3)';
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = '0 5px 20px rgba(0, 0, 0, 0.08)';
+                      e.currentTarget.style.boxShadow = 'none';
                     }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
@@ -630,7 +640,7 @@ const AdminAppointments = () => {
                           display: 'flex',
                           alignItems: 'center',
                           gap: '0.5rem',
-                          boxShadow: `0 4px 15px ${colors.primary}40`
+                          boxShadow: `0 4px 15px rgba(220, 38, 38, 0.4)`
                         }}>
                           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
@@ -666,7 +676,7 @@ const AdminAppointments = () => {
                             alignItems: 'center',
                             justifyContent: 'center',
                             transition: 'all 0.3s ease',
-                            boxShadow: `0 4px 15px ${colors.primary}40`
+                            boxShadow: `0 4px 15px rgba(220, 38, 38, 0.4)`
                           }}
                           onMouseEnter={(e) => {
                             e.currentTarget.style.backgroundColor = colors.primaryDark;
@@ -699,7 +709,7 @@ const AdminAppointments = () => {
                             alignItems: 'center',
                             justifyContent: 'center',
                             transition: 'all 0.3s ease',
-                            boxShadow: `0 4px 15px ${colors.warning}40`
+                            boxShadow: `0 4px 15px rgba(245, 158, 11, 0.4)`
                           }}
                           onMouseEnter={(e) => {
                             e.currentTarget.style.backgroundColor = '#d97706';
@@ -730,7 +740,7 @@ const AdminAppointments = () => {
                             alignItems: 'center',
                             justifyContent: 'center',
                             transition: 'all 0.3s ease',
-                            boxShadow: `0 4px 15px ${colors.error}40`
+                            boxShadow: `0 4px 15px rgba(239, 68, 68, 0.4)`
                           }}
                           onMouseEnter={(e) => {
                             e.currentTarget.style.backgroundColor = '#dc2626';
@@ -754,7 +764,7 @@ const AdminAppointments = () => {
                       <h3 style={{ 
                         color: colors.primary, 
                         marginBottom: '1rem', 
-                        fontSize: '1.4rem',
+                        fontSize: '1.3rem',
                         fontWeight: '700',
                         display: 'flex',
                         alignItems: 'center',
@@ -813,7 +823,7 @@ const AdminAppointments = () => {
                     
                     {appointment.images && appointment.images.length > 0 && (
                       <div>
-                        <h4 style={{ color: colors.primary, fontSize: '1.2rem', fontWeight: '700', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <h4 style={{ color: colors.primary, fontSize: '1.1rem', fontWeight: '700', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke="currentColor" strokeWidth="2"/>
                             <circle cx="8.5" cy="8.5" r="1.5" stroke="currentColor" strokeWidth="2"/>
@@ -827,7 +837,7 @@ const AdminAppointments = () => {
                               key={i} 
                               src={image} 
                               alt={`Vehicle image ${i + 1}`} 
-                              style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px', border: `2px solid ${colors.primary}`, boxShadow: `0 4px 15px ${colors.primary}40` }} 
+                              style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px', border: `2px solid ${colors.primary}`, boxShadow: `0 4px 15px rgba(220, 38, 38, 0.4)` }} 
                             />
                           ))}
                         </div>
@@ -839,12 +849,12 @@ const AdminAppointments = () => {
             ) : (
               <div style={{ 
                 textAlign: 'center', 
-                color: colors.textLight, 
-                fontSize: '1.3rem', 
+                color: colors.textMuted, 
+                fontSize: '1.1rem', 
                 padding: '4rem', 
                 border: `2px dashed ${colors.border}`, 
                 borderRadius: '12px',
-                backgroundColor: colors.card
+                backgroundColor: colors.surface
               }}>
                 <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ margin: '0 auto 1rem', opacity: 0.5 }}>
                   <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke="currentColor" strokeWidth="2"/>
@@ -854,7 +864,7 @@ const AdminAppointments = () => {
                 </svg>
                 No appointments found for {formatDate(selectedDate)}.
                 <br />
-                <span style={{ fontSize: '1rem', color: colors.textLight }}>
+                <span style={{ fontSize: '0.9rem', color: colors.textMuted }}>
                   Total appointments in system: {appointments.length}
                 </span>
               </div>
@@ -870,12 +880,12 @@ const AdminAppointments = () => {
                 color: 'white',
                 border: 'none',
                 padding: '1.2rem 2.5rem',
-                borderRadius: '12px',
+                borderRadius: '8px',
                 cursor: 'pointer',
                 fontWeight: '700',
-                fontSize: '1.2rem',
+                fontSize: '1.1rem',
                 transition: 'all 0.3s ease',
-                boxShadow: `0 6px 20px ${colors.primary}40`,
+                boxShadow: `0 6px 20px rgba(220, 38, 38, 0.4)`,
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.75rem',
@@ -884,12 +894,12 @@ const AdminAppointments = () => {
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = colors.primaryDark;
                 e.currentTarget.style.transform = 'translateY(-3px)';
-                e.currentTarget.style.boxShadow = `0 10px 30px ${colors.primary}60`;
+                e.currentTarget.style.boxShadow = `0 10px 30px rgba(220, 38, 38, 0.6)`;
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = colors.primary;
                 e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = `0 6px 20px ${colors.primary}40`;
+                e.currentTarget.style.boxShadow = `0 6px 20px rgba(220, 38, 38, 0.4)`;
               }}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -904,12 +914,12 @@ const AdminAppointments = () => {
       {/* Footer */}
       <footer style={{
         padding: '1.5rem 2rem',
-        backgroundColor: colors.card,
-        borderTop: `2px solid ${colors.primary}`,
+        backgroundColor: 'rgba(0, 0, 0, 0.95)',
+        borderTop: `1px solid ${colors.border}`,
         textAlign: 'center',
         marginTop: '3rem'
       }}>
-        <p style={{ margin: 0, color: colors.primary, fontSize: '1rem', fontWeight: '600' }}>
+        <p style={{ margin: 0, color: colors.textSecondary, fontSize: '0.9rem', fontWeight: '600' }}>
           &copy; 2025 Sunny Auto. All rights reserved.
         </p>
       </footer>
@@ -931,13 +941,14 @@ const AdminAppointments = () => {
           <div style={{
             backgroundColor: colors.background,
             padding: '2.5rem',
-            borderRadius: '15px',
+            borderRadius: '12px',
             width: '90%',
             maxWidth: '500px',
-            border: `2px solid ${colors.primary}`,
-            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
+            border: `1px solid ${colors.primary}`,
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+            backdropFilter: 'blur(10px)'
           }}>
-            <h3 style={{ color: colors.primary, marginTop: 0, marginBottom: '1.5rem', fontSize: '1.5rem', fontWeight: '700' }}>
+            <h3 style={{ color: colors.primary, marginTop: 0, marginBottom: '1.5rem', fontSize: '1.3rem', fontWeight: '700' }}>
               Upload Images for {selectedAppointment.name}
             </h3>
             <div style={{ marginBottom: '1.5rem' }}>
@@ -951,14 +962,14 @@ const AdminAppointments = () => {
                   width: '100%',
                   color: colors.text,
                   padding: '1rem',
-                  backgroundColor: colors.background,
-                  borderRadius: '10px',
-                  border: `2px solid ${colors.primary}`,
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                  borderRadius: '8px',
+                  border: `1px solid ${colors.border}`,
                   fontSize: '1rem',
                   fontWeight: '500'
                 }}
               />
-              <p style={{ color: colors.textLight, fontSize: '0.9rem', marginTop: '0.75rem' }}>
+              <p style={{ color: colors.textMuted, fontSize: '0.9rem', marginTop: '0.75rem' }}>
                 Select one or more images to upload for vehicle documentation.
               </p>
             </div>
@@ -966,7 +977,7 @@ const AdminAppointments = () => {
               <button 
                 onClick={handleCloseImageModal}
                 style={{
-                  backgroundColor: colors.textLight,
+                  backgroundColor: colors.textMuted,
                   color: 'white',
                   border: 'none',
                   padding: '0.75rem 1.5rem',
@@ -976,10 +987,10 @@ const AdminAppointments = () => {
                   transition: 'all 0.3s ease'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = colors.text;
+                  e.currentTarget.style.backgroundColor = colors.textSecondary;
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = colors.textLight;
+                  e.currentTarget.style.backgroundColor = colors.textMuted;
                 }}
               >
                 Close
@@ -1006,15 +1017,16 @@ const AdminAppointments = () => {
           <div style={{
             backgroundColor: colors.background,
             padding: '2.5rem',
-            borderRadius: '15px',
+            borderRadius: '12px',
             width: '90%',
             maxWidth: '600px',
-            border: `2px solid ${colors.primary}`,
+            border: `1px solid ${colors.primary}`,
             boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
             maxHeight: '90vh',
-            overflowY: 'auto'
+            overflowY: 'auto',
+            backdropFilter: 'blur(10px)'
           }}>
-            <h3 style={{ color: colors.primary, marginTop: 0, marginBottom: '1.5rem', fontSize: '1.5rem', fontWeight: '700' }}>
+            <h3 style={{ color: colors.primary, marginTop: 0, marginBottom: '1.5rem', fontSize: '1.3rem', fontWeight: '700' }}>
               Edit Appointment
             </h3>
             <form onSubmit={(e) => { e.preventDefault(); handleSaveEdit(); }}>
@@ -1117,7 +1129,7 @@ const AdminAppointments = () => {
                   type="button"
                   onClick={() => { setShowEditModal(false); setEditFormData(null); }}
                   style={{
-                    backgroundColor: colors.textLight,
+                    backgroundColor: colors.textMuted,
                     color: 'white',
                     border: 'none',
                     padding: '0.75rem 1.5rem',
@@ -1127,10 +1139,10 @@ const AdminAppointments = () => {
                     transition: 'all 0.3s ease'
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = colors.text;
+                    e.currentTarget.style.backgroundColor = colors.textSecondary;
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = colors.textLight;
+                    e.currentTarget.style.backgroundColor = colors.textMuted;
                   }}
                 >
                   Cancel
@@ -1173,10 +1185,10 @@ const AdminAppointments = () => {
 };
 
 const inputStyle = (colors: any) => ({
-  backgroundColor: colors.background,
+  backgroundColor: 'rgba(255, 255, 255, 0.05)',
   color: colors.text,
-  border: `2px solid ${colors.border}`,
-  borderRadius: '10px',
+  border: `1px solid ${colors.border}`,
+  borderRadius: '8px',
   padding: '0.75rem 1rem',
   fontSize: '1rem',
   fontWeight: '500',
