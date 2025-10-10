@@ -55,7 +55,8 @@ const Signup = () => {
     if (!validateForm()) return;
     setLoading(true);
     try {
-      const { data, error } = await supabase.auth.signUp({
+      // Step 1: Sign up the user
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
@@ -68,12 +69,45 @@ const Signup = () => {
           emailRedirectTo: `${location.origin}/auth/callback`,
         },
       });
-      if (error) throw error;
-      if (data) {
+
+      if (authError) throw authError;
+
+      if (authData.user) {
+        console.log('User created, now creating profile...');
+
+        // Step 2: Create profile in profiles table
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .insert([
+            {
+              id: authData.user.id,
+              email: formData.email,
+              first_name: formData.firstName,
+              last_name: formData.lastName,
+              full_name: `${formData.firstName} ${formData.lastName}`,
+              phone: formData.phone,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            }
+          ])
+          .select();
+
+        if (profileError) {
+          console.error('Profile creation error:', profileError);
+          
+          // If profile creation fails, try to get more specific error
+          if (profileError.code === '42501') {
+            throw new Error('Permission denied. Please contact support.');
+          } else if (profileError.code === '23505') {
+            throw new Error('Profile already exists for this user.');
+          } else {
+            throw new Error(`Failed to create profile: ${profileError.message}`);
+          }
+        }
+
+        console.log('Profile created successfully:', profileData);
+
         alert('Sign up successful! Please check your email for verification.');
-        
-
-
         router.push('/signin');
       }
     } catch (error: unknown) {
