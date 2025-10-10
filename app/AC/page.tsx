@@ -36,22 +36,22 @@ const AdminCustomers = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'all' | 'frequent' | 'new'>('all');
 
-  // Color scheme - White and Orange theme
+  // Color scheme - Black and Red theme
   const colors = {
-    primary: '#FF6B35',
-    primaryLight: '#FF8C42',
-    primaryDark: '#E55A2B',
-    background: '#FFFFFF',
-    surface: '#F8FAFC',
-    surfaceLight: '#F1F5F9',
-    surfaceDark: '#E2E8F0',
-    text: '#1E293B',
-    textSecondary: '#475569',
-    textMuted: '#64748B',
-    success: '#10B981',
-    warning: '#F59E0B',
-    error: '#EF4444',
-    info: '#3B82F6'
+    primary: '#dc2626',
+    primaryLight: '#ef4444',
+    primaryDark: '#b91c1c',
+    background: '#000000',
+    surface: '#0a0a0a',
+    surfaceLight: '#171717',
+    surfaceDark: '#262626',
+    text: '#ffffff',
+    textSecondary: '#d4d4d4',
+    textMuted: '#a3a3a3',
+    success: '#10b981',
+    warning: '#f59e0b',
+    error: '#ef4444',
+    info: '#3b82f6'
   };
 
   useEffect(() => {
@@ -188,18 +188,18 @@ const AdminCustomers = () => {
 
   const getStatusBgColor = (status: string) => {
     switch (status) {
-      case 'completed': return '#D1FAE5';
-      case 'pending': return '#FEF3C7';
-      case 'cancelled': return '#FEE2E2';
-      default: return '#DBEAFE';
+      case 'completed': return '#064e3b';
+      case 'pending': return '#78350f';
+      case 'cancelled': return '#7f1d1d';
+      default: return '#1e3a8a';
     }
   };
 
   const getLoyaltyLevel = (serviceCount: number) => {
-    if (serviceCount >= 10) return { level: 'VIP', color: '#8B5CF6', bgColor: '#EDE9FE' };
-    if (serviceCount >= 5) return { level: 'Regular', color: '#3B82F6', bgColor: '#DBEAFE' };
-    if (serviceCount >= 2) return { level: 'Returning', color: '#10B981', bgColor: '#D1FAE5' };
-    return { level: 'New', color: '#6B7280', bgColor: '#F3F4F6' };
+    if (serviceCount >= 10) return { level: 'VIP', color: '#c4b5fd', bgColor: '#4c1d95' };
+    if (serviceCount >= 5) return { level: 'Regular', color: '#93c5fd', bgColor: '#1e3a8a' };
+    if (serviceCount >= 2) return { level: 'Returning', color: '#6ee7b7', bgColor: '#064e3b' };
+    return { level: 'New', color: '#d4d4d4', bgColor: '#404040' };
   };
 
   if (loading) {
