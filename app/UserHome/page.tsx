@@ -3,12 +3,28 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { gsap } from 'gsap';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+
+interface Notification {
+  id: string;
+  user_id: string;
+  title: string;
+  message: string;
+  type: 'info' | 'warning' | 'success' | 'error';
+  is_read: boolean;
+  created_at: string;
+  expires_at: string | null;
+}
 
 const AutoServiceShop = () => {
   const [showWelcome, setShowWelcome] = useState(true);
   const [isClient, setIsClient] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [showNotificationPopup, setShowNotificationPopup] = useState(false);
+  const [currentNotificationIndex, setCurrentNotificationIndex] = useState(0);
   const router = useRouter();
+  const supabase = createClientComponentClient();
 
   // Refs for GSAP animations
   const navRef = useRef(null);
@@ -19,6 +35,7 @@ const AutoServiceShop = () => {
   const brandsRef = useRef<HTMLDivElement>(null);
   const statsRef = useRef(null);
   const servicesRef = useRef(null);
+  const notificationRef = useRef<HTMLDivElement>(null);
 
   const heroSlides = [
     {
@@ -39,6 +56,134 @@ const AutoServiceShop = () => {
   ];
 
   const brands = ['TESLA', 'TOYOTA', 'HYUNDAI', 'Mercedes-Benz', 'SUZUKI', 'JAGUAR'];
+
+  // Fetch notifications for current user
+  const fetchNotifications = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.log('No user found');
+        return [];
+      }
+
+      console.log('Fetching notifications for user:', user.id);
+
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_read', false)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching notifications:', error);
+        return [];
+      }
+
+      console.log('Fetched notifications:', data);
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      return [];
+    }
+  };
+
+  // Mark notification as read
+  const markAsRead = async (notificationId: string) => {
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('id', notificationId);
+
+      if (error) {
+        console.error('Error marking notification as read:', error);
+        return;
+      }
+
+      setNotifications(prev => prev.filter(n => n.id !== notificationId));
+      
+      // If no more notifications, close popup
+      if (notifications.length <= 1) {
+        setShowNotificationPopup(false);
+        setCurrentNotificationIndex(0);
+      } else {
+        // Show next notification
+        setCurrentNotificationIndex(0);
+      }
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  };
+
+  // Show next notification
+  const showNextNotification = () => {
+    if (currentNotificationIndex < notifications.length - 1) {
+      setCurrentNotificationIndex(prev => prev + 1);
+    } else {
+      setShowNotificationPopup(false);
+      setCurrentNotificationIndex(0);
+    }
+  };
+
+  // Close notification popup
+  const closeNotification = () => {
+    if (notifications[currentNotificationIndex]) {
+      markAsRead(notifications[currentNotificationIndex].id);
+    }
+  };
+
+  // Show notification popup
+  const showNotification = async () => {
+    const userNotifications = await fetchNotifications();
+    if (userNotifications && userNotifications.length > 0) {
+      setNotifications(userNotifications);
+      setShowNotificationPopup(true);
+      
+      // Animate notification popup
+      if (notificationRef.current) {
+        gsap.fromTo(notificationRef.current,
+          { scale: 0.8, opacity: 0 },
+          { scale: 1, opacity: 1, duration: 0.6, ease: "back.out(1.7)" }
+        );
+      }
+    }
+  };
+
+  // Set up real-time subscription for notifications
+  useEffect(() => {
+    const setupNotifications = async () => {
+      // Initial fetch
+      await showNotification();
+
+      // Set up real-time subscription
+      const channel = supabase
+        .channel('notifications-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'notifications'
+          },
+          async (payload) => {
+            console.log('New notification received:', payload);
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user && payload.new.user_id === user.id) {
+              // Refresh notifications
+              await showNotification();
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    };
+
+    setupNotifications();
+  }, []);
 
   useEffect(() => {
     setIsClient(true);
@@ -104,11 +249,34 @@ const AutoServiceShop = () => {
   const handleBookAppointment = () => router.push('/Appointment');
   const handleProfile = () => router.push('/UserProfile');
   const handleViewServices = () => router.push('/Services');
+  
   interface NavigationPath {
     path: string;
   }
 
   const handleNavigation = (path: string): void => router.push(path);
+
+  // Get type color for notification
+  const getTypeColor = (type: string) => {
+    switch (type) {
+      case 'success': return '#10b981';
+      case 'warning': return '#f59e0b';
+      case 'error': return '#ef4444';
+      case 'info': 
+      default: return '#3b82f6';
+    }
+  };
+
+  // Get type icon for notification
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'success': return '✅';
+      case 'warning': return '⚠️';
+      case 'error': return '❌';
+      case 'info': 
+      default: return 'ℹ️';
+    }
+  };
 
   if (!isClient) {
     return null;
@@ -165,6 +333,207 @@ const AutoServiceShop = () => {
         </div>
       )}
 
+      {/* Notification Popup */}
+      {showNotificationPopup && notifications.length > 0 && notifications[currentNotificationIndex] && (
+        <div
+          ref={notificationRef}
+          style={{
+            position: 'fixed',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%) scale(0.8)',
+            zIndex: 2147483647,
+            width: '500px',
+            maxWidth: '90vw',
+            background: 'linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%)',
+            borderRadius: '16px',
+            border: `3px solid ${getTypeColor(notifications[currentNotificationIndex].type)}`,
+            boxShadow: '0 25px 50px rgba(0, 0, 0, 0.9)',
+            backdropFilter: 'blur(20px)',
+            overflow: 'hidden',
+            opacity: 0
+          }}
+        >
+          {/* Notification Header */}
+          <div style={{
+            background: `linear-gradient(135deg, ${getTypeColor(notifications[currentNotificationIndex].type)}30, ${getTypeColor(notifications[currentNotificationIndex].type)}15)`,
+            padding: '1.5rem 2rem',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            borderBottom: `2px solid ${getTypeColor(notifications[currentNotificationIndex].type)}40`
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '1rem'
+            }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '10px',
+                background: getTypeColor(notifications[currentNotificationIndex].type),
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '1.2rem',
+                fontWeight: 'bold'
+              }}>
+                {getTypeIcon(notifications[currentNotificationIndex].type)}
+              </div>
+              <h3 style={{
+                margin: 0,
+                color: 'white',
+                fontSize: '1.3rem',
+                fontWeight: '700'
+              }}>
+                {notifications[currentNotificationIndex].title}
+              </h3>
+            </div>
+            
+            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+              <span style={{
+                background: 'rgba(255, 255, 255, 0.2)',
+                color: 'white',
+                padding: '0.3rem 0.8rem',
+                borderRadius: '12px',
+                fontSize: '0.8rem',
+                fontWeight: '600'
+              }}>
+                {currentNotificationIndex + 1}/{notifications.length}
+              </span>
+              
+              <button
+                onClick={closeNotification}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  width: '32px',
+                  height: '32px',
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#dc2626';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+                }}
+              >
+                ×
+              </button>
+            </div>
+          </div>
+
+          {/* Notification Content */}
+          <div style={{
+            padding: '2rem',
+            background: 'rgba(255, 255, 255, 0.02)'
+          }}>
+            <p style={{
+              margin: '0 0 1.5rem 0',
+              color: 'rgba(255, 255, 255, 0.9)',
+              fontSize: '1.05rem',
+              lineHeight: '1.6',
+              minHeight: '80px'
+            }}>
+              {notifications[currentNotificationIndex].message}
+            </p>
+
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              fontSize: '0.85rem',
+              color: 'rgba(255, 255, 255, 0.6)'
+            }}>
+              <span style={{
+                background: 'rgba(255, 255, 255, 0.1)',
+                padding: '0.4rem 0.9rem',
+                borderRadius: '14px',
+                fontWeight: '600',
+                textTransform: 'uppercase',
+                fontSize: '0.75rem'
+              }}>
+                {notifications[currentNotificationIndex].type}
+              </span>
+              <span>
+                {new Date(notifications[currentNotificationIndex].created_at).toLocaleDateString()} • {new Date(notifications[currentNotificationIndex].created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            </div>
+          </div>
+
+          {/* Notification Footer */}
+          <div style={{
+            padding: '1.25rem 2rem',
+            background: 'rgba(255, 255, 255, 0.03)',
+            borderTop: '2px solid rgba(255, 255, 255, 0.1)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <button
+              onClick={closeNotification}
+              style={{
+                background: 'transparent',
+                color: 'rgba(255, 255, 255, 0.7)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                padding: '0.6rem 1.25rem',
+                borderRadius: '8px',
+                fontWeight: '500',
+                cursor: 'pointer',
+                fontSize: '0.9rem',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                e.currentTarget.style.color = 'white';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)';
+              }}
+            >
+              Dismiss
+            </button>
+            
+            {notifications.length > 1 && (
+              <button
+                onClick={showNextNotification}
+                style={{
+                  background: 'linear-gradient(135deg, #dc2626, #b91c1c)',
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.6rem 1.75rem',
+                  borderRadius: '8px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                  e.currentTarget.style.boxShadow = '0 5px 15px rgba(220, 38, 38, 0.4)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
+                Next ({notifications.length - currentNotificationIndex - 1})
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Rest of your existing code remains exactly the same */}
       {/* Navigation */}
       <nav ref={navRef} style={{
         position: 'fixed',
