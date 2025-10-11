@@ -142,7 +142,7 @@ const AdminHome = () => {
   const handleEmployees = () => router.push('/AdminEmployees');
   const handleCustomers = () => router.push('/AC');
   const handleReports = () => router.push('/AdminReports');
-  const handleFinance = () => router.push('/AdminFinances');
+  const handleFinance = () => router.push('/AdminServices');
   const handleNotifications = () => router.push('/AdminNotification');
 
   const handleSearch = (e: React.FormEvent) => {
@@ -259,8 +259,8 @@ const AdminHome = () => {
       onClick: handleReports,
     },
     {
-      title: 'Finance',
-      description: 'Manage payments and accounting',
+      title: 'Services',
+      description: 'Available automotive services and pricing',
       icon: '💰',
       onClick: handleFinance,
     }

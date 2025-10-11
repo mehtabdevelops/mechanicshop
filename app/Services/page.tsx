@@ -1,102 +1,111 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+
+interface Service {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+  price: number;
+  duration_minutes: number;
+  image_url: string;
+  is_available: boolean;
+  created_at: string;
+}
 
 const Services = () => {
   const router = useRouter();
+  const supabase = createClientComponentClient();
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedService, setSelectedService] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All Categories');
 
-  const services = [
-    {
-      id: 1,
-      title: 'Oil Change',
-      description: 'Professional oil change service to keep your engine running smoothly and efficiently. Includes filter replacement and fluid check.',
-      price: '$49.99',
-      duration: '30 min',
-      image: 'https://www.carkeys.co.uk/media/1083/oil_change.jpg?anchor=center&mode=crop&width=1200&height=800',
-      features: ['Synthetic Oil', 'Filter Replacement', 'Fluid Check', '20-Point Inspection']
-    },
-    {
-      id: 2,
-      title: 'Brake Service',
-      description: 'Complete brake inspection and repair services for your safety on the road. Includes pad replacement and rotor resurfacing.',
-      price: '$129.99',
-      duration: '2 hours',
-      image: 'https://edmorsecadillacbrandonservice.com/wp-content/uploads/2018/10/brakes.jpg',
-      features: ['Brake Inspection', 'Pad Replacement', 'Rotor Resurfacing', 'Brake Fluid Check']
-    },
-    {
-      id: 3,
-      title: 'Tire Rotation',
-      description: 'Professional tire rotation service to ensure even wear and extend the life of your tires. Includes pressure check and balance.',
-      price: '$29.99',
-      duration: '45 min',
-      image: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=1170&q=80',
-      features: ['Tire Rotation', 'Pressure Check', 'Wheel Balancing', 'Visual Inspection']
-    },
-    {
-      id: 4,
-      title: 'Basic Service',
-      description: 'Essential maintenance package including oil change, filter replacement, and basic safety inspection.',
-      price: '$79.99',
-      duration: '1 hour',
-      image: 'https://www.worldofservice.in/wp-content/uploads/2016/01/car-service.jpg',
-      features: ['Oil Change', 'Filter Replacement', 'Safety Inspection', 'Fluid Top-up']
-    },
-    {
-      id: 5,
-      title: 'Full Service',
-      description: 'Comprehensive maintenance package covering all essential systems for optimal vehicle performance.',
-      price: '$199.99',
-      duration: '3 hours',
-      image: 'https://mycarneedsa.com/assets/uploads/images/blog/6f67cc7a0a1341f213f2ab17a95f0ca5.jpg',
-      features: ['Complete Inspection', 'Oil Change', 'Brake Check', 'Tire Service', 'AC Check']
-    },
-    {
-      id: 6,
-      title: 'AC Repair',
-      description: 'Professional AC system diagnosis and repair to keep you cool and comfortable on the road.',
-      price: '$149.99',
-      duration: '2 hours',
-      image: 'https://ictire.com/wp-content/uploads/2022/10/Car-Air-Conditioning-Repair-1024x643.webp',
-      features: ['AC Diagnosis', 'Refrigerant Charge', 'Compressor Check', 'System Testing']
-    },
-    {
-      id: 7,
-      title: 'Battery Replacement',
-      description: 'Professional battery testing and replacement service to ensure reliable starting power.',
-      price: '$89.99',
-      duration: '30 min',
-      image: 'https://knowhow.napaonline.com/wp-content/uploads/2017/03/Replace_Battery1.jpg',
-      features: ['Battery Testing', 'Replacement', 'Terminal Cleaning', 'Charging System Check']
-    },
-    {
-      id: 8,
-      title: 'General Maintenance',
-      description: 'Routine maintenance service to keep your vehicle in top condition and prevent future issues.',
-      price: '$99.99',
-      duration: '1.5 hours',
-      image: 'https://blog.napacanada.com/wp-content/uploads/2020/02/shutterstock_118548643-scaled.jpg',
-      features: ['Multi-point Inspection', 'Fluid Changes', 'Filter Replacement', 'Safety Check']
+  // Fetch services from Supabase
+  useEffect(() => {
+    fetchServices();
+  }, []);
+
+  const fetchServices = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('services')
+        .select('*')
+        .eq('is_available', true)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching services:', error);
+        throw error;
+      }
+
+      setServices(data || []);
+    } catch (error) {
+      console.error('Error loading services:', error);
+      alert('Error loading services data');
+    } finally {
+      setLoading(false);
     }
-  ];
-
-  const handleBookService = (serviceTitle: string) => {
-    router.push(`/Appointment?service=${encodeURIComponent(serviceTitle)}`);
   };
+
+  const handleBookService = (serviceName: string) => {
+    router.push(`/Appointment?service=${encodeURIComponent(serviceName)}`);
+  };
+
+  // Filter services based on search and category
+  const filteredServices = services.filter(service => {
+    const matchesSearch = service.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          service.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === 'All Categories' || service.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  // Get unique categories for filter dropdown
+  const categories = ['All Categories', ...new Set(services.map(service => service.category))];
+
+  if (loading) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)',
+        color: 'white',
+        fontFamily: 'Arial, sans-serif',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{
+            width: '50px',
+            height: '50px',
+            border: '4px solid rgba(220, 38, 38, 0.3)',
+            borderTop: '4px solid #dc2626',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 1rem'
+          }} />
+          <p style={{ color: '#dc2626', fontSize: '1.2rem', fontWeight: '600' }}>Loading Services...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #0a2540 0%, #1a4b78 100%)',
+      background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)',
       color: 'white',
       fontFamily: 'Arial, sans-serif',
       padding: '2rem 0'
     }}>
       {/* Navigation */}
       <nav style={{
-        background: 'rgba(10, 37, 64, 0.95)',
+        background: 'rgba(10, 10, 10, 0.95)',
         padding: '1.5rem 2rem',
         display: 'flex',
         justifyContent: 'space-between',
@@ -105,15 +114,17 @@ const Services = () => {
         top: 0,
         zIndex: 40,
         backdropFilter: 'blur(10px)',
-        marginBottom: '3rem'
+        marginBottom: '3rem',
+        borderBottom: '1px solid rgba(220, 38, 38, 0.3)'
       }}>
         <div>
           <h1 style={{
             fontSize: '2rem',
             fontWeight: 'bold',
-            color: '#fbbf24',
+            color: '#dc2626',
             letterSpacing: '1px',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            margin: 0
           }} onClick={() => router.push('/')}>
             SUNNY AUTO
           </h1>
@@ -127,11 +138,12 @@ const Services = () => {
           fontWeight: '400',
           cursor: 'pointer',
           transition: 'all 0.3s ease',
-          fontSize: '1.1rem'
+          fontSize: '1.1rem',
+          border: '1px solid #dc2626'
         }} 
         onMouseOver={(e) => {
-          e.currentTarget.style.background = '#fbbf24';
-          e.currentTarget.style.color = '#0a2540';
+          e.currentTarget.style.background = '#dc2626';
+          e.currentTarget.style.color = '#ffffff';
         }}
         onMouseOut={(e) => {
           e.currentTarget.style.background = 'transparent';
@@ -157,7 +169,7 @@ const Services = () => {
             fontSize: '4rem',
             fontWeight: 'bold',
             marginBottom: '1rem',
-            background: 'linear-gradient(45deg, #fbbf24, #f59e0b)',
+            background: 'linear-gradient(45deg, #dc2626, #ef4444)',
             backgroundClip: 'text',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent'
@@ -166,7 +178,7 @@ const Services = () => {
           </h1>
           <p style={{
             fontSize: '1.5rem',
-            color: '#dbeafe',
+            color: '#d1d5db',
             maxWidth: '800px',
             margin: '0 auto',
             lineHeight: '1.6'
@@ -176,6 +188,71 @@ const Services = () => {
           </p>
         </div>
 
+        {/* Search and Filter Section */}
+        <div style={{
+          display: 'flex',
+          gap: '1rem',
+          justifyContent: 'center',
+          marginBottom: '3rem',
+          flexWrap: 'wrap',
+          alignItems: 'center'
+        }}>
+          {/* Search Bar */}
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+            padding: '0.75rem 1rem',
+            borderRadius: '50px',
+            border: '1px solid rgba(220, 38, 38, 0.3)',
+            width: '300px',
+            transition: 'all 0.2s ease'
+          }}>
+            <input 
+              type="text" 
+              placeholder="Search services..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{ 
+                backgroundColor: 'transparent', 
+                border: 'none', 
+                color: 'white', 
+                outline: 'none',
+                width: '100%',
+                fontSize: '1rem',
+                padding: '0 0.5rem'
+              }}
+            />
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: '#dc2626' }}>
+              <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2"/>
+              <path d="m21 21-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+          </div>
+          
+          {/* Category Filter */}
+          <select 
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            style={{ 
+              backgroundColor: 'rgba(255, 255, 255, 0.05)', 
+              color: 'white', 
+              border: '1px solid rgba(220, 38, 38, 0.3)', 
+              borderRadius: '50px',
+              padding: '0.75rem 1.5rem',
+              fontSize: '1rem',
+              fontWeight: '500',
+              transition: 'all 0.2s ease',
+              cursor: 'pointer'
+            }}
+          >
+            {categories.map(category => (
+              <option key={category} value={category} style={{ backgroundColor: '#1a1a1a', color: 'white' }}>
+                {category}
+              </option>
+            ))}
+          </select>
+        </div>
+
         {/* Services Grid */}
         <div style={{
           display: 'grid',
@@ -183,30 +260,33 @@ const Services = () => {
           gap: '2.5rem',
           marginBottom: '4rem'
         }}>
-          {services.map((service) => (
+          {filteredServices.map((service) => (
             <div key={service.id} style={{
               background: 'rgba(255, 255, 255, 0.05)',
               backdropFilter: 'blur(20px)',
               borderRadius: '20px',
               overflow: 'hidden',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
+              border: '1px solid rgba(220, 38, 38, 0.3)',
               transition: 'all 0.3s ease',
               cursor: 'pointer'
             }}
             onMouseOver={(e) => {
               e.currentTarget.style.transform = 'translateY(-8px)';
-              e.currentTarget.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.3)';
+              e.currentTarget.style.boxShadow = '0 20px 40px rgba(220, 38, 38, 0.2)';
+              e.currentTarget.style.borderColor = 'rgba(220, 38, 38, 0.6)';
             }}
             onMouseOut={(e) => {
               e.currentTarget.style.transform = 'translateY(0)';
               e.currentTarget.style.boxShadow = 'none';
+              e.currentTarget.style.borderColor = 'rgba(220, 38, 38, 0.3)';
             }}
-            onClick={() => setSelectedService(selectedService === service.title ? null : service.title)}>
+            onClick={() => setSelectedService(selectedService === service.name ? null : service.name)}>
+              
               {/* Service Image */}
               <div style={{ height: '250px', overflow: 'hidden' }}>
                 <img 
-                  src={service.image} 
-                  alt={service.title}
+                  src={service.image_url} 
+                  alt={service.name}
                   style={{
                     width: '100%',
                     height: '100%',
@@ -229,25 +309,40 @@ const Services = () => {
                   <h3 style={{
                     fontSize: '1.5rem',
                     fontWeight: '600',
-                    color: '#fbbf24',
+                    color: '#dc2626',
                     margin: 0
                   }}>
-                    {service.title}
+                    {service.name}
                   </h3>
                   <div style={{
-                    background: 'linear-gradient(45deg, #fbbf24, #f59e0b)',
-                    color: '#0a2540',
+                    background: 'linear-gradient(45deg, #dc2626, #ef4444)',
+                    color: 'white',
                     padding: '0.5rem 1rem',
                     borderRadius: '20px',
                     fontWeight: 'bold',
                     fontSize: '1.1rem'
                   }}>
-                    {service.price}
+                    ${service.price}
                   </div>
                 </div>
 
+                {/* Category Badge */}
+                <div style={{
+                  display: 'inline-block',
+                  backgroundColor: 'rgba(220, 38, 38, 0.2)',
+                  color: '#dc2626',
+                  padding: '0.25rem 0.75rem',
+                  borderRadius: '15px',
+                  fontSize: '0.8rem',
+                  marginBottom: '1rem',
+                  fontWeight: '600',
+                  border: '1px solid rgba(220, 38, 38, 0.3)'
+                }}>
+                  {service.category}
+                </div>
+
                 <p style={{
-                  color: '#dbeafe',
+                  color: '#d1d5db',
                   marginBottom: '1.5rem',
                   lineHeight: '1.6'
                 }}>
@@ -259,99 +354,159 @@ const Services = () => {
                   justifyContent: 'space-between',
                   alignItems: 'center',
                   marginBottom: '1.5rem',
-                  color: '#93c5fd'
+                  color: '#9ca3af'
                 }}>
-                  <span>⏱️ {service.duration}</span>
-                  <span>⭐ 4.9/5 Rating</span>
+                  <span>⏱️ {service.duration_minutes} minutes</span>
+                  <span style={{ 
+                    color: service.is_available ? '#10b981' : '#ef4444',
+                    fontWeight: '600'
+                  }}>
+                    {service.is_available ? '✅ Available' : '❌ Unavailable'}
+                  </span>
                 </div>
 
-                {/* Features List */}
-                {selectedService === service.title && (
+                {/* Service Details */}
+                {selectedService === service.name && (
                   <div style={{
                     marginBottom: '2rem',
                     padding: '1rem',
-                    background: 'rgba(251, 191, 36, 0.1)',
+                    background: 'rgba(220, 38, 38, 0.1)',
                     borderRadius: '10px',
-                    border: '1px solid rgba(251, 191, 36, 0.2)'
+                    border: '1px solid rgba(220, 38, 38, 0.2)'
                   }}>
                     <h4 style={{
-                      color: '#fbbf24',
+                      color: '#dc2626',
                       marginBottom: '0.5rem',
                       fontSize: '1.1rem'
                     }}>
-                      Includes:
+                      Service Details:
                     </h4>
                     <ul style={{
                       listStyle: 'none',
                       padding: 0,
                       margin: 0
                     }}>
-                      {service.features.map((feature, index) => (
-                        <li key={index} style={{
-                          padding: '0.25rem 0',
-                          color: '#dbeafe',
-                          display: 'flex',
-                          alignItems: 'center'
-                        }}>
-                          <span style={{ color: '#fbbf24', marginRight: '0.5rem' }}>✓</span>
-                          {feature}
-                        </li>
-                      ))}
+                      <li style={{
+                        padding: '0.25rem 0',
+                        color: '#d1d5db',
+                        display: 'flex',
+                        alignItems: 'center'
+                      }}>
+                        <span style={{ color: '#dc2626', marginRight: '0.5rem' }}>⏱️</span>
+                        Duration: {service.duration_minutes} minutes
+                      </li>
+                      <li style={{
+                        padding: '0.25rem 0',
+                        color: '#d1d5db',
+                        display: 'flex',
+                        alignItems: 'center'
+                      }}>
+                        <span style={{ color: '#dc2626', marginRight: '0.5rem' }}>💰</span>
+                        Price: ${service.price}
+                      </li>
+                      <li style={{
+                        padding: '0.25rem 0',
+                        color: '#d1d5db',
+                        display: 'flex',
+                        alignItems: 'center'
+                      }}>
+                        <span style={{ color: '#dc2626', marginRight: '0.5rem' }}>📅</span>
+                        Same day appointment available
+                      </li>
+                      <li style={{
+                        padding: '0.25rem 0',
+                        color: '#d1d5db',
+                        display: 'flex',
+                        alignItems: 'center'
+                      }}>
+                        <span style={{ color: '#dc2626', marginRight: '0.5rem' }}>⭐</span>
+                        Certified technicians
+                      </li>
                     </ul>
                   </div>
                 )}
 
                 <button style={{
                   width: '100%',
-                  background: 'linear-gradient(45deg, #fbbf24, #f59e0b)',
-                  color: '#0a2540',
+                  background: 'linear-gradient(45deg, #dc2626, #ef4444)',
+                  color: 'white',
                   padding: '1rem 2rem',
                   borderRadius: '50px',
                   fontWeight: '600',
                   border: 'none',
                   cursor: 'pointer',
                   fontSize: '1.1rem',
-                  transition: 'all 0.3s ease'
+                  transition: 'all 0.3s ease',
+                  opacity: service.is_available ? 1 : 0.6
                 }}
+                disabled={!service.is_available}
                 onMouseOver={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = 'none';
+                  if (service.is_available) {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 10px 20px rgba(220, 38, 38, 0.3)';
+                  }
                 }}
                 onMouseOut={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = 'none';
+                  if (service.is_available) {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }
                 }}
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleBookService(service.title);
+                  if (service.is_available) {
+                    handleBookService(service.name);
+                  }
                 }}>
-                  Book This Service
+                  {service.is_available ? 'Book This Service' : 'Currently Unavailable'}
                 </button>
               </div>
             </div>
           ))}
         </div>
 
+        {/* Show message if no services match filter */}
+        {filteredServices.length === 0 && (
+          <div style={{ 
+            textAlign: 'center', 
+            padding: '4rem', 
+            color: '#d1d5db',
+            backgroundColor: 'rgba(255, 255, 255, 0.02)',
+            borderRadius: '20px',
+            border: '1px solid rgba(220, 38, 38, 0.2)',
+            backdropFilter: 'blur(10px)',
+            marginBottom: '4rem'
+          }}>
+            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: '#dc2626', marginBottom: '1rem', opacity: 0.5 }}>
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+              <line x1="8" y1="8" x2="16" y2="16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <line x1="16" y1="8" x2="8" y2="16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+            <h3 style={{ color: '#dc2626', marginBottom: '0.5rem', fontSize: '1.5rem' }}>No services found</h3>
+            <p style={{ margin: 0, fontSize: '1.1rem' }}>Try adjusting your search or filter criteria</p>
+          </div>
+        )}
+
         {/* Call to Action */}
         <div style={{
-          background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(245, 158, 11, 0.1))',
+          background: 'linear-gradient(135deg, rgba(220, 38, 38, 0.1), rgba(239, 68, 68, 0.1))',
           borderRadius: '20px',
           padding: '3rem',
           textAlign: 'center',
-          border: '1px solid rgba(251, 191, 36, 0.2)',
+          border: '1px solid rgba(220, 38, 38, 0.3)',
           marginBottom: '4rem'
         }}>
           <h2 style={{
             fontSize: '2.5rem',
             fontWeight: 'bold',
-            color: '#fbbf24',
+            color: '#dc2626',
             marginBottom: '1rem'
           }}>
             Ready to Get Started?
           </h2>
           <p style={{
             fontSize: '1.25rem',
-            color: '#dbeafe',
+            color: '#d1d5db',
             marginBottom: '2rem',
             maxWidth: '600px',
             margin: '0 auto 2rem'
@@ -360,8 +515,8 @@ const Services = () => {
             Our team is ready to provide exceptional care for your vehicle.
           </p>
           <button style={{
-            background: 'linear-gradient(45deg, #fbbf24, #f59e0b)',
-            color: '#0a2540',
+            background: 'linear-gradient(45deg, #dc2626, #ef4444)',
+            color: 'white',
             padding: '1.25rem 3rem',
             borderRadius: '50px',
             fontWeight: '600',
@@ -369,6 +524,14 @@ const Services = () => {
             cursor: 'pointer',
             fontSize: '1.25rem',
             transition: 'all 0.3s ease'
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 15px 30px rgba(220, 38, 38, 0.4)';
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = 'none';
           }}
           onClick={() => router.push('/appointment')}>
             Book Appointment Now
@@ -381,23 +544,30 @@ const Services = () => {
           padding: '2rem',
           background: 'rgba(255, 255, 255, 0.02)',
           borderRadius: '15px',
-          border: '1px solid rgba(255, 255, 255, 0.05)'
+          border: '1px solid rgba(220, 38, 38, 0.2)'
         }}>
           <h3 style={{
-            color: '#fbbf24',
+            color: '#dc2626',
             fontSize: '1.5rem',
             marginBottom: '1rem'
           }}>
             Questions About Our Services?
           </h3>
-          <p style={{ color: '#dbeafe', marginBottom: '0.5rem' }}>
+          <p style={{ color: '#d1d5db', marginBottom: '0.5rem' }}>
             📞 Call us: <strong>(555) 123-4567</strong>
           </p>
-          <p style={{ color: '#dbeafe' }}>
+          <p style={{ color: '#d1d5db' }}>
             ✉️ Email: <strong>service@sunnyauto.com</strong>
           </p>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 };
