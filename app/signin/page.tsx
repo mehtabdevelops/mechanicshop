@@ -195,7 +195,19 @@ const Signin = () => {
 
       if (error) throw error;
 
-      if (data) {
+      if (data.user) {
+        // Check if user exists in admin_signin table
+        const { data: adminData, error: adminError } = await supabase
+          .from('admin_signin')
+          .select('admin_id')
+          .eq('admin_id', data.user.id)
+          .single();
+
+        if (adminError && adminError.code !== 'PGRST116') {
+          // PGRST116 is "not found" error, which is expected for non-admin users
+          console.error('Error checking admin status:', adminError);
+        }
+
         // Enhanced success animation
         gsap.to(formCardRef.current, {
           scale: 1.05,
@@ -204,14 +216,22 @@ const Signin = () => {
           ease: "power2.out",
           onComplete: () => {
             alert('Sign in successful! Welcome back.');
-            supabase.from('profiles').select('*').eq('email', formData.email).single().then(({ data, error }) => {
-              if (error) {
-                console.error('Error fetching user role:', error);
-                return;
-              }
-              sessionStorage.setItem('userData', JSON.stringify(data));
-            });
-            router.push('/UserHome');
+            
+            // Store user data in sessionStorage
+            sessionStorage.setItem('userData', JSON.stringify({
+              id: data.user.id,
+              email: data.user.email,
+              isAdmin: !!adminData // true if adminData exists
+            }));
+
+            // Redirect based on admin status
+            if (adminData) {
+              // User is admin - redirect to admin home
+              router.push('/AdminHome');
+            } else {
+              // Regular user - redirect to user home
+              router.push('/UserHome');
+            }
           }
         });
       }  
