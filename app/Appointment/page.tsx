@@ -144,14 +144,14 @@ const Appointment = () => {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'white',
-      color: '#333',
+      background: 'linear-gradient(135deg, #050505 0%, #0f0f0f 50%, #181818 100%)',
+      color: 'white',
       fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       padding: '0'
     }}>
       {/* Navigation */}
       <nav style={{
-        background: 'white',
+        background: 'rgba(0, 0, 0, 0.95)',
         padding: '1.5rem 2rem',
         display: 'flex',
         justifyContent: 'space-between',
@@ -159,17 +159,23 @@ const Appointment = () => {
         position: 'sticky',
         top: 0,
         zIndex: 40,
-        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
+        boxShadow: '0 2px 20px rgba(0, 0, 0, 0.3)',
         marginBottom: '2rem',
-        borderBottom: '2px solid #C7613C'
+        borderBottom: '1px solid rgba(220, 38, 38, 0.3)',
+        backdropFilter: 'blur(10px)'
       }}>
         <div>
           <h1 style={{
             fontSize: '2.5rem',
-            fontWeight: '700',
-            color: '#C7613C',
+            fontWeight: '800',
+            background: 'linear-gradient(135deg, #ffffff 0%, #f87171 45%, #dc2626 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
             cursor: 'pointer',
-            margin: 0
+            margin: 0,
+            letterSpacing: '2px',
+            fontFamily: 'Georgia, serif'
           }} onClick={() => router.push('/UserHome')}>
             SUNNY AUTO
           </h1>
@@ -177,22 +183,24 @@ const Appointment = () => {
         
         <button style={{
           background: 'transparent',
-          color: '#C7613C',
+          color: '#dc2626',
           padding: '0.75rem 1.5rem',
           borderRadius: '8px',
           fontWeight: '600',
           cursor: 'pointer',
-          transition: 'all 0.2s ease',
+          transition: 'all 0.3s ease',
           fontSize: '1rem',
-          border: '2px solid #C7613C'
+          border: '1px solid rgba(220, 38, 38, 0.5)'
         }} 
         onMouseOver={(e) => {
-          e.currentTarget.style.backgroundColor = '#C7613C';
+          e.currentTarget.style.backgroundColor = '#dc2626';
           e.currentTarget.style.color = 'white';
+          e.currentTarget.style.transform = 'translateY(-2px)';
         }}
         onMouseOut={(e) => {
           e.currentTarget.style.backgroundColor = 'transparent';
-          e.currentTarget.style.color = '#C7613C';
+          e.currentTarget.style.color = '#dc2626';
+          e.currentTarget.style.transform = 'translateY(0)';
         }}
         onClick={() => router.push('/UserHome')}>
           Back to Home
@@ -209,27 +217,47 @@ const Appointment = () => {
         <div style={{
           textAlign: 'center',
           marginBottom: '3rem',
-          padding: '3rem 2rem',
-          background: 'linear-gradient(135deg, #C7613C 0%, #e07a4f 100%)',
-          borderRadius: '15px',
-          boxShadow: '0 10px 30px rgba(199, 97, 60, 0.2)'
+          padding: '4rem 2rem',
+          background: 'rgba(17, 17, 17, 0.78)',
+          borderRadius: '20px',
+          boxShadow: '0 15px 35px rgba(0, 0, 0, 0.6)',
+          backdropFilter: 'blur(25px) saturate(180%)',
+          border: '1px solid rgba(220, 38, 38, 0.35)',
+          position: 'relative'
         }}>
+          {/* Top Accent Line */}
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: '80%',
+            height: '3px',
+            background: 'linear-gradient(90deg, transparent, #dc2626, #f87171, #dc2626, transparent)',
+            filter: 'blur(0.5px)'
+          }} />
+          
           <h1 style={{
-            fontSize: '3rem',
+            fontSize: '3.5rem',
             fontWeight: '800',
-            marginBottom: '1rem',
-            color: 'white',
-            textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
+            marginBottom: '1.5rem',
+            background: 'linear-gradient(135deg, #ffffff 0%, #f87171 45%, #dc2626 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            textShadow: '0 4px 30px rgba(220, 38, 38, 0.45)',
+            fontFamily: 'Georgia, serif'
           }}>
             Book Your Appointment
           </h1>
           <p style={{
-            fontSize: '1.2rem',
-            color: 'white',
+            fontSize: '1.3rem',
+            color: 'rgba(229, 231, 235, 0.85)',
             maxWidth: '600px',
             margin: '0 auto',
-            lineHeight: '1.6',
-            opacity: 0.9
+            lineHeight: '1.7',
+            fontWeight: '300',
+            fontStyle: 'italic'
           }}>
             Schedule your vehicle service with our expert technicians. We'll get you back on the road quickly and safely.
           </p>
@@ -237,16 +265,30 @@ const Appointment = () => {
 
         {/* Appointment Form */}
         <div style={{
-          background: 'white',
-          padding: '3rem',
-          borderRadius: '15px',
-          boxShadow: '0 10px 40px rgba(0, 0, 0, 0.08)',
+          background: 'rgba(17, 17, 17, 0.78)',
+          padding: '3.5rem',
+          borderRadius: '20px',
+          boxShadow: '0 20px 50px rgba(0, 0, 0, 0.6)',
           marginBottom: '3rem',
-          border: '1px solid #f0f0f0'
+          border: '1px solid rgba(220, 38, 38, 0.35)',
+          backdropFilter: 'blur(25px) saturate(180%)',
+          position: 'relative'
         }}>
+          {/* Top Accent Line */}
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: '80%',
+            height: '3px',
+            background: 'linear-gradient(90deg, transparent, #dc2626, #f87171, #dc2626, transparent)',
+            filter: 'blur(0.5px)'
+          }} />
+          
           <form onSubmit={handleSubmit} style={{
             display: 'grid',
-            gap: '2rem'
+            gap: '2.5rem'
           }}>
             {/* Personal Information */}
             <div style={{
@@ -259,8 +301,8 @@ const Appointment = () => {
                   display: 'block',
                   marginBottom: '0.75rem',
                   fontWeight: '600',
-                  color: '#333',
-                  fontSize: '1rem'
+                  color: '#fca5a5',
+                  fontSize: '1.1rem'
                 }}>
                   Full Name *
                 </label>
@@ -272,30 +314,32 @@ const Appointment = () => {
                   required
                   style={{
                     width: '100%',
-                    padding: '1rem 1.25rem',
-                    borderRadius: '10px',
-                    border: `2px solid ${errors.name ? '#e53e3e' : '#e0e0e0'}`,
-                    backgroundColor: 'white',
-                    color: '#333',
+                    padding: '1.25rem 1.5rem',
+                    borderRadius: '12px',
+                    border: `1px solid ${errors.name ? '#f87171' : 'rgba(248, 113, 113, 0.45)'}`,
+                    backgroundColor: 'rgba(24, 24, 27, 0.6)',
+                    color: '#e5e7eb',
                     fontSize: '1rem',
                     transition: 'all 0.3s ease',
                     boxSizing: 'border-box',
                     fontWeight: '500'
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = '#C7613C';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(199, 97, 60, 0.1)';
+                    e.target.style.borderColor = '#dc2626';
+                    e.target.style.backgroundColor = 'rgba(38, 38, 38, 0.85)';
+                    e.target.style.boxShadow = '0 0 0 4px rgba(220, 38, 38, 0.2)';
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = errors.name ? '#e53e3e' : '#e0e0e0';
+                    e.target.style.borderColor = errors.name ? '#f87171' : 'rgba(248, 113, 113, 0.45)';
+                    e.target.style.backgroundColor = 'rgba(24, 24, 27, 0.6)';
                     e.target.style.boxShadow = 'none';
                   }}
                   placeholder="Enter your full name"
                 />
                 {errors.name && (
                   <p style={{ 
-                    color: '#e53e3e', 
-                    fontSize: '0.875rem', 
+                    color: '#ff6b6b', 
+                    fontSize: '0.9rem', 
                     marginTop: '0.5rem',
                     fontWeight: '500'
                   }}>
@@ -309,8 +353,8 @@ const Appointment = () => {
                   display: 'block',
                   marginBottom: '0.75rem',
                   fontWeight: '600',
-                  color: '#333',
-                  fontSize: '1rem'
+                  color: '#fca5a5',
+                  fontSize: '1.1rem'
                 }}>
                   Email Address *
                 </label>
@@ -322,30 +366,32 @@ const Appointment = () => {
                   required
                   style={{
                     width: '100%',
-                    padding: '1rem 1.25rem',
-                    borderRadius: '10px',
-                    border: `2px solid ${errors.email ? '#e53e3e' : '#e0e0e0'}`,
-                    backgroundColor: 'white',
-                    color: '#333',
+                    padding: '1.25rem 1.5rem',
+                    borderRadius: '12px',
+                    border: `1px solid ${errors.email ? '#f87171' : 'rgba(248, 113, 113, 0.45)'}`,
+                    backgroundColor: 'rgba(24, 24, 27, 0.6)',
+                    color: '#e5e7eb',
                     fontSize: '1rem',
                     transition: 'all 0.3s ease',
                     boxSizing: 'border-box',
                     fontWeight: '500'
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = '#C7613C';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(199, 97, 60, 0.1)';
+                    e.target.style.borderColor = '#dc2626';
+                    e.target.style.backgroundColor = 'rgba(38, 38, 38, 0.85)';
+                    e.target.style.boxShadow = '0 0 0 4px rgba(220, 38, 38, 0.2)';
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = errors.email ? '#e53e3e' : '#e0e0e0';
+                    e.target.style.borderColor = errors.email ? '#f87171' : 'rgba(248, 113, 113, 0.45)';
+                    e.target.style.backgroundColor = 'rgba(24, 24, 27, 0.6)';
                     e.target.style.boxShadow = 'none';
                   }}
                   placeholder="your.email@example.com"
                 />
                 {errors.email && (
                   <p style={{ 
-                    color: '#e53e3e', 
-                    fontSize: '0.875rem', 
+                    color: '#ff6b6b', 
+                    fontSize: '0.9rem', 
                     marginTop: '0.5rem',
                     fontWeight: '500'
                   }}>
@@ -365,8 +411,8 @@ const Appointment = () => {
                   display: 'block',
                   marginBottom: '0.75rem',
                   fontWeight: '600',
-                  color: '#333',
-                  fontSize: '1rem'
+                  color: '#fca5a5',
+                  fontSize: '1.1rem'
                 }}>
                   Phone Number *
                 </label>
@@ -378,30 +424,32 @@ const Appointment = () => {
                   required
                   style={{
                     width: '100%',
-                    padding: '1rem 1.25rem',
-                    borderRadius: '10px',
-                    border: `2px solid ${errors.phone ? '#e53e3e' : '#e0e0e0'}`,
-                    backgroundColor: 'white',
-                    color: '#333',
+                    padding: '1.25rem 1.5rem',
+                    borderRadius: '12px',
+                    border: `1px solid ${errors.phone ? '#f87171' : 'rgba(248, 113, 113, 0.45)'}`,
+                    backgroundColor: 'rgba(24, 24, 27, 0.6)',
+                    color: '#e5e7eb',
                     fontSize: '1rem',
                     transition: 'all 0.3s ease',
                     boxSizing: 'border-box',
                     fontWeight: '500'
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = '#C7613C';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(199, 97, 60, 0.1)';
+                    e.target.style.borderColor = '#dc2626';
+                    e.target.style.backgroundColor = 'rgba(38, 38, 38, 0.85)';
+                    e.target.style.boxShadow = '0 0 0 4px rgba(220, 38, 38, 0.2)';
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = errors.phone ? '#e53e3e' : '#e0e0e0';
+                    e.target.style.borderColor = errors.phone ? '#f87171' : 'rgba(248, 113, 113, 0.45)';
+                    e.target.style.backgroundColor = 'rgba(24, 24, 27, 0.6)';
                     e.target.style.boxShadow = 'none';
                   }}
                   placeholder="(555) 123-4567"
                 />
                 {errors.phone && (
                   <p style={{ 
-                    color: '#e53e3e', 
-                    fontSize: '0.875rem', 
+                    color: '#ff6b6b', 
+                    fontSize: '0.9rem', 
                     marginTop: '0.5rem',
                     fontWeight: '500'
                   }}>
@@ -415,8 +463,8 @@ const Appointment = () => {
                   display: 'block',
                   marginBottom: '0.75rem',
                   fontWeight: '600',
-                  color: '#333',
-                  fontSize: '1rem'
+                  color: '#fca5a5',
+                  fontSize: '1.1rem'
                 }}>
                   Vehicle Type *
                 </label>
@@ -427,27 +475,29 @@ const Appointment = () => {
                   required
                   style={{
                     width: '100%',
-                    padding: '1rem 1.25rem',
-                    borderRadius: '10px',
-                    border: `2px solid ${errors.vehicleType ? '#e53e3e' : '#e0e0e0'}`,
-                    backgroundColor: 'white',
-                    color: '#333',
+                    padding: '1.25rem 1.5rem',
+                    borderRadius: '12px',
+                    border: `1px solid ${errors.vehicleType ? '#f87171' : 'rgba(248, 113, 113, 0.45)'}`,
+                    backgroundColor: 'rgba(24, 24, 27, 0.6)',
+                    color: '#e5e7eb',
                     fontSize: '1rem',
                     transition: 'all 0.3s ease',
                     boxSizing: 'border-box',
                     appearance: 'none',
                     fontWeight: '500',
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23C7613C'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23dc2626'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
                     backgroundRepeat: 'no-repeat',
-                    backgroundPosition: 'right 1rem center',
+                    backgroundPosition: 'right 1.5rem center',
                     backgroundSize: '1.25rem'
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = '#C7613C';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(199, 97, 60, 0.1)';
+                    e.target.style.borderColor = '#dc2626';
+                    e.target.style.backgroundColor = 'rgba(38, 38, 38, 0.85)';
+                    e.target.style.boxShadow = '0 0 0 4px rgba(220, 38, 38, 0.2)';
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = errors.vehicleType ? '#e53e3e' : '#e0e0e0';
+                    e.target.style.borderColor = errors.vehicleType ? '#f87171' : 'rgba(248, 113, 113, 0.45)';
+                    e.target.style.backgroundColor = 'rgba(24, 24, 27, 0.6)';
                     e.target.style.boxShadow = 'none';
                   }}
                 >
@@ -458,8 +508,8 @@ const Appointment = () => {
                 </select>
                 {errors.vehicleType && (
                   <p style={{ 
-                    color: '#e53e3e', 
-                    fontSize: '0.875rem', 
+                    color: '#ff6b6b', 
+                    fontSize: '0.9rem', 
                     marginTop: '0.5rem',
                     fontWeight: '500'
                   }}>
@@ -480,8 +530,8 @@ const Appointment = () => {
                   display: 'block',
                   marginBottom: '0.75rem',
                   fontWeight: '600',
-                  color: '#333',
-                  fontSize: '1rem'
+                  color: '#fca5a5',
+                  fontSize: '1.1rem'
                 }}>
                   Service Type *
                 </label>
@@ -492,27 +542,29 @@ const Appointment = () => {
                   required
                   style={{
                     width: '100%',
-                    padding: '1rem 1.25rem',
-                    borderRadius: '10px',
-                    border: `2px solid ${errors.serviceType ? '#e53e3e' : '#e0e0e0'}`,
-                    backgroundColor: 'white',
-                    color: '#333',
+                    padding: '1.25rem 1.5rem',
+                    borderRadius: '12px',
+                    border: `1px solid ${errors.serviceType ? '#f87171' : 'rgba(248, 113, 113, 0.45)'}`,
+                    backgroundColor: 'rgba(24, 24, 27, 0.6)',
+                    color: '#e5e7eb',
                     fontSize: '1rem',
                     transition: 'all 0.3s ease',
                     boxSizing: 'border-box',
                     appearance: 'none',
                     fontWeight: '500',
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23C7613C'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23dc2626'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
                     backgroundRepeat: 'no-repeat',
-                    backgroundPosition: 'right 1rem center',
+                    backgroundPosition: 'right 1.5rem center',
                     backgroundSize: '1.25rem'
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = '#C7613C';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(199, 97, 60, 0.1)';
+                    e.target.style.borderColor = '#dc2626';
+                    e.target.style.backgroundColor = 'rgba(38, 38, 38, 0.85)';
+                    e.target.style.boxShadow = '0 0 0 4px rgba(220, 38, 38, 0.2)';
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = errors.serviceType ? '#e53e3e' : '#e0e0e0';
+                    e.target.style.borderColor = errors.serviceType ? '#f87171' : 'rgba(248, 113, 113, 0.45)';
+                    e.target.style.backgroundColor = 'rgba(24, 24, 27, 0.6)';
                     e.target.style.boxShadow = 'none';
                   }}
                 >
@@ -525,8 +577,8 @@ const Appointment = () => {
                 </select>
                 {errors.serviceType && (
                   <p style={{ 
-                    color: '#e53e3e', 
-                    fontSize: '0.875rem', 
+                    color: '#ff6b6b', 
+                    fontSize: '0.9rem', 
                     marginTop: '0.5rem',
                     fontWeight: '500'
                   }}>
@@ -540,8 +592,8 @@ const Appointment = () => {
                   display: 'block',
                   marginBottom: '0.75rem',
                   fontWeight: '600',
-                  color: '#333',
-                  fontSize: '1rem'
+                  color: '#fca5a5',
+                  fontSize: '1.1rem'
                 }}>
                   Preferred Date *
                 </label>
@@ -554,29 +606,31 @@ const Appointment = () => {
                   min={new Date().toISOString().split('T')[0]}
                   style={{
                     width: '100%',
-                    padding: '1rem 1.25rem',
-                    borderRadius: '10px',
-                    border: `2px solid ${errors.preferredDate ? '#e53e3e' : '#e0e0e0'}`,
-                    backgroundColor: 'white',
-                    color: '#333',
+                    padding: '1.25rem 1.5rem',
+                    borderRadius: '12px',
+                    border: `1px solid ${errors.preferredDate ? '#f87171' : 'rgba(248, 113, 113, 0.45)'}`,
+                    backgroundColor: 'rgba(24, 24, 27, 0.6)',
+                    color: '#e5e7eb',
                     fontSize: '1rem',
                     transition: 'all 0.3s ease',
                     boxSizing: 'border-box',
                     fontWeight: '500'
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = '#C7613C';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(199, 97, 60, 0.1)';
+                    e.target.style.borderColor = '#dc2626';
+                    e.target.style.backgroundColor = 'rgba(38, 38, 38, 0.85)';
+                    e.target.style.boxShadow = '0 0 0 4px rgba(220, 38, 38, 0.2)';
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = errors.preferredDate ? '#e53e3e' : '#e0e0e0';
+                    e.target.style.borderColor = errors.preferredDate ? '#f87171' : 'rgba(248, 113, 113, 0.45)';
+                    e.target.style.backgroundColor = 'rgba(24, 24, 27, 0.6)';
                     e.target.style.boxShadow = 'none';
                   }}
                 />
                 {errors.preferredDate && (
                   <p style={{ 
-                    color: '#e53e3e', 
-                    fontSize: '0.875rem', 
+                    color: '#ff6b6b', 
+                    fontSize: '0.9rem', 
                     marginTop: '0.5rem',
                     fontWeight: '500'
                   }}>
@@ -591,8 +645,8 @@ const Appointment = () => {
                 display: 'block',
                 marginBottom: '0.75rem',
                 fontWeight: '600',
-                color: '#333',
-                fontSize: '1rem'
+                color: '#fca5a5',
+                fontSize: '1.1rem'
               }}>
                 Preferred Time *
               </label>
@@ -604,29 +658,31 @@ const Appointment = () => {
                 required
                 style={{
                   width: '100%',
-                  padding: '1rem 1.25rem',
-                  borderRadius: '10px',
-                  border: `2px solid ${errors.preferredTime ? '#e53e3e' : '#e0e0e0'}`,
-                  backgroundColor: 'white',
-                  color: '#333',
+                  padding: '1.25rem 1.5rem',
+                  borderRadius: '12px',
+                  border: `1px solid ${errors.preferredTime ? '#f87171' : 'rgba(248, 113, 113, 0.45)'}`,
+                  backgroundColor: 'rgba(24, 24, 27, 0.6)',
+                  color: '#e5e7eb',
                   fontSize: '1rem',
                   transition: 'all 0.3s ease',
                   boxSizing: 'border-box',
                   fontWeight: '500'
                 }}
                 onFocus={(e) => {
-                  e.target.style.borderColor = '#C7613C';
-                  e.target.style.boxShadow = '0 0 0 3px rgba(199, 97, 60, 0.1)';
+                  e.target.style.borderColor = '#dc2626';
+                  e.target.style.backgroundColor = 'rgba(38, 38, 38, 0.85)';
+                  e.target.style.boxShadow = '0 0 0 4px rgba(220, 38, 38, 0.2)';
                 }}
                 onBlur={(e) => {
-                  e.target.style.borderColor = errors.preferredTime ? '#e53e3e' : '#e0e0e0';
+                  e.target.style.borderColor = errors.preferredTime ? '#f87171' : 'rgba(248, 113, 113, 0.45)';
+                  e.target.style.backgroundColor = 'rgba(24, 24, 27, 0.6)';
                   e.target.style.boxShadow = 'none';
                 }}
               />
               {errors.preferredTime && (
                 <p style={{ 
-                  color: '#e53e3e', 
-                  fontSize: '0.875rem', 
+                  color: '#ff6b6b', 
+                  fontSize: '0.9rem', 
                   marginTop: '0.5rem',
                   fontWeight: '500'
                 }}>
@@ -640,8 +696,8 @@ const Appointment = () => {
                 display: 'block',
                 marginBottom: '0.75rem',
                 fontWeight: '600',
-                color: '#333',
-                fontSize: '1rem'
+                color: '#fca5a5',
+                fontSize: '1.1rem'
               }}>
                 Additional Message
               </label>
@@ -652,11 +708,11 @@ const Appointment = () => {
                 rows={4}
                 style={{
                   width: '100%',
-                  padding: '1rem 1.25rem',
-                  borderRadius: '10px',
-                  border: '2px solid #e0e0e0',
-                  backgroundColor: 'white',
-                  color: '#333',
+                  padding: '1.25rem 1.5rem',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(248, 113, 113, 0.45)',
+                  backgroundColor: 'rgba(24, 24, 27, 0.6)',
+                  color: '#e5e7eb',
                   fontSize: '1rem',
                   resize: 'vertical',
                   transition: 'all 0.3s ease',
@@ -665,11 +721,13 @@ const Appointment = () => {
                   fontFamily: 'inherit'
                 }}
                 onFocus={(e) => {
-                  e.target.style.borderColor = '#C7613C';
-                  e.target.style.boxShadow = '0 0 0 3px rgba(199, 97, 60, 0.1)';
+                  e.target.style.borderColor = '#dc2626';
+                  e.target.style.backgroundColor = 'rgba(38, 38, 38, 0.85)';
+                  e.target.style.boxShadow = '0 0 0 4px rgba(220, 38, 38, 0.2)';
                 }}
                 onBlur={(e) => {
-                  e.target.style.borderColor = '#e0e0e0';
+                  e.target.style.borderColor = 'rgba(248, 113, 113, 0.45)';
+                  e.target.style.backgroundColor = 'rgba(24, 24, 27, 0.6)';
                   e.target.style.boxShadow = 'none';
                 }}
                 placeholder="Tell us about any specific issues or concerns..."
@@ -680,43 +738,45 @@ const Appointment = () => {
               type="submit" 
               disabled={loading}
               style={{
-                background: loading ? '#cccccc' : '#C7613C',
-                color: 'white',
-                padding: '1.25rem 2.5rem',
-                borderRadius: '10px',
+                background: loading 
+                  ? 'rgba(75, 85, 99, 0.4)' 
+                  : 'linear-gradient(135deg, #dc2626 0%, #b91c1c 60%, #7f1d1d 100%)',
+                color: loading ? '#9ca3af' : '#f9fafb',
+                padding: '1.5rem 3rem',
+                borderRadius: '12px',
                 fontWeight: '700',
                 border: 'none',
                 cursor: loading ? 'not-allowed' : 'pointer',
-                fontSize: '1.1rem',
+                fontSize: '1.2rem',
                 transition: 'all 0.3s ease',
                 marginTop: '1rem',
-                boxShadow: '0 4px 15px rgba(199, 97, 60, 0.3)',
+                boxShadow: loading 
+                  ? 'none' 
+                  : '0 6px 25px rgba(220, 38, 38, 0.45)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: '0.75rem'
+                gap: '1rem'
               }}
               onMouseOver={(e) => {
                 if (!loading) {
-                  e.currentTarget.style.background = '#b55536';
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(199, 97, 60, 0.4)';
+                  e.currentTarget.style.transform = 'translateY(-3px)';
+                  e.currentTarget.style.boxShadow = '0 12px 35px rgba(220, 38, 38, 0.6)';
                 }
               }}
               onMouseOut={(e) => {
                 if (!loading) {
-                  e.currentTarget.style.background = '#C7613C';
                   e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 4px 15px rgba(199, 97, 60, 0.3)';
+                  e.currentTarget.style.boxShadow = '0 6px 25px rgba(220, 38, 38, 0.45)';
                 }
               }}
             >
               {loading && (
                 <div style={{
-                  width: '18px',
-                  height: '18px',
+                  width: '20px',
+                  height: '20px',
                   border: '2px solid transparent',
-                  borderTop: '2px solid white',
+                  borderTop: '2px solid currentColor',
                   borderRadius: '50%',
                   animation: 'spin 1s linear infinite'
                 }} />
@@ -729,57 +789,105 @@ const Appointment = () => {
         {/* Contact Info */}
         <div style={{
           textAlign: 'center',
-          padding: '3rem 2rem',
-          background: 'linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%)',
-          borderRadius: '15px',
-          boxShadow: '0 5px 20px rgba(0, 0, 0, 0.05)',
-          border: '1px solid #f0f0f0'
+          padding: '4rem 2rem',
+          background: 'rgba(17, 17, 17, 0.78)',
+          borderRadius: '20px',
+          boxShadow: '0 15px 35px rgba(0, 0, 0, 0.6)',
+          border: '1px solid rgba(220, 38, 38, 0.35)',
+          backdropFilter: 'blur(25px) saturate(180%)',
+          position: 'relative'
         }}>
+          {/* Top Accent Line */}
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: '80%',
+            height: '3px',
+            background: 'linear-gradient(90deg, transparent, #dc2626, #f87171, #dc2626, transparent)',
+            filter: 'blur(0.5px)'
+          }} />
+          
           <h3 style={{
-            color: '#C7613C',
-            fontSize: '1.75rem',
-            marginBottom: '1.5rem',
-            fontWeight: '700'
+            background: 'linear-gradient(135deg, #ffffff 0%, #f87171 45%, #dc2626 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            fontSize: '2rem',
+            marginBottom: '2rem',
+            fontWeight: '700',
+            fontFamily: 'Georgia, serif'
           }}>
             Need Immediate Assistance?
           </h3>
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-            gap: '1.5rem',
-            maxWidth: '600px',
+            gap: '2rem',
+            maxWidth: '800px',
             margin: '0 auto'
           }}>
             <div style={{
-              padding: '1.5rem',
-              background: 'white',
-              borderRadius: '10px',
-              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)'
+              padding: '2rem',
+              background: 'rgba(24, 24, 27, 0.6)',
+              borderRadius: '15px',
+              boxShadow: '0 5px 20px rgba(0, 0, 0, 0.3)',
+              transition: 'all 0.3s ease',
+              border: '1px solid rgba(220, 38, 38, 0.3)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-5px)';
+              e.currentTarget.style.boxShadow = '0 10px 30px rgba(220, 38, 38, 0.4)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 5px 20px rgba(0, 0, 0, 0.3)';
             }}>
-              <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📞</div>
-              <p style={{ color: '#333', margin: '0.5rem 0', fontWeight: '600' }}>Call Us</p>
-              <p style={{ color: '#C7613C', margin: 0, fontWeight: '700', fontSize: '1.1rem' }}>(555) 123-4567</p>
+              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📞</div>
+              <p style={{ color: '#fca5a5', margin: '0.5rem 0', fontWeight: '600', fontSize: '1.1rem' }}>Call Us</p>
+              <p style={{ color: '#dc2626', margin: 0, fontWeight: '700', fontSize: '1.2rem' }}>(555) 123-4567</p>
             </div>
             <div style={{
-              padding: '1.5rem',
-              background: 'white',
-              borderRadius: '10px',
-              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)'
+              padding: '2rem',
+              background: 'rgba(24, 24, 27, 0.6)',
+              borderRadius: '15px',
+              boxShadow: '0 5px 20px rgba(0, 0, 0, 0.3)',
+              transition: 'all 0.3s ease',
+              border: '1px solid rgba(220, 38, 38, 0.3)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-5px)';
+              e.currentTarget.style.boxShadow = '0 10px 30px rgba(220, 38, 38, 0.4)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 5px 20px rgba(0, 0, 0, 0.3)';
             }}>
-              <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>✉️</div>
-              <p style={{ color: '#333', margin: '0.5rem 0', fontWeight: '600' }}>Email</p>
-              <p style={{ color: '#C7613C', margin: 0, fontWeight: '700', fontSize: '1.1rem' }}>service@sunnyauto.com</p>
+              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>✉️</div>
+              <p style={{ color: '#fca5a5', margin: '0.5rem 0', fontWeight: '600', fontSize: '1.1rem' }}>Email</p>
+              <p style={{ color: '#dc2626', margin: 0, fontWeight: '700', fontSize: '1.2rem' }}>service@sunnyauto.com</p>
             </div>
             <div style={{
-              padding: '1.5rem',
-              background: 'white',
-              borderRadius: '10px',
-              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)'
+              padding: '2rem',
+              background: 'rgba(24, 24, 27, 0.6)',
+              borderRadius: '15px',
+              boxShadow: '0 5px 20px rgba(0, 0, 0, 0.3)',
+              transition: 'all 0.3s ease',
+              border: '1px solid rgba(220, 38, 38, 0.3)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-5px)';
+              e.currentTarget.style.boxShadow = '0 10px 30px rgba(220, 38, 38, 0.4)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 5px 20px rgba(0, 0, 0, 0.3)';
             }}>
-              <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🕒</div>
-              <p style={{ color: '#333', margin: '0.5rem 0', fontWeight: '600' }}>Business Hours</p>
-              <p style={{ color: '#C7613C', margin: 0, fontWeight: '700', fontSize: '1rem' }}>Mon-Fri 8AM-6PM</p>
-              <p style={{ color: '#C7613C', margin: 0, fontWeight: '700', fontSize: '1rem' }}>Sat 9AM-4PM</p>
+              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🕒</div>
+              <p style={{ color: '#fca5a5', margin: '0.5rem 0', fontWeight: '600', fontSize: '1.1rem' }}>Business Hours</p>
+              <p style={{ color: '#dc2626', margin: '0.25rem 0', fontWeight: '700', fontSize: '1.1rem' }}>Mon-Fri 8AM-6PM</p>
+              <p style={{ color: '#dc2626', margin: 0, fontWeight: '700', fontSize: '1.1rem' }}>Sat 9AM-4PM</p>
             </div>
           </div>
         </div>

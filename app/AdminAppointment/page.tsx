@@ -32,6 +32,7 @@ const AdminAppointments = () => {
   const [showEditModal, setShowEditModal] = useState<boolean>(false);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [editFormData, setEditFormData] = useState<Appointment | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
 
   // Color scheme - Red accent (#dc2626) with dark theme
   const colors = {
@@ -186,21 +187,59 @@ const AdminAppointments = () => {
   };
 
   const handleDeleteAppointment = async (appointmentId: string) => {
-    if (window.confirm('Are you sure you want to delete this appointment?')) {
-      try {
-        const { error } = await supabase
-          .from('appointments')
-          .delete()
-          .eq('id', appointmentId);
+    if (!window.confirm('Are you sure you want to delete this appointment? This action cannot be undone.')) {
+      return;
+    }
 
-        if (error) throw error;
+    setDeleteLoading(appointmentId);
+    
+    try {
+      console.log('Attempting to delete appointment:', appointmentId);
+      
+      const { error } = await supabase
+        .from('appointments')
+        .delete()
+        .eq('id', appointmentId);
+
+      if (error) {
+        console.error('Supabase delete error:', error);
         
-        setAppointments(prev => prev.filter(app => app.id !== appointmentId));
-        alert('Appointment deleted successfully!');
-      } catch (error) {
-        console.error('Error deleting appointment:', error);
-        alert('Error deleting appointment');
+        // Provide specific error messages based on error code
+        if (error.code === '42501') {
+          throw new Error('Permission denied. Please check if you have delete permissions for the appointments table.');
+        } else if (error.code === '23503') {
+          throw new Error('Cannot delete appointment due to foreign key constraints.');
+        } else {
+          throw error;
+        }
       }
+
+      // Update local state immediately for better UX
+      setAppointments(prev => prev.filter(app => app.id !== appointmentId));
+      
+      console.log('Appointment deleted successfully');
+      alert('Appointment deleted successfully!');
+      
+    } catch (error: any) {
+      console.error('Error deleting appointment:', error);
+      
+      // Show user-friendly error message
+      let errorMessage = 'Failed to delete appointment. ';
+      
+      if (error.message.includes('Permission denied')) {
+        errorMessage += 'You do not have permission to delete appointments. Please contact your administrator.';
+      } else if (error.message.includes('foreign key')) {
+        errorMessage += 'This appointment is referenced by other records and cannot be deleted.';
+      } else {
+        errorMessage += error.message || 'Please try again.';
+      }
+      
+      alert(errorMessage);
+      
+      // Refresh appointments to ensure consistency
+      fetchAppointments();
+    } finally {
+      setDeleteLoading(null);
     }
   };
 
@@ -728,34 +767,50 @@ const AdminAppointments = () => {
                         
                         <button 
                           onClick={() => handleDeleteAppointment(appointment.id)}
+                          disabled={deleteLoading === appointment.id}
                           style={{
-                            backgroundColor: colors.error,
+                            backgroundColor: deleteLoading === appointment.id ? colors.textMuted : colors.error,
                             color: 'white',
                             border: 'none',
                             width: '40px',
                             height: '40px',
                             borderRadius: '8px',
-                            cursor: 'pointer',
+                            cursor: deleteLoading === appointment.id ? 'not-allowed' : 'pointer',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             transition: 'all 0.3s ease',
-                            boxShadow: `0 4px 15px rgba(239, 68, 68, 0.4)`
+                            boxShadow: deleteLoading === appointment.id ? 'none' : `0 4px 15px rgba(239, 68, 68, 0.4)`
                           }}
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = '#dc2626';
-                            e.currentTarget.style.transform = 'translateY(-2px)';
+                            if (deleteLoading !== appointment.id) {
+                              e.currentTarget.style.backgroundColor = '#dc2626';
+                              e.currentTarget.style.transform = 'translateY(-2px)';
+                            }
                           }}
                           onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = colors.error;
-                            e.currentTarget.style.transform = 'translateY(0)';
+                            if (deleteLoading !== appointment.id) {
+                              e.currentTarget.style.backgroundColor = colors.error;
+                              e.currentTarget.style.transform = 'translateY(0)';
+                            }
                           }}
                           title="Delete Appointment"
                         >
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <polyline points="3,6 5,6 21,6" stroke="currentColor" strokeWidth="2"/>
-                            <path d="m19,6v14a2,2 0 0,1-2,2H7a2,2 0 0,1-2-2V6m3,0V4a2,2 0 0,1,2-2h4a2,2 0 0,1,2,2v2" stroke="currentColor" strokeWidth="2"/>
-                          </svg>
+                          {deleteLoading === appointment.id ? (
+                            <div style={{
+                              width: '16px',
+                              height: '16px',
+                              border: '2px solid transparent',
+                              borderTop: '2px solid currentColor',
+                              borderRadius: '50%',
+                              animation: 'spin 1s linear infinite'
+                            }} />
+                          ) : (
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <polyline points="3,6 5,6 21,6" stroke="currentColor" strokeWidth="2"/>
+                              <path d="m19,6v14a2,2 0 0,1-2,2H7a2,2 0 0,1-2-2V6m3,0V4a2,2 0 0,1,2-2h4a2,2 0 0,1,2,2v2" stroke="currentColor" strokeWidth="2"/>
+                            </svg>
+                          )}
                         </button>
                       </div>
                     </div>
