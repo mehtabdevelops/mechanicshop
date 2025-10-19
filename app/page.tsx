@@ -22,7 +22,6 @@ const HomePage = () => {
 
   const handleSignIn = () => router.push('/signin');
   const handleSignUp = () => router.push('/signup');
-  const handleAdminSignIn = () => router.push('/AdminSignIn');
 
   const carImages = [
     "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
@@ -378,8 +377,7 @@ const HomePage = () => {
         }}>
           {[
             { text: 'Sign in', action: handleSignIn, isPrimary: true },
-            { text: 'Sign Up', action: handleSignUp, isPrimary: true },
-            { text: 'Admin Access', action: handleAdminSignIn, isPrimary: false }
+            { text: 'Sign Up', action: handleSignUp, isPrimary: true }
           ].map((button, index) => (
             <button
               key={index}
