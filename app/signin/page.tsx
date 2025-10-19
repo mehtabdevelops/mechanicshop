@@ -199,7 +199,7 @@ const Signin = () => {
         // Enhanced success animation
         gsap.to(formCardRef.current, {
           scale: 1.05,
-          boxShadow: '0 20px 50px rgba(212, 175, 55, 0.4)',
+          boxShadow: '0 20px 50px rgba(220, 38, 38, 0.4)',
           duration: 0.5,
           ease: "power2.out",
           onComplete: () => {
@@ -278,7 +278,7 @@ const Signin = () => {
       display: 'flex', 
       flexDirection: 'column',
       fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      background: 'linear-gradient(135deg, #2F4F4F 0%, #F5F5DC 50%, #2F4F4F 100%)',
+      background: 'linear-gradient(135deg, #050505 0%, #0f0f0f 50%, #181818 100%)',
       position: 'relative',
       overflow: 'hidden'
     }}>
@@ -290,8 +290,8 @@ const Signin = () => {
           position: 'absolute',
           inset: 0,
           backgroundImage: `
-            radial-gradient(circle at 20% 20%, rgba(212, 175, 55, 0.08) 2px, transparent 0),
-            radial-gradient(circle at 80% 80%, rgba(212, 175, 55, 0.05) 1px, transparent 0)
+            radial-gradient(circle at 20% 20%, rgba(220, 38, 38, 0.08) 2px, transparent 0),
+            radial-gradient(circle at 80% 80%, rgba(220, 38, 38, 0.05) 1px, transparent 0)
           `,
           backgroundSize: '60px 60px, 40px 40px',
           zIndex: 1,
@@ -305,23 +305,23 @@ const Signin = () => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        borderBottom: '1px solid rgba(212, 175, 55, 0.2)',
+        borderBottom: '1px solid rgba(220, 38, 38, 0.25)',
         backdropFilter: 'blur(15px)',
         position: 'relative',
         zIndex: 10,
-        background: 'rgba(47, 79, 79, 0.3)'
+        background: 'rgba(12, 12, 12, 0.6)'
       }}>
         <h1 style={{
           fontSize: '2.75rem',
           fontWeight: '800',
-          background: 'linear-gradient(135deg, #D4AF37 0%, #F5F5DC 50%, #D4AF37 100%)',
+          background: 'linear-gradient(135deg, #ffffff 0%, #f87171 45%, #dc2626 100%)',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
           backgroundClip: 'text',
           backgroundSize: '200% 200%',
           cursor: 'pointer',
           letterSpacing: '3px',
-          textShadow: '0 2px 20px rgba(212, 175, 55, 0.3)',
+          textShadow: '0 2px 20px rgba(220, 38, 38, 0.35)',
           fontFamily: 'Georgia, serif',
           transition: 'all 0.3s ease'
         }} 
@@ -365,19 +365,20 @@ const Signin = () => {
           <div ref={formCardRef} style={{
             width: '100%',
             maxWidth: '480px',
-            background: 'rgba(245, 245, 220, 0.08)',
+            background: 'rgba(17, 17, 17, 0.78)',
             backdropFilter: 'blur(25px) saturate(180%)',
             WebkitBackdropFilter: 'blur(25px) saturate(180%)',
             padding: '3.5rem 3rem',
             borderRadius: '20px',
             boxShadow: `
-              0 15px 40px rgba(0, 0, 0, 0.3),
-              inset 0 1px 0 rgba(245, 245, 220, 0.1)
+              0 15px 40px rgba(0, 0, 0, 0.6),
+              inset 0 1px 0 rgba(255, 255, 255, 0.08)
             `,
-            border: '1px solid rgba(212, 175, 55, 0.25)',
+            border: '1px solid rgba(220, 38, 38, 0.35)',
             position: 'relative',
             transform: 'perspective(1000px)',
-            transformStyle: 'preserve-3d'
+            transformStyle: 'preserve-3d',
+            color: '#f3f4f6'
           }}>
             {/* Enhanced Top Accent */}
             <div style={{
@@ -387,7 +388,7 @@ const Signin = () => {
               transform: 'translateX(-50%)',
               width: '70%',
               height: '3px',
-              background: 'linear-gradient(90deg, transparent, #D4AF37, #F5F5DC, #D4AF37, transparent)',
+              background: 'linear-gradient(90deg, transparent, #dc2626, #f87171, #dc2626, transparent)',
               opacity: 0.8,
               filter: 'blur(0.5px)',
               borderRadius: '2px'
@@ -397,7 +398,7 @@ const Signin = () => {
               fontSize: '2.25rem',
               fontWeight: '700',
               marginBottom: '0.75rem',
-              background: 'linear-gradient(135deg, #D4AF37 0%, #F5F5DC 100%)',
+              background: 'linear-gradient(135deg, #ffffff 0%, #f87171 45%, #dc2626 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
@@ -408,7 +409,7 @@ const Signin = () => {
             </h2>
             
             <p style={{
-              color: 'rgba(47, 79, 79, 0.7)',
+              color: 'rgba(229, 231, 235, 0.7)',
               marginBottom: '3rem',
               fontSize: '1rem',
               textAlign: 'center',
@@ -426,7 +427,7 @@ const Signin = () => {
                   display: 'block', 
                   marginBottom: '0.75rem', 
                   fontWeight: '600',
-                  color: '#D4AF37',
+                  color: '#fca5a5',
                   fontSize: '0.95rem',
                   letterSpacing: '0.5px'
                 }}>
@@ -441,9 +442,9 @@ const Signin = () => {
                   style={{
                     padding: '1rem 1.25rem',
                     borderRadius: '12px',
-                    border: `1px solid ${errors.email ? '#cc6666' : 'rgba(212, 175, 55, 0.4)'}`,
-                    backgroundColor: 'rgba(245, 245, 220, 0.12)',
-                    color: '#2F4F4F',
+                    border: `1px solid ${errors.email ? '#f87171' : 'rgba(248, 113, 113, 0.45)'}`,
+                    backgroundColor: 'rgba(24, 24, 27, 0.6)',
+                    color: '#e5e7eb',
                     fontSize: '1rem',
                     width: '100%',
                     outline: 'none',
@@ -452,9 +453,9 @@ const Signin = () => {
                     fontFamily: 'inherit'
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = '#D4AF37';
-                    e.target.style.backgroundColor = 'rgba(245, 245, 220, 0.2)';
-                    e.target.style.boxShadow = '0 0 0 4px rgba(212, 175, 55, 0.2)';
+                    e.target.style.borderColor = '#dc2626';
+                    e.target.style.backgroundColor = 'rgba(38, 38, 38, 0.85)';
+                    e.target.style.boxShadow = '0 0 0 4px rgba(220, 38, 38, 0.2)';
                     gsap.to(e.target, { 
                       scale: 1.02, 
                       duration: 0.3,
@@ -462,8 +463,8 @@ const Signin = () => {
                     });
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = errors.email ? '#cc6666' : 'rgba(212, 175, 55, 0.4)';
-                    e.target.style.backgroundColor = 'rgba(245, 245, 220, 0.12)';
+                    e.target.style.borderColor = errors.email ? '#f87171' : 'rgba(248, 113, 113, 0.45)';
+                    e.target.style.backgroundColor = 'rgba(24, 24, 27, 0.6)';
                     e.target.style.boxShadow = 'none';
                     gsap.to(e.target, { 
                       scale: 1, 
@@ -494,7 +495,7 @@ const Signin = () => {
                 }}>
                   <label style={{ 
                     fontWeight: '600',
-                    color: '#D4AF37',
+                    color: '#fca5a5',
                     fontSize: '0.95rem',
                     letterSpacing: '0.5px'
                   }}>
@@ -502,7 +503,7 @@ const Signin = () => {
                   </label>
                   <span 
                     style={{ 
-                      color: 'rgba(47, 79, 79, 0.6)', 
+                      color: 'rgba(229, 231, 235, 0.6)', 
                       cursor: 'pointer', 
                       fontSize: '0.85rem',
                       textDecoration: 'none',
@@ -512,11 +513,11 @@ const Signin = () => {
                       borderRadius: '6px'
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.color = '#D4AF37';
-                      e.currentTarget.style.backgroundColor = 'rgba(212, 175, 55, 0.1)';
+                      e.currentTarget.style.color = '#f87171';
+                      e.currentTarget.style.backgroundColor = 'rgba(220, 38, 38, 0.1)';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.color = 'rgba(47, 79, 79, 0.6)';
+                      e.currentTarget.style.color = 'rgba(229, 231, 235, 0.6)';
                       e.currentTarget.style.backgroundColor = 'transparent';
                     }}
                     onClick={handleForgotPassword}
@@ -533,9 +534,9 @@ const Signin = () => {
                   style={{
                     padding: '1rem 1.25rem',
                     borderRadius: '12px',
-                    border: `1px solid ${errors.password ? '#cc6666' : 'rgba(212, 175, 55, 0.4)'}`,
-                    backgroundColor: 'rgba(245, 245, 220, 0.12)',
-                    color: '#2F4F4F',
+                    border: `1px solid ${errors.password ? '#f87171' : 'rgba(248, 113, 113, 0.45)'}`,
+                    backgroundColor: 'rgba(24, 24, 27, 0.6)',
+                    color: '#e5e7eb',
                     fontSize: '1rem',
                     width: '100%',
                     outline: 'none',
@@ -544,9 +545,9 @@ const Signin = () => {
                     fontFamily: 'inherit'
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = '#D4AF37';
-                    e.target.style.backgroundColor = 'rgba(245, 245, 220, 0.2)';
-                    e.target.style.boxShadow = '0 0 0 4px rgba(212, 175, 55, 0.2)';
+                    e.target.style.borderColor = '#dc2626';
+                    e.target.style.backgroundColor = 'rgba(38, 38, 38, 0.85)';
+                    e.target.style.boxShadow = '0 0 0 4px rgba(220, 38, 38, 0.2)';
                     gsap.to(e.target, { 
                       scale: 1.02, 
                       duration: 0.3,
@@ -554,8 +555,8 @@ const Signin = () => {
                     });
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = errors.password ? '#cc6666' : 'rgba(212, 175, 55, 0.4)';
-                    e.target.style.backgroundColor = 'rgba(245, 245, 220, 0.12)';
+                    e.target.style.borderColor = errors.password ? '#f87171' : 'rgba(248, 113, 113, 0.45)';
+                    e.target.style.backgroundColor = 'rgba(24, 24, 27, 0.6)';
                     e.target.style.boxShadow = 'none';
                     gsap.to(e.target, { 
                       scale: 1, 
@@ -583,9 +584,9 @@ const Signin = () => {
                 disabled={loading}
                 style={{
                   background: loading 
-                    ? 'rgba(100, 100, 100, 0.3)' 
-                    : 'linear-gradient(135deg, #D4AF37 0%, #F5F5DC 50%, #D4AF37 100%)',
-                  color: loading ? '#999' : '#2F4F4F',
+                    ? 'rgba(75, 85, 99, 0.4)' 
+                    : 'linear-gradient(135deg, #dc2626 0%, #b91c1c 60%, #7f1d1d 100%)',
+                  color: loading ? '#9ca3af' : '#f9fafb',
                   padding: '1.25rem',
                   border: 'none',
                   borderRadius: '12px',
@@ -598,7 +599,7 @@ const Signin = () => {
                   letterSpacing: '0.8px',
                   boxShadow: loading 
                     ? 'none' 
-                    : '0 6px 25px rgba(212, 175, 55, 0.4)',
+                    : '0 6px 25px rgba(220, 38, 38, 0.45)',
                   position: 'relative',
                   overflow: 'hidden'
                 }}
@@ -606,7 +607,7 @@ const Signin = () => {
                   if (!loading) {
                     gsap.to(e.currentTarget, { 
                       scale: 1.03,
-                      boxShadow: '0 8px 35px rgba(212, 175, 55, 0.6)',
+                      boxShadow: '0 8px 35px rgba(220, 38, 38, 0.6)',
                       duration: 0.4,
                       ease: "back.out(1.5)"
                     });
@@ -616,7 +617,7 @@ const Signin = () => {
                   if (!loading) {
                     gsap.to(e.currentTarget, { 
                       scale: 1,
-                      boxShadow: '0 6px 25px rgba(212, 175, 55, 0.4)',
+                      boxShadow: '0 6px 25px rgba(220, 38, 38, 0.45)',
                       duration: 0.4,
                       ease: "power2.out"
                     });
@@ -630,7 +631,7 @@ const Signin = () => {
                   left: '-100%',
                   width: '100%',
                   height: '100%',
-                  background: 'linear-gradient(90deg, transparent, rgba(245,245,220,0.4), transparent)',
+                  background: 'linear-gradient(90deg, transparent, rgba(248,113,113,0.4), transparent)',
                   transition: 'left 0.6s ease'
                 }} 
                 onMouseEnter={(e) => {
@@ -650,15 +651,15 @@ const Signin = () => {
             {/* Enhanced Sign Up Link */}
             <div style={{ 
               textAlign: 'center', 
-              color: 'rgba(47, 79, 79, 0.6)',
+              color: 'rgba(229, 231, 235, 0.6)',
               fontSize: '0.95rem',
               paddingTop: '1.5rem',
-              borderTop: '1px solid rgba(212, 175, 55, 0.2)'
+              borderTop: '1px solid rgba(220, 38, 38, 0.2)'
             }}>
-              <span>Don't have an account? </span>
+              <span>Don&apos;t have an account? </span>
               <span 
                 style={{ 
-                  color: '#D4AF37', 
+                  color: '#f87171', 
                   cursor: 'pointer', 
                   fontWeight: '600',
                   transition: 'all 0.3s ease',
@@ -667,12 +668,12 @@ const Signin = () => {
                   marginLeft: '0.5rem'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.color = '#F5F5DC';
-                  e.currentTarget.style.backgroundColor = 'rgba(212, 175, 55, 0.1)';
+                  e.currentTarget.style.color = '#f9fafb';
+                  e.currentTarget.style.backgroundColor = 'rgba(220, 38, 38, 0.1)';
                   gsap.to(e.currentTarget, { scale: 1.05, duration: 0.3 });
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.color = '#D4AF37';
+                  e.currentTarget.style.color = '#f87171';
                   e.currentTarget.style.backgroundColor = 'transparent';
                   gsap.to(e.currentTarget, { scale: 1, duration: 0.3 });
                 }}
@@ -687,30 +688,30 @@ const Signin = () => {
         {/* Enhanced Right Panel - Image */}
         <div ref={rightPanelRef} style={{
           flex: 1,
-          backgroundImage: `linear-gradient(rgba(47, 79, 79, 0.4), rgba(47, 79, 79, 0.7)), url('https://images.unsplash.com/photo-1542362567-b07e54358753?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80')`,
+          backgroundImage: `linear-gradient(rgba(15, 15, 15, 0.6), rgba(15, 15, 15, 0.85)), url('https://images.unsplash.com/photo-1542362567-b07e54358753?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80')`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           display: 'flex',
           alignItems: 'flex-end',
           padding: '4rem',
-          color: '#F5F5DC',
+          color: '#f3f4f6',
           position: 'relative',
-          filter: 'brightness(0.8) contrast(1.1) saturate(1.1)'
+          filter: 'brightness(0.7) contrast(1.1) saturate(1.05)'
         }}>
           {/* Enhanced vignette */}
           <div style={{
             position: 'absolute',
             inset: 0,
-            background: 'radial-gradient(ellipse at center, transparent 0%, rgba(47, 79, 79, 0.8) 70%, rgba(47, 79, 79, 0.95) 100%)'
+            background: 'radial-gradient(ellipse at center, transparent 0%, rgba(0, 0, 0, 0.75) 70%, rgba(0, 0, 0, 0.95) 100%)'
           }} />
           
           <div style={{
-            background: 'rgba(47, 79, 79, 0.75)',
-            backdropFilter: 'blur(15px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(15px) saturate(180%)',
+            background: 'rgba(17, 17, 17, 0.78)',
+            backdropFilter: 'blur(18px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(18px) saturate(180%)',
             padding: '2.5rem',
             borderRadius: '16px',
-            border: '1px solid rgba(212, 175, 55, 0.25)',
+            border: '1px solid rgba(220, 38, 38, 0.35)',
             position: 'relative',
             zIndex: 1,
             transform: 'perspective(1000px)',
@@ -720,7 +721,7 @@ const Signin = () => {
               fontSize: '2rem',
               fontWeight: '700',
               marginBottom: '1.25rem',
-              background: 'linear-gradient(135deg, #D4AF37 0%, #F5F5DC 100%)',
+              background: 'linear-gradient(135deg, #ffffff 0%, #f87171 45%, #dc2626 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
@@ -733,7 +734,7 @@ const Signin = () => {
               opacity: 0.9,
               maxWidth: '500px',
               lineHeight: '1.7',
-              color: 'rgba(245, 245, 220, 0.8)',
+              color: 'rgba(229, 231, 235, 0.75)',
               fontStyle: 'italic'
             }}>
               Experience automotive care that combines classic craftsmanship with contemporary innovation. Your journey to premium service starts here.
