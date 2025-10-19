@@ -222,8 +222,8 @@ const HomePage = () => {
     // Add glow effect to content card when any button is hovered
     gsap.to(contentCardRef.current, {
       boxShadow: isHovering 
-        ? '0 15px 40px rgba(212, 175, 55, 0.25), 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-        : '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+        ? '0 15px 40px rgba(220, 38, 38, 0.28), 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08)'
+        : '0 8px 32px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
       duration: 0.4,
       ease: "power2.out"
     });
@@ -231,7 +231,7 @@ const HomePage = () => {
 
   return (
     <div style={{
-      background: 'linear-gradient(135deg, #0a1628 0%, #162849 50%, #0d1b2a 100%)',
+      background: 'linear-gradient(135deg, #050505 0%, #0f0f0f 50%, #181818 100%)',
       height: '100vh',
       display: 'flex',
       flexDirection: 'column',
@@ -249,8 +249,8 @@ const HomePage = () => {
           position: 'absolute',
           inset: 0,
           backgroundImage: `
-            radial-gradient(circle at 25% 25%, rgba(212, 175, 55, 0.08) 2px, transparent 0),
-            radial-gradient(circle at 75% 75%, rgba(212, 175, 55, 0.05) 1px, transparent 0)
+            radial-gradient(circle at 25% 25%, rgba(220, 38, 38, 0.08) 2px, transparent 0),
+            radial-gradient(circle at 75% 75%, rgba(220, 38, 38, 0.05) 1px, transparent 0)
           `,
           backgroundSize: '60px 60px, 40px 40px',
           zIndex: 1,
@@ -269,7 +269,7 @@ const HomePage = () => {
           backgroundPosition: 'center',
           zIndex: 2,
           opacity: 0,
-          filter: 'brightness(0.7) contrast(1.2) saturate(1.1)',
+          filter: 'brightness(0.55) contrast(1.15) saturate(1.05)',
           transition: 'background-image 0.8s ease'
         }}
       />
@@ -281,8 +281,9 @@ const HomePage = () => {
           position: 'absolute',
           inset: 0,
           background: `
-            radial-gradient(ellipse at 30% 50%, transparent 0%, rgba(10, 22, 40, 0.6) 50%, rgba(10, 22, 40, 0.95) 100%),
-            linear-gradient(135deg, rgba(10, 22, 40, 0.85) 0%, rgba(22, 40, 73, 0.8) 50%, rgba(13, 27, 42, 0.9) 100%)
+            linear-gradient(135deg, rgba(12, 12, 12, 0.92) 0%, rgba(18, 18, 18, 0.9) 50%, rgba(0, 0, 0, 0.96) 100%),
+            linear-gradient(45deg, rgba(220, 38, 38, 0.18) 0%, transparent 65%),
+            radial-gradient(ellipse at 30% 50%, transparent 0%, rgba(10, 10, 10, 0.7) 50%, rgba(0, 0, 0, 0.96) 100%)
           `,
           zIndex: 4,
           opacity: 0
@@ -295,16 +296,16 @@ const HomePage = () => {
         style={{
           position: 'relative',
           zIndex: 10,
-          background: 'rgba(255, 255, 255, 0.04)',
-          backdropFilter: 'blur(25px) saturate(200%)',
-          WebkitBackdropFilter: 'blur(25px) saturate(200%)',
+          background: 'rgba(17, 17, 17, 0.78)',
+          backdropFilter: 'blur(25px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(25px) saturate(180%)',
           padding: '4rem 3.5rem',
           borderRadius: '20px',
           boxShadow: `
-            0 8px 32px rgba(0, 0, 0, 0.4),
-            inset 0 1px 0 rgba(255, 255, 255, 0.1)
+            0 8px 32px rgba(0, 0, 0, 0.6),
+            inset 0 1px 0 rgba(255, 255, 255, 0.08)
           `,
-          border: '1px solid rgba(212, 175, 55, 0.3)',
+          border: '1px solid rgba(220, 38, 38, 0.35)',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -325,7 +326,7 @@ const HomePage = () => {
             transform: 'translateX(-50%)',
             width: '80%',
             height: '3px',
-            background: 'linear-gradient(90deg, transparent, #d4af37, #f4e5b8, #d4af37, transparent)',
+            background: 'linear-gradient(90deg, transparent, #dc2626, #f87171, #dc2626, transparent)',
             opacity: 0,
             filter: 'blur(0.5px)'
           }} 
@@ -337,7 +338,7 @@ const HomePage = () => {
             fontSize: '3.75rem',
             fontWeight: '800',
             marginBottom: '24px',
-            background: 'linear-gradient(135deg, #d4af37 0%, #f4e5b8 30%, #ffedc2 50%, #f4e5b8 70%, #d4af37 100%)',
+            background: 'linear-gradient(135deg, #ffffff 0%, #f87171 45%, #dc2626 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
@@ -345,7 +346,7 @@ const HomePage = () => {
             width: '100%',
             opacity: 0,
             letterSpacing: '4px',
-            textShadow: '0 4px 30px rgba(212, 175, 55, 0.4)',
+            textShadow: '0 4px 30px rgba(220, 38, 38, 0.45)',
             fontFamily: 'Georgia, serif'
           }}
         >
@@ -358,7 +359,7 @@ const HomePage = () => {
             fontSize: '1.15rem',
             marginBottom: '45px',
             fontWeight: '300',
-            color: 'rgba(245, 245, 245, 0.9)',
+            color: 'rgba(229, 231, 235, 0.85)',
             width: '100%',
             opacity: 0,
             letterSpacing: '1.5px',
@@ -386,12 +387,12 @@ const HomePage = () => {
               style={{
                 background: button.isPrimary 
                   ? (hoveredButton === button.text 
-                      ? 'linear-gradient(135deg, #f8ecc2 0%, #d4af37 50%, #c9a961 100%)' 
-                      : 'linear-gradient(135deg, #d4af37 0%, #c9a961 50%, #b89434 100%)')
-                  : 'rgba(255, 255, 255, 0.06)',
-                color: button.isPrimary ? '#0a1628' : '#d4af37',
+                      ? 'linear-gradient(135deg, #fca5a5 0%, #dc2626 55%, #b91c1c 100%)' 
+                      : 'linear-gradient(135deg, #dc2626 0%, #b91c1c 50%, #7f1d1d 100%)')
+                  : 'rgba(255, 255, 255, 0.08)',
+                color: button.isPrimary ? '#ffffff' : '#fca5a5',
                 padding: '18px 36px',
-                border: button.isPrimary ? 'none' : '1px solid rgba(212, 175, 55, 0.5)',
+                border: button.isPrimary ? 'none' : '1px solid rgba(248, 113, 113, 0.5)',
                 borderRadius: '12px',
                 cursor: 'pointer',
                 fontSize: '1.05rem',
@@ -401,10 +402,10 @@ const HomePage = () => {
                 textAlign: 'center',
                 letterSpacing: '0.8px',
                 boxShadow: button.isPrimary && hoveredButton === button.text
-                  ? '0 8px 30px rgba(212, 175, 55, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3)'
+                  ? '0 8px 30px rgba(220, 38, 38, 0.55), 0 2px 12px rgba(0, 0, 0, 0.45)'
                   : button.isPrimary 
-                    ? '0 6px 20px rgba(212, 175, 55, 0.3)'
-                    : '0 4px 15px rgba(0, 0, 0, 0.2)',
+                    ? '0 6px 22px rgba(220, 38, 38, 0.35)'
+                    : '0 4px 18px rgba(248, 113, 113, 0.25)',
                 opacity: 0,
                 position: 'relative',
                 overflow: 'hidden'
@@ -447,14 +448,14 @@ const HomePage = () => {
           marginTop: '35px',
           width: '60%',
           height: '2px',
-          background: 'linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.4), rgba(212, 175, 55, 0.6), rgba(212, 175, 55, 0.4), transparent)',
+          background: 'linear-gradient(90deg, transparent, rgba(220, 38, 38, 0.35), rgba(220, 38, 38, 0.55), rgba(220, 38, 38, 0.35), transparent)',
           borderRadius: '2px'
         }} />
 
         <p style={{
           marginTop: '24px',
           fontSize: '0.9rem',
-          color: 'rgba(245, 245, 245, 0.6)',
+          color: 'rgba(229, 231, 235, 0.6)',
           letterSpacing: '1.5px',
           fontWeight: '300',
           fontStyle: 'italic'
