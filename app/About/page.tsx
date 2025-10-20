@@ -1,163 +1,458 @@
 "use client";
 
-import React, { useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
+
+const ORANGE = '#FF8C00';          // primary accent
+const ORANGE_LIGHT = '#FFA500';    // secondary for gradients
+const ORANGE_RGBA = (a: number) => `rgba(255, 140, 0, ${a})`;
 
 const About = () => {
-  const router = useRouter();
-  
-  // Simple refs for subtle animations
-  const heroRef = useRef<HTMLDivElement>(null);
-  const statsRef = useRef<HTMLDivElement>(null);
-  const storyRef = useRef<HTMLDivElement>(null);
-  const valuesRef = useRef<HTMLDivElement>(null);
-  const teamRef = useRef<HTMLDivElement>(null);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const prefersReducedMotion =
+    typeof window !== 'undefined'
+      ? window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+      : false;
+
+  // Refs for animations
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const heroRef = useRef<HTMLDivElement | null>(null);
+  const heroTextRef = useRef<HTMLDivElement | null>(null);
+  const statsRef = useRef<HTMLDivElement | null>(null);
+  const storyRef = useRef<HTMLDivElement | null>(null);
+  const valuesRef = useRef<HTMLDivElement | null>(null);
+  const teamRef = useRef<HTMLDivElement | null>(null);
+  const ctaRef = useRef<HTMLDivElement | null>(null);
+  const geometricRef = useRef<HTMLDivElement | null>(null);
 
   const teamMembers = [
     {
-      name: 'Michael Rodriguez',
-      position: 'Head Mechanic',
+      name: 'Michael "Steel Hands" Rodriguez',
+      position: 'Master Technician & Head Mechanic',
       experience: '15+ years',
+      specialization: 'Engine Diagnostics & Performance',
       image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
-      quote: 'Every car tells a story. I listen and fix.'
+      quote: 'Every engine has a voice. I speak fluent mechanic.',
+      certifications: 'ASE Master Certified'
     },
     {
-      name: 'Sarah Johnson',
-      position: 'Service Manager',
+      name: 'Sarah "The Negotiator" Johnson',
+      position: 'Service Manager & Customer Relations',
       experience: '12+ years', 
+      specialization: 'Customer Experience & Operations',
       image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
-      quote: 'Your satisfaction is our top priority.'
+      quote: 'Your trust is earned, not given. We earn it daily.',
+      certifications: 'Service Excellence Award 2023'
     },
     {
-      name: 'David Chen',
-      position: 'Electrical Systems Expert',
+      name: 'David "Circuit" Chen',
+      position: 'Electrical Systems Specialist',
       experience: '10+ years',
+      specialization: 'Advanced Electronics & Computer Systems',
       image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
-      quote: 'Solving complex problems is my passion.'
+      quote: 'From spark plugs to sensors, I solve the impossible.',
+      certifications: 'Hybrid & EV Certified'
     },
     {
-      name: 'Emily Williams', 
-      position: 'Brake & Suspension Specialist',
+      name: 'Emily "Safety First" Williams', 
+      position: 'Brake & Suspension Expert',
       experience: '8+ years',
+      specialization: 'Safety Systems & Chassis',
       image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
-      quote: 'Keeping your family safe on the road.'
+      quote: 'Every mile you drive is a mile I made safer.',
+      certifications: 'Brake Safety Specialist'
     }
   ];
 
   const values = [
-    {
-      icon: '⚡',
-      title: 'Quick Service',
-      description: 'Most services completed within 2 hours'
-    },
-    {
-      icon: '✅', 
-      title: 'Quality Work',
-      description: '12-month/12,000-mile warranty on all repairs'
-    },
-    {
-      icon: '💎',
-      title: 'Honest Pricing',
-      description: 'Transparent pricing with no hidden fees'
-    },
-    {
-      icon: '🤝',
-      title: 'Trustworthy',
-      description: 'We only recommend necessary repairs'
-    }
+    { icon: '⚡', title: 'Lightning Fast', description: 'Most services completed same-day. Because your time matters.', metric: '2 hours average' },
+    { icon: '🎯', title: 'Precision Quality', description: '12-month/12,000-mile warranty. We stand behind every bolt we turn.', metric: '98% satisfaction' },
+    { icon: '💎', title: 'Crystal Clear Pricing', description: 'No surprises. No hidden fees. Just honest work at honest prices.', metric: '100% transparent' },
+    { icon: '🛡️', title: 'Ironclad Trust', description: 'We only recommend what your car actually needs. Your safety, our mission.', metric: '10,000+ loyal customers' }
   ];
 
   const stats = [
-    { number: '10,000+', label: 'Happy Customers' },
-    { number: '15+', label: 'Years Experience' },
-    { number: '98%', label: 'Satisfaction Rate' },
-    { number: '24/7', label: 'Roadside Support' }
+    { number: '10,247', label: 'Happy Drivers', suffix: '+' },
+    { number: '15', label: 'Years of Excellence', suffix: '+' },
+    { number: '98.7', label: 'Satisfaction Rate', suffix: '%' },
+    { number: '24', label: 'Emergency Support', suffix: '/7' }
   ];
 
+  const milestones = [
+    { year: '2009', event: 'Founded by James Wilson in a single-bay garage' },
+    { year: '2012', event: 'Expanded to 5 service bays, hired first team of 3 mechanics' },
+    { year: '2016', event: 'Achieved ASE Blue Seal of Excellence recognition' },
+    { year: '2019', event: 'Opened state-of-the-art facility with 12 service bays' },
+    { year: '2023', event: 'Served 10,000th customer, launched 24/7 roadside assistance' }
+  ];
+
+  // CAR / SHOP GALLERY (organized nicely with varied spans)
+  const gallery: { src: string; title: string; wide?: boolean; tall?: boolean }[] = [
+    { src: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1600&q=80', title: 'Midnight Muscle', wide: true },
+    { src: 'https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&w=1600&q=80', title: 'Turbo Bay', tall: true },
+    { src: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=1600&q=80', title: 'Classic Shine' },
+    { src: 'https://images.unsplash.com/photo-1502877338535-766e1452684a?auto=format&fit=crop&w=1600&q=80', title: 'Shop Glow' },
+    { src: 'https://images.unsplash.com/photo-1515923162077-3f8a8e5b4d36?auto=format&fit=crop&w=1600&q=80', title: 'Detailing Bay', wide: true },
+    { src: 'https://images.unsplash.com/photo-1506619216599-9d16d0903dfd?auto=format&fit=crop&w=1600&q=80', title: 'City Cruise' },
+  ];
+
+  // Mouse parallax effect (smoothed)
   useEffect(() => {
-    // Simple fade-in animations
-    const elements = [
-      heroRef.current,
-      statsRef.current,
-      storyRef.current, 
-      valuesRef.current,
-      teamRef.current
-    ].filter(Boolean);
+    if (prefersReducedMotion) return;
+    const handleMouseMove = (e: MouseEvent): void => {
+      setMousePos({
+        x: (e.clientX / window.innerWidth - 0.5) * 2,
+        y: (e.clientY / window.innerHeight - 0.5) * 2
+      });
+    };
 
-    gsap.fromTo(elements, 
-      { opacity: 0, y: 30 },
-      { 
-        opacity: 1, 
-        y: 0, 
-        duration: 1,
-        stagger: 0.2,
-        ease: "power2.out"
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, [prefersReducedMotion]);
+
+  useEffect(() => {
+    if (prefersReducedMotion) return;
+
+    // Geometric shapes parallax
+    if (geometricRef.current) {
+      const shapes = geometricRef.current.querySelectorAll('.geometric-shape');
+      shapes.forEach((shape, index) => {
+        const speed = (index + 1) * 0.45;
+        const el = shape as HTMLElement;
+        el.style.willChange = 'transform';
+        gsap.to(el, {
+          x: mousePos.x * 30 * speed,
+          y: mousePos.y * 30 * speed,
+          duration: 0.6,
+          ease: "power3.out",
+          force3D: true
+        });
+      });
+    }
+  }, [mousePos, prefersReducedMotion]);
+
+  // ---- MAIN ANIMATIONS ----
+  useLayoutEffect(() => {
+    const ctx = gsap.context(() => {
+      if (prefersReducedMotion) return;
+
+      // HERO: robust per-line character animation (prevents gradient clipping/flicker)
+      const tl = gsap.timeline({ defaults: { ease: 'back.out(1.6)' } });
+
+      const line1Chars = heroTextRef.current?.querySelectorAll('.hero-line-1 .hero-char');
+      const line2Chars = heroTextRef.current?.querySelectorAll('.hero-line-2 .hero-char');
+
+      // Start hidden (no layout jump)
+      gsap.set([line1Chars, line2Chars], { autoAlpha: 0, y: 18, rotate: 0.01, scale: 0.98 });
+
+      if (line1Chars && line1Chars.length) {
+        tl.to(line1Chars, {
+          autoAlpha: 1,
+          y: 0,
+          scale: 1,
+          duration: 0.7,
+          stagger: 0.025,
+          force3D: true
+        });
       }
-    );
 
-    // Subtle hover effects for cards
-    const cards = document.querySelectorAll('.hover-card');
-    cards.forEach(card => {
-      card.addEventListener('mouseenter', () => {
-        gsap.to(card, { y: -5, duration: 0.3, ease: "power2.out" });
+      if (line2Chars && line2Chars.length) {
+        tl.to(line2Chars, {
+          autoAlpha: 1,
+          y: 0,
+          scale: 1,
+          duration: 0.75,
+          stagger: 0.02,
+          force3D: true
+        }, "-=0.2"); // slight overlap with line1 end
+      }
+
+      // Stats counter animation
+      const statNumbers = statsRef.current?.querySelectorAll('.stat-number');
+      statNumbers?.forEach((stat) => {
+        const el = stat as HTMLElement;
+        const target = parseFloat(el.dataset.target || '0');
+        gsap.from(stat, {
+          textContent: 0,
+          duration: 2,
+          ease: "power1.out",
+          snap: { textContent: target < 100 ? 0.1 : 1 },
+          scrollTrigger: {
+            trigger: stat,
+            start: "top 80%",
+          },
+          onUpdate: function () {
+            const numeric = Number((this.targets()[0] as HTMLElement).textContent || '0');
+            const rounded = Math.ceil(isNaN(numeric) ? 0 : numeric);
+            (stat as HTMLElement).textContent = String(rounded);
+          }
+        });
       });
-      card.addEventListener('mouseleave', () => {
-        gsap.to(card, { y: 0, duration: 0.3, ease: "power2.out" });
+
+      // Story section with parallax
+      if (storyRef.current) {
+        gsap.fromTo(storyRef.current,
+          { opacity: 0, y: 100 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 1,
+            scrollTrigger: {
+              trigger: storyRef.current,
+              start: "top 80%",
+              end: "top 30%",
+              scrub: 1
+            }
+          }
+        );
+      }
+
+      // Values cards stagger
+      const valueCards = valuesRef.current?.querySelectorAll('.value-card');
+      if (valueCards) {
+        gsap.fromTo(valueCards,
+          { opacity: 0, y: 50, rotationX: -12 },
+          {
+            opacity: 1,
+            y: 0,
+            rotationX: 0,
+            duration: 0.8,
+            stagger: 0.1,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: valuesRef.current,
+              start: "top 70%"
+            }
+          }
+        );
+      }
+
+      // Team cards with rotation entrance
+      const teamCards = teamRef.current?.querySelectorAll('.team-card');
+      if (teamCards) {
+        teamCards.forEach((card, index) => {
+          (card as HTMLElement).style.willChange = 'transform';
+          gsap.fromTo(card,
+            { opacity: 0, rotation: index % 2 === 0 ? -180 : 180, scale: 0.3 },
+            {
+              opacity: 1,
+              rotation: 0,
+              scale: 1,
+              duration: 1,
+              ease: "back.out(1.4)",
+              scrollTrigger: {
+                trigger: card,
+                start: "top 80%"
+              }
+            }
+          );
+        });
+      }
+
+      // CTA section
+      if (ctaRef.current) {
+        gsap.fromTo(ctaRef.current,
+          { opacity: 0, scale: 0.9 },
+          {
+            opacity: 1,
+            scale: 1,
+            duration: 1,
+            ease: "elastic.out(1, 0.6)",
+            scrollTrigger: {
+              trigger: ctaRef.current,
+              start: "top 80%"
+            }
+          }
+        );
+      }
+
+      // Geometric shapes floating animation
+      const shapes = document.querySelectorAll('.geometric-shape');
+      shapes.forEach((shape, index) => {
+        gsap.to(shape, {
+          y: "+=20",
+          rotation: "+=360",
+          duration: 3 + index,
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut",
+          force3D: true
+        });
       });
-    });
-  }, []);
+    }, rootRef);
+
+    return () => ctx.revert();
+  }, [prefersReducedMotion]);
+
+  // ---- Types ----
+  interface TeamMember {
+    name: string;
+    position: string;
+    experience: string;
+    specialization: string;
+    image: string;
+    quote: string;
+    certifications: string;
+  }
+  interface ValueItem { icon: string; title: string; description: string; metric: string; }
+  interface StatItem { number: string; label: string; suffix: string; }
+  interface Milestone { year: string; event: string; }
+
+  // Split into characters
+  const splitText = (text: string): React.ReactElement[] =>
+    text.split('').map((char, index) => (
+      <span
+        key={index}
+        className="hero-char"
+        style={{
+          display: 'inline-block',
+          willChange: 'transform, opacity',
+          backfaceVisibility: 'hidden',
+        }}
+      >
+        {char === ' ' ? '\u00A0' : char}
+      </span>
+    ));
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: '#F5F5DC',
-      color: '#2F4F4F',
-      fontFamily: 'Inter, sans-serif'
-    }}>
+    <div
+      ref={rootRef}
+      style={{
+        minHeight: '100vh',
+        background: '#000000',
+        color: '#FFFFFF',
+        fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+        position: 'relative',
+        overflow: 'hidden'
+      }}
+    >
+      {/* Geometric Background */}
+      <div
+        ref={geometricRef}
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          pointerEvents: 'none',
+          zIndex: 0,
+          opacity: 0.15
+        }}
+      >
+        {/* Circle */}
+        <div
+          className="geometric-shape"
+          style={{
+            position: 'absolute',
+            width: '300px',
+            height: '300px',
+            borderRadius: '50%',
+            border: `2px solid ${ORANGE}`,
+            top: '10%',
+            right: '15%'
+          }}
+        />
+        {/* Triangle */}
+        <div
+          className="geometric-shape"
+          style={{
+            position: 'absolute',
+            width: 0,
+            height: 0,
+            borderLeft: '150px solid transparent',
+            borderRight: '150px solid transparent',
+            borderBottom: `260px solid ${ORANGE_RGBA(0.3)}`,
+            bottom: '20%',
+            left: '10%'
+          }}
+        />
+        {/* Rectangle */}
+        <div
+          className="geometric-shape"
+          style={{
+            position: 'absolute',
+            width: '200px',
+            height: '200px',
+            border: '2px solid rgba(255, 255, 255, 0.3)',
+            top: '50%',
+            left: '50%',
+            transform: 'rotate(45deg)'
+          }}
+        />
+        {/* Small circles */}
+        {[...Array(5)].map((_, i) => (
+          <div
+            key={i}
+            className="geometric-shape"
+            style={{
+              position: 'absolute',
+              width: '50px',
+              height: '50px',
+              borderRadius: '50%',
+              background: i % 2 === 0 ? ORANGE_RGBA(0.2) : 'rgba(255, 255, 255, 0.1)',
+              top: `${20 + i * 15}%`,
+              left: `${10 + i * 15}%`
+            }}
+          />
+        ))}
+      </div>
+
       {/* Navigation */}
-      <nav style={{
-        background: 'rgba(47, 79, 79, 0.95)',
-        padding: '1.5rem 2rem',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
-        backdropFilter: 'blur(10px)',
-        borderBottom: '1px solid rgba(212, 175, 55, 0.2)'
-      }}>
-        <h1 style={{
-          fontSize: '2rem',
-          fontWeight: '700',
-          background: 'linear-gradient(135deg, #d4af37, #f4e5b8)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          backgroundClip: 'text',
-          cursor: 'pointer'
-        }} onClick={() => router.push('/')}>
+      <nav
+        style={{
+          background: 'rgba(0, 0, 0, 0.95)',
+          padding: '1.5rem 2rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          position: 'sticky',
+          top: 0,
+          zIndex: 100,
+          backdropFilter: 'blur(20px)',
+          borderBottom: `1px solid ${ORANGE_RGBA(0.3)}`,
+          boxShadow: `0 4px 20px ${ORANGE_RGBA(0.1)}`
+        }}
+      >
+        <h1
+          style={{
+            fontSize: '2rem',
+            fontWeight: '900',
+            background: `linear-gradient(135deg, #FFFFFF, ${ORANGE})`,
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            cursor: 'pointer',
+            letterSpacing: '2px'
+          }}
+        >
           SUNNY AUTO
         </h1>
-        
-        <button 
-          onClick={() => router.push('/UserHome')}
+
+        <button
           style={{
-            background: 'rgba(212, 175, 55, 0.1)',
-            color: '#d4af37',
+            background: ORANGE_RGBA(0.1),
+            color: ORANGE,
             padding: '0.75rem 1.5rem',
             borderRadius: '8px',
-            border: '1px solid rgba(212, 175, 55, 0.3)',
+            border: `1px solid ${ORANGE_RGBA(0.3)}`,
             cursor: 'pointer',
             fontSize: '1rem',
-            fontWeight: '500',
-            transition: 'all 0.3s ease'
+            fontWeight: '600',
+            transition: 'all 0.3s ease',
+            textTransform: 'uppercase',
+            letterSpacing: '1px'
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(212, 175, 55, 0.2)';
+            e.currentTarget.style.background = ORANGE;
+            e.currentTarget.style.color = '#000000';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'rgba(212, 175, 55, 0.1)';
+            e.currentTarget.style.background = ORANGE_RGBA(0.1);
+            e.currentTarget.style.color = ORANGE;
           }}
         >
           Back to Home
@@ -165,65 +460,125 @@ const About = () => {
       </nav>
 
       {/* Main Content */}
-      <div style={{
-        maxWidth: '1200px',
-        margin: '0 auto',
-        padding: '2rem'
-      }}>
+      <div
+        style={{
+          maxWidth: '1400px',
+          margin: '0 auto',
+          padding: '4rem 2rem',
+          position: 'relative',
+          zIndex: 1
+        }}
+      >
         {/* Hero Section */}
-        <div ref={heroRef} style={{ opacity: 0, textAlign: 'center', marginBottom: '4rem' }}>
-          <h1 style={{
-            fontSize: '3.5rem',
-            fontWeight: '700',
-            background: 'linear-gradient(135deg, #d4af37, #f4e5b8)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            marginBottom: '1.5rem'
-          }}>
-            About Sunny Auto
-          </h1>
-          <p style={{
-            fontSize: '1.25rem',
-            color: '#2F4F4F',
-            maxWidth: '600px',
-            margin: '0 auto',
-            lineHeight: '1.6'
-          }}>
-            For over 15 years, we've been the trusted auto care partner for thousands of drivers. 
-            Excellence and customer satisfaction drive everything we do.
+        <div
+          ref={heroRef}
+          style={{
+            textAlign: 'center',
+            marginBottom: '8rem',
+            padding: '4rem 0'
+          }}
+        >
+          <div
+            ref={heroTextRef}
+            style={{
+              fontSize: 'clamp(2.5rem, 8vw, 6rem)',
+              fontWeight: '900',
+              marginBottom: '2rem',
+              letterSpacing: '-2px',
+              lineHeight: '1.1',
+              willChange: 'opacity, transform'
+            }}
+          >
+            <span className="hero-line hero-line-1" style={{ display: 'inline-block' }}>
+              {splitText('DRIVEN BY')}
+            </span>
+            <br />
+            <span
+              className="hero-line hero-line-2"
+              style={{
+                display: 'inline-block',
+                background: `linear-gradient(135deg, ${ORANGE}, #FFFFFF)`,
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text'
+              }}
+            >
+              {splitText('EXCELLENCE')}
+            </span>
+          </div>
+          <p
+            style={{
+              fontSize: '1.25rem',
+              color: 'rgba(255, 255, 255, 0.7)',
+              maxWidth: '700px',
+              margin: '0 auto',
+              lineHeight: '1.8',
+              fontWeight: '300'
+            }}
+          >
+            For over 15 years, we've been more than mechanics—we're automotive craftsmen,
+            problem solvers, and your trusted partners on every journey.
           </p>
         </div>
 
         {/* Stats Section */}
-        <div ref={statsRef} style={{ opacity: 0, marginBottom: '4rem' }}>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: '1.5rem'
-          }}>
+        <div ref={statsRef} style={{ marginBottom: '8rem' }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+              gap: '2rem'
+            }}
+          >
             {stats.map((stat, index) => (
-              <div 
+              <div
                 key={index}
-                className="hover-card"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  padding: '2rem 1rem',
-                  borderRadius: '12px',
+                  background: `linear-gradient(135deg, ${ORANGE_RGBA(0.05)}, rgba(0, 0, 0, 0.8))`,
+                  padding: '3rem 2rem',
+                  borderRadius: '20px',
                   textAlign: 'center',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  transition: 'all 0.3s ease'
+                  border: `1px solid ${ORANGE_RGBA(0.2)}`,
+                  transition: 'all 0.3s ease',
+                  cursor: 'pointer',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  willChange: 'transform, box-shadow, border-color'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-10px)';
+                  e.currentTarget.style.borderColor = ORANGE;
+                  e.currentTarget.style.boxShadow = `0 20px 40px ${ORANGE_RGBA(0.3)}`;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.borderColor = ORANGE_RGBA(0.2);
+                  e.currentTarget.style.boxShadow = 'none';
                 }}
               >
-                <div style={{
-                  fontSize: '2.5rem',
-                  fontWeight: '700',
-                  color: '#d4af37',
-                  marginBottom: '0.5rem'
-                }}>
-                  {stat.number}
+                <div
+                  style={{
+                    fontSize: '3.5rem',
+                    fontWeight: '900',
+                    color: ORANGE,
+                    marginBottom: '0.5rem',
+                    letterSpacing: '-2px'
+                  }}
+                >
+                  <span className="stat-number" data-target={stat.number}>
+                    0
+                  </span>
+                  <span style={{ fontSize: '2rem' }}>{stat.suffix}</span>
                 </div>
-                <div style={{ color: 'rgba(47, 79, 79, 0.7)' }}>
+                <div
+                  style={{
+                    color: 'rgba(255, 255, 255, 0.6)',
+                    fontSize: '1rem',
+                    textTransform: 'uppercase',
+                    letterSpacing: '2px',
+                    fontWeight: '600'
+                  }}
+                >
                   {stat.label}
                 </div>
               </div>
@@ -232,211 +587,423 @@ const About = () => {
         </div>
 
         {/* Story Section */}
-        <div ref={storyRef} style={{ opacity: 0, marginBottom: '4rem' }}>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '3rem',
-            alignItems: 'center'
-          }}>
+        <div ref={storyRef} style={{ marginBottom: '8rem' }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
+              gap: '4rem',
+              alignItems: 'center'
+            }}
+          >
             <div>
-              <h2 style={{
-                fontSize: '2.5rem',
-                fontWeight: '600',
-                color: '#d4af37',
-                marginBottom: '1.5rem'
-              }}>
+              <h2
+                style={{
+                  fontSize: 'clamp(2rem, 5vw, 3.5rem)',
+                  fontWeight: '900',
+                  marginBottom: '2rem',
+                  background: `linear-gradient(135deg, #FFFFFF, ${ORANGE})`,
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  letterSpacing: '-1px'
+                }}
+              >
                 Our Story
               </h2>
-              <p style={{
-                color: 'rgba(47, 79, 79, 0.8)',
-                lineHeight: '1.6',
-                marginBottom: '1.5rem'
-              }}>
-                Founded in 2009 by automotive enthusiast James Wilson, Sunny Auto started as a small 
-                neighborhood garage with a big dream: to provide honest, reliable auto care that 
-                customers could trust.
+              <p
+                style={{
+                  color: 'rgba(255, 255, 255, 0.7)',
+                  lineHeight: '1.8',
+                  marginBottom: '1.5rem',
+                  fontSize: '1.1rem'
+                }}
+              >
+                Founded in 2009 by James "Jimmy Wrench" Wilson, a third-generation mechanic with oil in his veins
+                and precision in his hands, Sunny Auto started as a rebellious dream in a cramped single-bay garage.
               </p>
-              <p style={{
-                color: 'rgba(47, 79, 79, 0.8)',
-                lineHeight: '1.6',
-                marginBottom: '2rem'
-              }}>
-                Today, we've grown into a full-service automotive center with state-of-the-art 
-                equipment and a team of certified technicians, maintaining our core values of 
-                integrity, quality, and customer satisfaction.
+              <p
+                style={{
+                  color: 'rgba(255, 255, 255, 0.7)',
+                  lineHeight: '1.8',
+                  marginBottom: '1.5rem',
+                  fontSize: '1.1rem'
+                }}
+              >
+                We didn't just want to fix cars—we wanted to revolutionize what honest automotive service means.
+                No upselling. No mysterious "recommended services." Just pure, transparent craftsmanship.
               </p>
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <button 
-                  onClick={() => router.push('/Services')}
-                  style={{
-                    background: '#d4af37',
-                    color: '#2F4F4F',
-                    padding: '1rem 2rem',
-                    borderRadius: '8px',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontWeight: '600',
-                    transition: 'all 0.3s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                  }}
-                >
-                  Our Services
-                </button>
-                <button 
-                  onClick={() => router.push('/Contactus')}
-                  style={{
-                    background: 'transparent',
-                    color: '#d4af37',
-                    padding: '1rem 2rem',
-                    borderRadius: '8px',
-                    border: '1px solid #d4af37',
-                    cursor: 'pointer',
-                    fontWeight: '600',
-                    transition: 'all 0.3s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(212, 175, 55, 0.1)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'transparent';
-                  }}
-                >
-                  Contact Us
-                </button>
+              <p
+                style={{
+                  color: 'rgba(255, 255, 255, 0.8)',
+                  lineHeight: '1.8',
+                  fontSize: '1.1rem',
+                  fontWeight: '500'
+                }}
+              >
+                Today, with a team of ASE-certified technicians and a state-of-the-art 12-bay facility,
+                we're still that same passionate garage—just bigger, faster, and more committed to your ride.
+              </p>
+
+              {/* Timeline */}
+              <div style={{ marginTop: '3rem' }}>
+                <h3 style={{ fontSize: '1.5rem', color: ORANGE, marginBottom: '1.5rem', fontWeight: '700' }}>
+                  OUR JOURNEY
+                </h3>
+                {milestones.map((milestone, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      display: 'flex',
+                      gap: '1rem',
+                      marginBottom: '1rem',
+                      paddingLeft: '1rem',
+                      borderLeft: `2px solid ${ORANGE_RGBA(0.3)}`
+                    }}
+                  >
+                    <div style={{ color: ORANGE, fontWeight: '700', fontSize: '1.1rem', minWidth: '50px' }}>
+                      {milestone.year}
+                    </div>
+                    <div style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.95rem' }}>
+                      {milestone.event}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-            <div className="hover-card">
-              <img 
-                src="https://images.unsplash.com/photo-1603712610490-8dfb147f0dc1?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+
+            <div
+              style={{
+                position: 'relative',
+                borderRadius: '20px',
+                overflow: 'hidden',
+                border: `2px solid ${ORANGE_RGBA(0.3)}`
+              }}
+            >
+              <img
+                src="https://images.unsplash.com/photo-1603712610490-8dfb147f0dc1?auto=format&fit=crop&w=1200&q=80"
                 alt="Our Workshop"
+                style={{ width: '100%', display: 'block', filter: 'grayscale(100%) contrast(1.2)' }}
+                loading="lazy"
+              />
+              <div
                 style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
                   width: '100%',
-                  borderRadius: '12px',
-                  boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)'
+                  height: '100%',
+                  background: `linear-gradient(135deg, ${ORANGE_RGBA(0.2)}, rgba(0, 0, 0, 0.4))`,
+                  mixBlendMode: 'multiply'
                 }}
               />
             </div>
           </div>
         </div>
 
-        {/* Values Section */}
-        <div ref={valuesRef} style={{ opacity: 0, marginBottom: '4rem' }}>
-          <h2 style={{
-            fontSize: '2.5rem',
-            fontWeight: '600',
-            color: '#d4af37',
-            textAlign: 'center',
-            marginBottom: '3rem'
-          }}>
-            Our Values
+        {/* Showcase Gallery — organized, varied spans */}
+        <section style={{ marginBottom: '8rem' }}>
+          <h2
+            style={{
+              fontSize: 'clamp(2rem, 5vw, 3.5rem)',
+              fontWeight: '900',
+              textAlign: 'center',
+              marginBottom: '2rem',
+              background: `linear-gradient(135deg, #FFFFFF, ${ORANGE})`,
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              letterSpacing: '-1px'
+            }}
+          >
+            In the Shop & On the Road
           </h2>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-            gap: '1.5rem'
-          }}>
-            {values.map((value, index) => (
-              <div 
-                key={index}
-                className="hover-card"
+          <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.65)', marginBottom: '2rem' }}>
+            A feel for the vibe — real cars, real work, real shine.
+          </p>
+
+          {/* Grid with responsive spans */}
+          <div
+            style={{
+              display: 'grid',
+              gap: '1rem',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+              gridAutoRows: '200px'
+            }}
+          >
+            {gallery.map((g, i) => (
+              <figure
+                key={i}
+                className="value-card"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  padding: '2rem',
-                  borderRadius: '12px',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  textAlign: 'center',
-                  transition: 'all 0.3s ease'
+                  position: 'relative',
+                  borderRadius: '16px',
+                  overflow: 'hidden',
+                  border: `1px solid ${ORANGE_RGBA(0.2)}`,
+                  background: `linear-gradient(135deg, ${ORANGE_RGBA(0.04)}, rgba(0,0,0,0.9))`,
+                  transition: 'transform .3s ease, box-shadow .3s ease, border-color .3s ease',
+                  cursor: 'zoom-in',
+                  gridColumn: g.wide ? 'span 2' as any : 'span 1',
+                  gridRow: g.tall ? 'span 2' as any : 'span 1'
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-6px)';
+                  (e.currentTarget as HTMLDivElement).style.borderColor = ORANGE;
+                  (e.currentTarget as HTMLDivElement).style.boxShadow = `0 12px 30px ${ORANGE_RGBA(0.25)}`;
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)';
+                  (e.currentTarget as HTMLDivElement).style.borderColor = ORANGE_RGBA(0.2);
+                  (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
                 }}
               >
-                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>
+                <img
+                  src={g.src}
+                  alt={g.title}
+                  loading="lazy"
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    display: 'block',
+                    filter: 'grayscale(8%) contrast(1.05)'
+                  }}
+                />
+                <figcaption
+                  style={{
+                    position: 'absolute',
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    padding: '0.5rem 0.75rem',
+                    fontSize: '0.8rem',
+                    color: 'rgba(255,255,255,0.85)',
+                    background: 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.65) 70%)'
+                  }}
+                >
+                  {g.title}
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </section>
+
+        {/* Values Section */}
+        <div ref={valuesRef} style={{ marginBottom: '8rem' }}>
+          <h2
+            style={{
+              fontSize: 'clamp(2rem, 5vw, 3.5rem)',
+              fontWeight: '900',
+              textAlign: 'center',
+              marginBottom: '4rem',
+              background: `linear-gradient(135deg, #FFFFFF, ${ORANGE})`,
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              letterSpacing: '-1px'
+            }}
+          >
+            What Drives Us
+          </h2>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gap: '2rem'
+            }}
+          >
+            {values.map((value, index) => (
+              <div
+                key={index}
+                className="value-card"
+                style={{
+                  background: `linear-gradient(135deg, ${ORANGE_RGBA(0.05)}, rgba(0, 0, 0, 0.9))`,
+                  padding: '2.5rem',
+                  borderRadius: '20px',
+                  border: `1px solid ${ORANGE_RGBA(0.2)}`,
+                  textAlign: 'center',
+                  transition: 'all 0.3s ease',
+                  cursor: 'pointer',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  willChange: 'transform, border-color'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-10px) scale(1.02)';
+                  e.currentTarget.style.borderColor = ORANGE;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                  e.currentTarget.style.borderColor = ORANGE_RGBA(0.2);
+                }}
+              >
+                <div style={{ fontSize: '4rem', marginBottom: '1.5rem', filter: 'grayscale(100%)' }}>
                   {value.icon}
                 </div>
-                <h3 style={{
-                  fontSize: '1.25rem',
-                  fontWeight: '600',
-                  color: '#d4af37',
-                  marginBottom: '1rem'
-                }}>
+                <h3
+                  style={{
+                    fontSize: '1.5rem',
+                    fontWeight: '700',
+                    color: ORANGE,
+                    marginBottom: '1rem',
+                    textTransform: 'uppercase',
+                    letterSpacing: '1px'
+                  }}
+                >
                   {value.title}
                 </h3>
-                <p style={{ color: 'rgba(47, 79, 79, 0.7)', lineHeight: '1.5' }}>
+                <p
+                  style={{
+                    color: 'rgba(255, 255, 255, 0.6)',
+                    lineHeight: '1.6',
+                    marginBottom: '1rem',
+                    fontSize: '1rem'
+                  }}
+                >
                   {value.description}
                 </p>
+                <div
+                  style={{
+                    color: ORANGE,
+                    fontWeight: '700',
+                    fontSize: '0.9rem',
+                    textTransform: 'uppercase',
+                    letterSpacing: '1px',
+                    marginTop: '1rem',
+                    paddingTop: '1rem',
+                    borderTop: `1px solid ${ORANGE_RGBA(0.2)}`
+                  }}
+                >
+                  {value.metric}
+                </div>
               </div>
             ))}
           </div>
         </div>
 
         {/* Team Section */}
-        <div ref={teamRef} style={{ opacity: 0, marginBottom: '4rem' }}>
-          <h2 style={{
-            fontSize: '2.5rem',
-            fontWeight: '600',
-            color: '#d4af37',
-            textAlign: 'center',
-            marginBottom: '3rem'
-          }}>
-            Meet Our Team
+        <div ref={teamRef} style={{ marginBottom: '8rem' }}>
+          <h2
+            style={{
+              fontSize: 'clamp(2rem, 5vw, 3.5rem)',
+              fontWeight: '900',
+              textAlign: 'center',
+              marginBottom: '2rem',
+              background: `linear-gradient(135deg, #FFFFFF, ${ORANGE})`,
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              letterSpacing: '-1px'
+            }}
+          >
+            The Dream Team
           </h2>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-            gap: '2rem'
-          }}>
+          <p
+            style={{
+              textAlign: 'center',
+              color: 'rgba(255, 255, 255, 0.6)',
+              marginBottom: '4rem',
+              fontSize: '1.1rem',
+              maxWidth: '600px',
+              margin: '0 auto 4rem'
+            }}
+          >
+            Meet the certified professionals who treat your car like their own
+          </p>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+              gap: '2.5rem'
+            }}
+          >
             {teamMembers.map((member, index) => (
-              <div 
+              <div
                 key={index}
-                className="hover-card"
+                className="team-card"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  padding: '2rem',
-                  borderRadius: '12px',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  background: `linear-gradient(135deg, ${ORANGE_RGBA(0.05)}, rgba(0, 0, 0, 0.9))`,
+                  padding: '2.5rem',
+                  borderRadius: '20px',
+                  border: `1px solid ${ORANGE_RGBA(0.2)}`,
                   textAlign: 'center',
-                  transition: 'all 0.3s ease'
+                  transition: 'all 0.3s ease',
+                  cursor: 'pointer'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-10px)';
+                  e.currentTarget.style.borderColor = ORANGE;
+                  e.currentTarget.style.boxShadow = `0 20px 40px ${ORANGE_RGBA(0.3)}`;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.borderColor = ORANGE_RGBA(0.2);
+                  e.currentTarget.style.boxShadow = 'none';
                 }}
               >
-                <img 
-                  src={member.image}
-                  alt={member.name}
-                  style={{
-                    width: '120px',
-                    height: '120px',
-                    borderRadius: '50%',
-                    objectFit: 'cover',
-                    margin: '0 auto 1.5rem',
-                    border: '3px solid #d4af37'
-                  }}
-                />
-                <h3 style={{
-                  fontSize: '1.25rem',
-                  fontWeight: '600',
-                  color: '#d4af37',
-                  marginBottom: '0.5rem'
-                }}>
+                <div style={{ width: '140px', height: '140px', margin: '0 auto 1.5rem', position: 'relative' }}>
+                  <img
+                    src={member.image}
+                    alt={member.name}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      borderRadius: '50%',
+                      objectFit: 'cover',
+                      border: `3px solid ${ORANGE}`,
+                      filter: 'grayscale(100%) contrast(1.1)',
+                      transition: 'all 0.3s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.filter = 'grayscale(0%) contrast(1)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.filter = 'grayscale(100%) contrast(1.1)';
+                    }}
+                    loading="lazy"
+                  />
+                </div>
+                <h3 style={{ fontSize: '1.3rem', fontWeight: '700', color: '#FFFFFF', marginBottom: '0.5rem' }}>
                   {member.name}
                 </h3>
-                <p style={{ color: '#2F4F4F', fontWeight: '500', marginBottom: '0.5rem' }}>
+                <p
+                  style={{
+                    color: ORANGE,
+                    fontWeight: '600',
+                    marginBottom: '0.5rem',
+                    fontSize: '1rem',
+                    textTransform: 'uppercase',
+                    letterSpacing: '1px'
+                  }}
+                >
                   {member.position}
                 </p>
-                <p style={{ color: 'rgba(47, 79, 79, 0.6)', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
-                  {member.experience}
+                <p style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>
+                  {member.specialization}
                 </p>
-                <p style={{
-                  color: 'rgba(47, 79, 79, 0.8)',
-                  fontStyle: 'italic',
-                  marginTop: '1rem',
-                  padding: '1rem',
-                  background: 'rgba(212, 175, 55, 0.1)',
-                  borderRadius: '8px',
-                  borderLeft: '3px solid #d4af37'
-                }}>
+                <p
+                  style={{
+                    color: 'rgba(255, 255, 255, 0.4)',
+                    marginBottom: '1rem',
+                    fontSize: '0.85rem',
+                    fontWeight: '600'
+                  }}
+                >
+                  {member.experience} • {member.certifications}
+                </p>
+                <p
+                  style={{
+                    color: 'rgba(255, 255, 255, 0.7)',
+                    fontStyle: 'italic',
+                    marginTop: '1.5rem',
+                    padding: '1.5rem',
+                    background: ORANGE_RGBA(0.05),
+                    borderRadius: '12px',
+                    borderLeft: `3px solid ${ORANGE}`,
+                    fontSize: '0.95rem',
+                    lineHeight: '1.5'
+                  }}
+                >
                   "{member.quote}"
                 </p>
               </div>
@@ -444,53 +1011,137 @@ const About = () => {
           </div>
         </div>
 
-        {/* Call to Action */}
-        <div style={{
-          background: 'rgba(212, 175, 55, 0.1)',
-          borderRadius: '12px',
-          padding: '3rem 2rem',
-          textAlign: 'center',
-          border: '1px solid rgba(212, 175, 55, 0.2)'
-        }}>
-          <h2 style={{
-            fontSize: '2rem',
-            fontWeight: '600',
-            color: '#d4af37',
-            marginBottom: '1rem'
-          }}>
-            Ready to Experience the Sunny Auto Difference?
-          </h2>
-          <p style={{
-            color: 'rgba(47, 79, 79, 0.8)',
-            marginBottom: '2rem',
-            maxWidth: '500px',
-            margin: '0 auto 2rem'
-          }}>
-            Join thousands of satisfied customers who trust us with their vehicles.
-          </p>
-          <button 
-            onClick={() => router.push('/Appointment')}
+        {/* CTA */}
+        <div
+          ref={ctaRef}
+          style={{
+            background: `linear-gradient(135deg, ${ORANGE_RGBA(0.1)}, rgba(0, 0, 0, 0.9))`,
+            borderRadius: '30px',
+            padding: '4rem 3rem',
+            textAlign: 'center',
+            border: `2px solid ${ORANGE_RGBA(0.3)}`,
+            position: 'relative',
+            overflow: 'hidden'
+          }}
+        >
+          <div
             style={{
-              background: '#d4af37',
-              color: '#2F4F4F',
-              padding: '1rem 2.5rem',
-              borderRadius: '8px',
-              border: 'none',
-              cursor: 'pointer',
-              fontWeight: '600',
-              fontSize: '1.1rem',
-              transition: 'all 0.3s ease'
+              position: 'absolute',
+              top: '-50%',
+              right: '-10%',
+              width: '300px',
+              height: '300px',
+              borderRadius: '50%',
+              background: `radial-gradient(circle, ${ORANGE_RGBA(0.2)}, transparent)`,
+              filter: 'blur(60px)'
             }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
+          />
+          <h2
+            style={{
+              fontSize: 'clamp(2rem, 5vw, 3rem)',
+              fontWeight: '900',
+              marginBottom: '1.5rem',
+              position: 'relative',
+              zIndex: 1
             }}
           >
-            Book Your Appointment
-          </button>
+            Ready to Experience the <span style={{ color: ORANGE }}>Difference?</span>
+          </h2>
+          <p
+            style={{
+              color: 'rgba(255, 255, 255, 0.7)',
+              marginBottom: '2.5rem',
+              maxWidth: '600px',
+              margin: '0 auto 2.5rem',
+              fontSize: '1.1rem',
+              lineHeight: '1.6',
+              position: 'relative',
+              zIndex: 1
+            }}
+          >
+            Join 10,000+ drivers who've discovered what automotive excellence really means.
+            Book your appointment and feel the Sunny Auto difference.
+          </p>
+          <div
+            style={{
+              display: 'flex',
+              gap: '1rem',
+              justifyContent: 'center',
+              flexWrap: 'wrap',
+              position: 'relative',
+              zIndex: 1
+            }}
+          >
+            <button
+              style={{
+                background: ORANGE,
+                color: '#000000',
+                padding: '1.25rem 3rem',
+                borderRadius: '12px',
+                border: 'none',
+                cursor: 'pointer',
+                fontWeight: '700',
+                fontSize: '1.1rem',
+                transition: 'all 0.3s ease',
+                textTransform: 'uppercase',
+                letterSpacing: '1px'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-5px) scale(1.05)';
+                e.currentTarget.style.boxShadow = `0 20px 40px ${ORANGE_RGBA(0.4)}`;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            >
+              Book Appointment
+            </button>
+            <button
+              style={{
+                background: 'transparent',
+                color: '#FFFFFF',
+                padding: '1.25rem 3rem',
+                borderRadius: '12px',
+                border: '2px solid rgba(255, 255, 255, 0.3)',
+                cursor: 'pointer',
+                fontWeight: '600',
+                fontSize: '1.1rem',
+                transition: 'all 0.3s ease',
+                textTransform: 'uppercase',
+                letterSpacing: '1px'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = '#FFFFFF';
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                e.currentTarget.style.background = 'transparent';
+              }}
+            >
+              Call 24/7: (555) 123-4567
+            </button>
+          </div>
         </div>
+      </div>
+
+      {/* Footer */}
+      <div
+        style={{
+          textAlign: 'center',
+          padding: '3rem 2rem',
+          color: 'rgba(255, 255, 255, 0.4)',
+          borderTop: `1px solid ${ORANGE_RGBA(0.1)}`,
+          fontSize: '0.9rem',
+          position: 'relative',
+          zIndex: 1
+        }}
+      >
+        <p>© 2024 Sunny Auto. Where every mile matters.</p>
+        <p style={{ marginTop: '0.5rem', fontSize: '0.8rem' }}>
+          ASE Certified • Family Owned • Serving the Community Since 2009
+        </p>
       </div>
     </div>
   );

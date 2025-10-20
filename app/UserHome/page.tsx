@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { gsap } from 'gsap';
+<<<<<<< HEAD
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 interface Notification {
@@ -14,15 +15,27 @@ interface Notification {
   is_read: boolean;
   created_at: string;
   expires_at: string | null;
+=======
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { TextPlugin } from 'gsap/TextPlugin';
+
+// Register GSAP plugins
+if (typeof window !== 'undefined') {
+  gsap.registerPlugin(ScrollTrigger, TextPlugin);
+>>>>>>> d7358a270e2b75e020169a750931f4bb77e6b518
 }
 
 const AutoServiceShop = () => {
   const [showWelcome, setShowWelcome] = useState(true);
   const [isClient, setIsClient] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
+<<<<<<< HEAD
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showNotificationPopup, setShowNotificationPopup] = useState(false);
   const [currentNotificationIndex, setCurrentNotificationIndex] = useState(0);
+=======
+  const [activeService, setActiveService] = useState<number | null>(null);
+>>>>>>> d7358a270e2b75e020169a750931f4bb77e6b518
   const router = useRouter();
   const supabase = createClientComponentClient();
 
@@ -34,8 +47,17 @@ const AutoServiceShop = () => {
   const buttonsRef = useRef<(HTMLButtonElement | null)[]>([]);
   const brandsRef = useRef<HTMLDivElement>(null);
   const statsRef = useRef(null);
+<<<<<<< HEAD
   const servicesRef = useRef(null);
   const notificationRef = useRef<HTMLDivElement>(null);
+=======
+  const servicesRef = useRef<HTMLDivElement | null>(null);
+  const heroRef = useRef(null);
+  const aboutRef = useRef(null);
+  const testimonialsRef = useRef(null);
+  const galleryRef = useRef(null);
+  const processRef = useRef(null);
+>>>>>>> d7358a270e2b75e020169a750931f4bb77e6b518
 
   const heroSlides = [
     {
@@ -57,6 +79,7 @@ const AutoServiceShop = () => {
 
   const brands = ['TESLA', 'TOYOTA', 'HYUNDAI', 'Mercedes-Benz', 'SUZUKI', 'JAGUAR'];
 
+<<<<<<< HEAD
   // Fetch notifications for current user
   const fetchNotifications = async () => {
     try {
@@ -184,6 +207,115 @@ const AutoServiceShop = () => {
 
     setupNotifications();
   }, []);
+=======
+  const services = [
+    { 
+      title: 'Oil Change & Filter', 
+      price: 'From $39.99',
+      description: 'Full synthetic oil change with premium filter replacement',
+      image: 'https://images.unsplash.com/photo-1487754180451-c456f719a1fc?q=80&w=1000&auto=format&fit=crop',
+      duration: '30 mins',
+      popular: true
+    },
+    { 
+      title: 'Brake Service', 
+      price: 'From $149.99',
+      description: 'Complete brake inspection, pad replacement, and rotor resurfacing',
+      image: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?q=80&w=1000&auto=format&fit=crop',
+      duration: '1-2 hours',
+      popular: true
+    },
+    { 
+      title: 'Tire Rotation', 
+      price: 'From $24.99',
+      description: 'Professional tire rotation and pressure adjustment',
+      image: 'https://images.unsplash.com/photo-1621939514649-280e2ee25f60?q=80&w=1000&auto=format&fit=crop',
+      duration: '20 mins',
+      popular: false
+    },
+    { 
+      title: 'Engine Diagnostic', 
+      price: 'From $89.99',
+      description: 'Comprehensive computer diagnostic and system check',
+      image: 'https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?q=80&w=1000&auto=format&fit=crop',
+      duration: '1 hour',
+      popular: true
+    },
+    { 
+      title: 'AC Service', 
+      price: 'From $129.99',
+      description: 'AC system inspection, recharge, and leak detection',
+      image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?q=80&w=1000&auto=format&fit=crop',
+      duration: '45 mins',
+      popular: false
+    },
+    { 
+      title: 'Transmission Service', 
+      price: 'From $189.99',
+      description: 'Fluid exchange and transmission system maintenance',
+      image: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=1000&auto=format&fit=crop',
+      duration: '2 hours',
+      popular: false
+    }
+  ];
+
+  const processSteps = [
+    { 
+      step: '01', 
+      title: 'Book Online', 
+      description: 'Schedule your appointment with our easy online booking system',
+      icon: '📅'
+    },
+    { 
+      step: '02', 
+      title: 'Drop Off', 
+      description: 'Bring your vehicle to our service center at your scheduled time',
+      icon: '🚗'
+    },
+    { 
+      step: '03', 
+      title: 'Diagnosis', 
+      description: 'Our experts thoroughly inspect and diagnose your vehicle',
+      icon: '🔍'
+    },
+    { 
+      step: '04', 
+      title: 'Approval', 
+      description: 'We provide a detailed estimate and get your approval before any work',
+      icon: '✓'
+    },
+    { 
+      step: '05', 
+      title: 'Service', 
+      description: 'Our certified technicians perform the necessary repairs',
+      icon: '🔧'
+    },
+    { 
+      step: '06', 
+      title: 'Pick Up', 
+      description: 'Your vehicle is ready! We explain all work completed',
+      icon: '🔑'
+    }
+  ];
+
+  const beforeAfterGallery = [
+    {
+      before: 'https://images.unsplash.com/photo-1565043666747-69f6646db940?q=80&w=1000&auto=format&fit=crop',
+      after: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=1000&auto=format&fit=crop',
+      title: 'Complete Restoration'
+    },
+    {
+      before: 'https://images.unsplash.com/photo-1609521263047-f8f205293f24?q=80&w=1000&auto=format&fit=crop',
+      after: 'https://images.unsplash.com/photo-1514316454349-750a7fd3da3a?q=80&w=1000&auto=format&fit=crop',
+      title: 'Engine Overhaul'
+    },
+    {
+      before: 'https://images.unsplash.com/photo-1581235720704-06d3acfcb36f?q=80&w=1000&auto=format&fit=crop',
+      after: 'https://images.unsplash.com/photo-1462396881884-de2c07cb95ed?q=80&w=1000&auto=format&fit=crop',
+      title: 'Paint & Body Work'
+    }
+  ];
+>>>>>>> d7358a270e2b75e020169a750931f4bb77e6b518
 
   useEffect(() => {
     setIsClient(true);
@@ -196,10 +328,18 @@ const AutoServiceShop = () => {
       setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
     }, 5000);
 
-    if (!showWelcome) {
+    return () => {
+      clearTimeout(timer);
+      clearInterval(slideInterval);
+      ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+    };
+  }, [heroSlides.length]);
+
+  useEffect(() => {
+    if (!showWelcome && isClient) {
+      // Initial animations
       const tl = gsap.timeline();
 
-      // Navigation animation
       tl.fromTo(navRef.current, 
         { y: -100, opacity: 0 },
         { y: 0, opacity: 1, duration: 0.8, ease: "power2.out" }
@@ -209,7 +349,6 @@ const AutoServiceShop = () => {
         "-=0.3"
       );
 
-      // Hero content animation
       tl.fromTo(titleRef.current,
         { y: 30, opacity: 0 },
         { y: 0, opacity: 1, duration: 0.8, ease: "power2.out" },
@@ -224,36 +363,288 @@ const AutoServiceShop = () => {
         "-=0.3"
       );
 
+      // Scroll-triggered animations
+      ScrollTrigger.defaults({ 
+        toggleActions: "play none none reverse",
+        markers: false 
+      });
+
+      // Parallax effect on hero
+      if (heroRef.current) {
+        gsap.to(heroRef.current, {
+          scrollTrigger: {
+            trigger: heroRef.current,
+            start: "top top",
+            end: "bottom top",
+            scrub: 1,
+            invalidateOnRefresh: true
+          },
+          y: 100,
+          opacity: 0.7
+        });
+      }
+
       // Brands animation
       if (brandsRef.current) {
         gsap.fromTo(brandsRef.current.children,
           { x: -50, opacity: 0 },
           {
+            scrollTrigger: {
+              trigger: brandsRef.current,
+              start: "top 80%",
+              end: "bottom 20%",
+              toggleActions: "play none none reverse"
+            },
             x: 0,
             opacity: 1,
             duration: 0.6,
             stagger: 0.1,
-            ease: "power2.out",
-            delay: 1
+            ease: "power2.out"
           }
         );
       }
-    }
 
-    return () => {
-      clearTimeout(timer);
-      clearInterval(slideInterval);
-    };
-  }, [showWelcome, heroSlides.length]);
+      // Stats counter animation
+      if (statsRef.current) {
+        const statElements = (statsRef.current as HTMLElement).querySelectorAll('.stat-number');
+        statElements.forEach((stat) => {
+          const endValue = stat.textContent;
+          const isPercentage = endValue.includes('%');
+          const hasPlus = endValue.includes('+');
+          const numericValue = parseFloat(endValue.replace(/[^0-9.]/g, ''));
+          
+          ScrollTrigger.create({
+            trigger: stat,
+            start: "top 80%",
+            onEnter: () => {
+              gsap.from(stat, {
+                textContent: 0,
+                duration: 2,
+                ease: "power2.out",
+                snap: { textContent: 0.1 },
+                onUpdate: function() {
+                  const current = parseFloat(this.targets()[0].textContent);
+                  const suffix = isPercentage ? '%' : (hasPlus ? '+' : '');
+                  if (endValue.includes('/')) {
+                    this.targets()[0].textContent = '24/7';
+                  } else {
+                    this.targets()[0].textContent = current.toFixed(1) + suffix;
+                  }
+                },
+                onComplete: function() {
+                  stat.textContent = endValue;
+                }
+              });
+            },
+            once: true
+          });
+        });
+      }
+
+      // Services cards animation with stagger
+      if (servicesRef.current) {
+        const serviceCards = servicesRef.current.querySelectorAll('.service-card');
+        
+        ScrollTrigger.batch(serviceCards, {
+          onEnter: batch => gsap.fromTo(batch, 
+            {
+              opacity: 0,
+              y: 50,
+              scale: 0.9
+            },
+            {
+              opacity: 1,
+              y: 0,
+              scale: 1,
+              duration: 0.6,
+              stagger: 0.15,
+              ease: "power3.out",
+              overwrite: true
+            }
+          ),
+          onLeave: batch => gsap.to(batch, {
+            opacity: 0.3,
+            y: -50,
+            scale: 0.95,
+            duration: 0.5,
+            stagger: 0.15,
+            overwrite: true
+          }),
+          onEnterBack: batch => gsap.to(batch, {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            duration: 0.5,
+            stagger: 0.15,
+            overwrite: true
+          }),
+          onLeaveBack: batch => gsap.to(batch, {
+            opacity: 0,
+            y: 50,
+            scale: 0.9,
+            duration: 0.5,
+            stagger: 0.15,
+            overwrite: true
+          }),
+          start: "top 85%",
+          end: "bottom 15%"
+        });
+      }
+
+      // About section text reveal
+      if (aboutRef.current) {
+        const aboutText = (aboutRef.current as HTMLElement).querySelectorAll('p, h2, h3');
+        
+        gsap.fromTo(aboutText,
+          {
+            opacity: 0,
+            y: 30,
+            clipPath: "inset(100% 0% 0% 0%)"
+          },
+          {
+            scrollTrigger: {
+              trigger: aboutRef.current,
+              start: "top 70%",
+              end: "bottom 30%",
+              toggleActions: "play none none reverse"
+            },
+            opacity: 1,
+            y: 0,
+            clipPath: "inset(0% 0% 0% 0%)",
+            duration: 0.8,
+            stagger: 0.1,
+            ease: "power2.out"
+          }
+        );
+      }
+
+      // Process steps animation
+      if (processRef.current) {
+        const steps = (processRef.current as HTMLElement).querySelectorAll('.process-step');
+        
+        steps.forEach((step, index) => {
+          gsap.fromTo(step,
+            {
+              opacity: 0,
+              x: index % 2 === 0 ? -50 : 50,
+              rotateY: index % 2 === 0 ? -15 : 15
+            },
+            {
+              scrollTrigger: {
+                trigger: step,
+                start: "top 80%",
+                end: "bottom 20%",
+                toggleActions: "play none none reverse"
+              },
+              opacity: 1,
+              x: 0,
+              rotateY: 0,
+              duration: 0.8,
+              delay: index * 0.1,
+              ease: "power3.out"
+            }
+          );
+        });
+
+        // Connecting lines animation
+        const lines = (processRef.current as HTMLElement).querySelectorAll('.process-line');
+        lines.forEach((line, index) => {
+          gsap.fromTo(line,
+            { scaleX: 0 },
+            {
+              scrollTrigger: {
+                trigger: line,
+                start: "top 75%",
+                end: "bottom 25%",
+                toggleActions: "play none none reverse"
+              },
+              scaleX: 1,
+              duration: 0.6,
+              delay: index * 0.15,
+              ease: "power2.inOut"
+            }
+          );
+        });
+      }
+
+      // Gallery animation
+      if (galleryRef.current) {
+        const galleryItems = (galleryRef.current as HTMLElement).querySelectorAll('.gallery-item');
+        
+        galleryItems.forEach((item, index) => {
+          const slider = item.querySelector('.before-after-slider');
+          
+          ScrollTrigger.create({
+            trigger: item,
+            start: "top 70%",
+            end: "bottom 30%",
+            onEnter: () => {
+              gsap.to(slider, {
+                x: '100%',
+                duration: 2,
+                ease: "power2.inOut"
+              });
+            },
+            onLeaveBack: () => {
+              gsap.to(slider, {
+                x: '50%',
+                duration: 1,
+                ease: "power2.inOut"
+              });
+            }
+          });
+        });
+      }
+
+      // Testimonials fade in
+      if (testimonialsRef.current) {
+        const testimonialCards = (testimonialsRef.current as HTMLElement).querySelectorAll('.testimonial-card');
+        
+        gsap.fromTo(testimonialCards,
+          { 
+            opacity: 0,
+            scale: 0.8,
+            rotateX: 10
+          },
+          {
+            scrollTrigger: {
+              trigger: testimonialsRef.current,
+              start: "top 70%",
+              end: "bottom 30%",
+              toggleActions: "play none none reverse"
+            },
+            opacity: 1,
+            scale: 1,
+            rotateX: 0,
+            duration: 0.7,
+            stagger: 0.2,
+            ease: "back.out(1.7)"
+          }
+        );
+      }
+
+      // Sticky navigation background on scroll
+      ScrollTrigger.create({
+        start: "top -50",
+        end: 99999,
+        toggleClass: { className: "nav-scrolled", targets: navRef.current }
+      });
+
+      ScrollTrigger.refresh();
+    }
+  }, [showWelcome, isClient]);
 
   const handleBookAppointment = () => router.push('/Appointment');
   const handleProfile = () => router.push('/UserProfile');
   const handleViewServices = () => router.push('/Services');
+<<<<<<< HEAD
   
   interface NavigationPath {
     path: string;
   }
 
+=======
+>>>>>>> d7358a270e2b75e020169a750931f4bb77e6b518
   const handleNavigation = (path: string): void => router.push(path);
 
   // Get type color for notification
@@ -285,10 +676,11 @@ const AutoServiceShop = () => {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#0a0a0a',
+      background: '#000000',
       color: 'white',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-      overflowX: 'hidden'
+      overflowX: 'hidden',
+      position: 'relative'
     }} suppressHydrationWarning>
 
       {/* Welcome Animation */}
@@ -310,13 +702,13 @@ const AutoServiceShop = () => {
                 marginBottom: '0.75rem',
                 letterSpacing: '1px'
               }}>
-                <span style={{ color: '#dc2626' }}>Sunny</span>
+                <span style={{ color: '#ff6b35' }}>Sunny</span>
                 <span style={{ color: '#ffffff' }}>Auto</span>
               </h1>
               <div style={{
                 width: '120px',
                 height: '2px',
-                background: 'linear-gradient(90deg, transparent, #dc2626, transparent)',
+                background: 'linear-gradient(90deg, transparent, #ff6b35, transparent)',
                 margin: '0 auto 0.75rem'
               }}></div>
               <p style={{
@@ -535,82 +927,92 @@ const AutoServiceShop = () => {
 
       {/* Rest of your existing code remains exactly the same */}
       {/* Navigation */}
-      <nav ref={navRef} style={{
+      <nav ref={navRef} className="main-nav" style={{
         position: 'fixed',
         top: 0,
         left: 0,
         right: 0,
-        background: 'rgba(0, 0, 0, 0.95)',
-        backdropFilter: 'blur(10px)',
-        padding: '1.5rem 3rem',
+        background: 'transparent',
+        padding: '2rem 3rem',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        zIndex: 1000
+        zIndex: 1000,
+        transition: 'all 0.3s ease'
       }}>
         <div ref={logoRef} style={{ cursor: 'pointer' }} onClick={() => handleNavigation('/UserHome')}>
           <h1 style={{
-            fontSize: '1.5rem',
-            fontWeight: '600',
+            fontSize: '1.75rem',
+            fontWeight: '700',
             margin: 0
           }}>
-            <span style={{ color: '#dc2626' }}>Sunny</span>
-            <span style={{ color: '#ffffff' }}>Auto</span>
+            <span style={{ color: '#ff6b35' }}>SUNNY</span>
+            <span style={{ color: '#ffffff' }}>AUTO</span>
           </h1>
         </div>
 
         <div style={{ 
           display: 'flex', 
-          gap: '2.5rem',
+          gap: '3rem',
           alignItems: 'center'
         }}>
-          {['Home', 'Services', 'About', 'Gallery', 'Contact'].map((item) => (
+          {['HOME', 'SERVICES', 'ABOUT', 'GALLERY', 'CONTACT'].map((item) => (
             <button
               key={item}
               style={{
-                color: 'rgba(255, 255, 255, 0.8)',
-                fontSize: '0.95rem',
-                fontWeight: '400',
+                color: item === 'SERVICES' || item === 'GALLERY' ? '#ff6b35' : 'rgba(255, 255, 255, 0.9)',
+                fontSize: '0.875rem',
+                fontWeight: '700',
                 background: 'none',
                 border: 'none',
                 cursor: 'pointer',
                 padding: '0.5rem 0',
-                transition: 'color 0.3s ease'
+                transition: 'all 0.3s ease',
+                letterSpacing: '0.5px',
+                textTransform: 'uppercase'
               }}
-              onMouseEnter={(e) => e.currentTarget.style.color = '#ffffff'}
-              onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.8)'}
-              onClick={() => handleNavigation(item === 'Home' ? '/UserHome' : `/${item}`)}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = '#ff6b35';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = item === 'SERVICES' || item === 'GALLERY' ? '#ff6b35' : 'rgba(255, 255, 255, 0.9)';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
+              onClick={() => handleNavigation(item === 'HOME' ? '/UserHome' : `/${item.charAt(0) + item.slice(1).toLowerCase()}`)}
             >
               {item}
             </button>
           ))}
           <button style={{
-            background: 'rgba(255, 255, 255, 0.1)',
-            color: 'white',
-            padding: '0.5rem 1.5rem',
-            borderRadius: '6px',
-            fontWeight: '500',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
+            background: 'transparent',
+            color: '#ffffff',
+            padding: '0.75rem 2rem',
+            borderRadius: '0',
+            fontWeight: '700',
+            border: '2px solid #ffffff',
             cursor: 'pointer',
-            transition: 'all 0.2s ease',
-            fontSize: '0.9rem'
+            transition: 'all 0.3s ease',
+            fontSize: '0.875rem',
+            letterSpacing: '0.5px',
+            textTransform: 'uppercase'
           }} 
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#dc2626';
-            e.currentTarget.style.borderColor = '#dc2626';
+            e.currentTarget.style.background = '#ffffff';
+            e.currentTarget.style.color = '#000000';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+            e.currentTarget.style.background = 'transparent';
+            e.currentTarget.style.color = '#ffffff';
           }}
           onClick={handleProfile}>
-            Profile
+            PROFILE
           </button>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <section style={{
+      <section ref={heroRef} style={{
         position: 'relative',
         height: '100vh',
         width: '100%',
@@ -624,14 +1026,14 @@ const AutoServiceShop = () => {
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           transition: 'background-image 1.5s ease-in-out',
-          filter: 'brightness(0.6)'
+          filter: 'brightness(0.5)'
         }}></div>
 
         {/* Gradient Overlay */}
         <div style={{
           position: 'absolute',
           inset: 0,
-          background: 'linear-gradient(90deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 40%, transparent 100%)',
+          background: 'linear-gradient(90deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 40%, transparent 100%)',
           pointerEvents: 'none'
         }}></div>
         
@@ -644,11 +1046,11 @@ const AutoServiceShop = () => {
           maxWidth: '600px',
           zIndex: 10
         }}>
-          {/* Red Accent Line */}
+          {/* Orange Accent Line */}
           <div style={{
             width: '3px',
             height: '200px',
-            background: '#dc2626',
+            background: '#ff6b35',
             position: 'absolute',
             left: '-40px',
             top: '50%',
@@ -661,7 +1063,7 @@ const AutoServiceShop = () => {
             lineHeight: 1.2,
             marginBottom: '1.5rem'
           }}>
-            <span style={{ color: '#dc2626' }}>{heroSlides[currentSlide].title}</span>
+            <span style={{ color: '#ff6b35' }}>{heroSlides[currentSlide].title}</span>
             <span style={{ color: '#ffffff', display: 'block' }}>- Drive with Confidence</span>
           </h1>
           <p ref={subtitleRef} style={{
@@ -683,7 +1085,7 @@ const AutoServiceShop = () => {
             <button
               ref={el => { buttonsRef.current[0] = el }}
               style={{
-                background: '#dc2626',
+                background: '#ff6b35',
                 color: 'white',
                 padding: '0.875rem 2rem',
                 borderRadius: '6px',
@@ -694,11 +1096,11 @@ const AutoServiceShop = () => {
                 transition: 'all 0.2s ease'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#b91c1c';
+                e.currentTarget.style.background = '#e55a2b';
                 e.currentTarget.style.transform = 'translateY(-1px)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = '#dc2626';
+                e.currentTarget.style.background = '#ff6b35';
                 e.currentTarget.style.transform = 'translateY(0)';
               }}
               onClick={handleBookAppointment}
@@ -721,10 +1123,12 @@ const AutoServiceShop = () => {
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
                 e.currentTarget.style.transform = 'translateY(-1px)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.5)';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = 'transparent';
                 e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
               }}
               onClick={handleViewServices}
             >
@@ -757,7 +1161,7 @@ const AutoServiceShop = () => {
                 style={{
                   width: '40px',
                   height: '2px',
-                  background: index === currentSlide ? '#dc2626' : 'rgba(255, 255, 255, 0.3)',
+                  background: index === currentSlide ? '#ff6b35' : 'rgba(255, 255, 255, 0.3)',
                   transition: 'background 0.3s ease',
                   cursor: 'pointer'
                 }}
@@ -793,12 +1197,14 @@ const AutoServiceShop = () => {
               fontSize: '0.9rem'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.4)';
+              e.currentTarget.style.background = 'rgba(255, 107, 53, 0.1)';
+              e.currentTarget.style.borderColor = '#ff6b35';
+              e.currentTarget.style.color = '#ff6b35';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = 'transparent';
               e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+              e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)';
             }}>
               {icon}
             </div>
@@ -842,7 +1248,7 @@ const AutoServiceShop = () => {
       </section>
 
       {/* About Section */}
-      <section style={{
+      <section ref={aboutRef} style={{
         padding: '5rem 2rem',
         background: '#000000'
       }}>
@@ -904,8 +1310,21 @@ const AutoServiceShop = () => {
                 padding: '2rem 1.5rem',
                 borderRadius: '8px',
                 border: '1px solid rgba(255, 255, 255, 0.1)',
-                textAlign: 'left'
+                textAlign: 'left',
+                position: 'relative',
+                overflow: 'hidden'
               }}>
+                <div style={{
+                  position: 'absolute',
+                  top: '-50%',
+                  right: '-50%',
+                  width: '200%',
+                  height: '200%',
+                  background: 'radial-gradient(circle, rgba(255,107,53,0.1) 0%, transparent 70%)',
+                  pointerEvents: 'none',
+                  opacity: 0,
+                  transition: 'opacity 0.3s ease'
+                }} className="hover-glow"></div>
                 <h3 style={{
                   fontSize: '1.1rem',
                   fontWeight: '600',
@@ -931,7 +1350,7 @@ const AutoServiceShop = () => {
       {/* Stats Section */}
       <section style={{
         padding: '4rem 2rem',
-        background: '#111827'
+        background: '#111111'
       }}>
         <div style={{
           maxWidth: '1000px',
@@ -944,7 +1363,7 @@ const AutoServiceShop = () => {
           }}>
             {[
               { number: '12+', label: 'Years of Excellence' },
-              { number: '8,500+', label: 'Satisfied Customers' },
+              { number: '8500+', label: 'Satisfied Customers' },
               { number: '98.7%', label: 'Customer Satisfaction' },
               { number: '24/7', label: 'Emergency Support' }
             ].map((stat, index) => (
@@ -955,10 +1374,10 @@ const AutoServiceShop = () => {
                 textAlign: 'center',
                 border: '1px solid rgba(255, 255, 255, 0.1)'
               }}>
-                <div style={{
+                <div className="stat-number" style={{
                   fontSize: '2rem',
                   fontWeight: '700',
-                  background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
+                  background: 'linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
@@ -979,7 +1398,7 @@ const AutoServiceShop = () => {
         </div>
       </section>
 
-      {/* Popular Services Section */}
+      {/* Popular Services Section with Images */}
       <section ref={servicesRef} style={{
         padding: '5rem 2rem',
         background: '#000000'
@@ -1000,80 +1419,164 @@ const AutoServiceShop = () => {
           
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
             gap: '2rem'
           }}>
-            {[
-              { 
-                title: 'Oil Change & Filter', 
-                price: 'From $39.99',
-                description: 'Full synthetic oil change with premium filter replacement'
-              },
-              { 
-                title: 'Brake Service', 
-                price: 'From $149.99',
-                description: 'Complete brake inspection, pad replacement, and rotor resurfacing'
-              },
-              { 
-                title: 'Tire Rotation', 
-                price: 'From $24.99',
-                description: 'Professional tire rotation and pressure adjustment'
-              },
-              { 
-                title: 'Engine Diagnostic', 
-                price: 'From $89.99',
-                description: 'Comprehensive computer diagnostic and system check'
-              },
-              { 
-                title: 'AC Service', 
-                price: 'From $129.99',
-                description: 'AC system inspection, recharge, and leak detection'
-              },
-              { 
-                title: 'Transmission Service', 
-                price: 'From $189.99',
-                description: 'Fluid exchange and transmission system maintenance'
-              }
-            ].map((service, index) => (
-              <div key={index} style={{
-                background: 'rgba(255, 255, 255, 0.05)',
-                padding: '2rem',
-                borderRadius: '8px',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                transition: 'all 0.3s ease',
-                cursor: 'pointer'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-4px)';
-                e.currentTarget.style.borderColor = '#dc2626';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-              }}>
-                <h3 style={{
-                  fontSize: '1.2rem',
-                  fontWeight: '600',
-                  marginBottom: '0.5rem',
-                  color: 'white'
+            {services.map((service, index) => (
+              <div 
+                key={index} 
+                className="service-card"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  transition: 'all 0.3s ease',
+                  cursor: 'pointer',
+                  overflow: 'hidden',
+                  position: 'relative'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-4px) scale(1.02)';
+                  e.currentTarget.style.borderColor = '#ff6b35';
+                  const overlay = e.currentTarget.querySelector('.service-overlay') as HTMLElement;
+                  if (overlay) overlay.style.opacity = '0.7';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                  const overlay = e.currentTarget.querySelector('.service-overlay') as HTMLElement;
+                  if (overlay) overlay.style.opacity = '0.4';
+                }}
+                onClick={() => setActiveService(index === activeService ? null : index)}
+              >
+                {/* Service Image */}
+                <div style={{
+                  position: 'relative',
+                  height: '200px',
+                  overflow: 'hidden'
                 }}>
-                  {service.title}
-                </h3>
-                <p style={{
-                  color: '#dc2626',
-                  fontSize: '1.1rem',
-                  fontWeight: '600',
-                  marginBottom: '0.75rem'
+                  <img 
+                    src={service.image} 
+                    alt={service.title}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      transition: 'transform 0.3s ease'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+                    onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                  />
+                  <div 
+                    className="service-overlay"
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      background: 'linear-gradient(to bottom, transparent, rgba(0,0,0,0.8))',
+                      opacity: 0.4,
+                      transition: 'opacity 0.3s ease'
+                    }}
+                  />
+                  {service.popular && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '10px',
+                      right: '10px',
+                      background: '#ff6b35',
+                      color: 'white',
+                      padding: '0.25rem 0.75rem',
+                      borderRadius: '20px',
+                      fontSize: '0.75rem',
+                      fontWeight: '600',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px'
+                    }}>
+                      Popular
+                    </div>
+                  )}
+                </div>
+                
+                {/* Service Details */}
+                <div style={{
+                  padding: '1.5rem'
                 }}>
-                  {service.price}
-                </p>
-                <p style={{
-                  color: '#9ca3af',
-                  fontSize: '0.9rem',
-                  lineHeight: '1.5'
-                }}>
-                  {service.description}
-                </p>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'flex-start',
+                    marginBottom: '0.75rem'
+                  }}>
+                    <h3 style={{
+                      fontSize: '1.2rem',
+                      fontWeight: '600',
+                      color: 'white'
+                    }}>
+                      {service.title}
+                    </h3>
+                    <span style={{
+                      color: '#ff6b35',
+                      fontSize: '1.1rem',
+                      fontWeight: '600'
+                    }}>
+                      {service.price}
+                    </span>
+                  </div>
+                  
+                  <p style={{
+                    color: '#9ca3af',
+                    fontSize: '0.9rem',
+                    lineHeight: '1.5',
+                    marginBottom: '1rem'
+                  }}>
+                    {service.description}
+                  </p>
+                  
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '1rem',
+                    fontSize: '0.85rem',
+                    color: '#9ca3af'
+                  }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      ⏱️ {service.duration}
+                    </span>
+                    <span style={{
+                      color: '#ff6b35',
+                      cursor: 'pointer'
+                    }}>
+                      Learn more →
+                    </span>
+                  </div>
+                  
+                  {/* Expandable Details */}
+                  {activeService === index && (
+                    <div style={{
+                      marginTop: '1rem',
+                      paddingTop: '1rem',
+                      borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+                      animation: 'slideDown 0.3s ease'
+                    }}>
+                      <button style={{
+                        background: '#ff6b35',
+                        color: 'white',
+                        padding: '0.5rem 1.5rem',
+                        borderRadius: '6px',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontSize: '0.9rem',
+                        fontWeight: '600',
+                        width: '100%'
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleBookAppointment();
+                      }}>
+                        Book This Service
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -1083,7 +1586,7 @@ const AutoServiceShop = () => {
             marginTop: '3rem'
           }}>
             <button style={{
-              background: '#dc2626',
+              background: '#ff6b35',
               color: 'white',
               padding: '1rem 2.5rem',
               borderRadius: '6px',
@@ -1094,11 +1597,11 @@ const AutoServiceShop = () => {
               transition: 'all 0.2s ease'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = '#b91c1c';
+              e.currentTarget.style.background = '#e55a2b';
               e.currentTarget.style.transform = 'translateY(-2px)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = '#dc2626';
+              e.currentTarget.style.background = '#ff6b35';
               e.currentTarget.style.transform = 'translateY(0)';
             }}
             onClick={handleViewServices}>
@@ -1108,10 +1611,252 @@ const AutoServiceShop = () => {
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section style={{
+      {/* Our Process Section */}
+      <section ref={processRef} style={{
         padding: '5rem 2rem',
-        background: '#111827'
+        background: '#0a0a0a',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          maxWidth: '1200px',
+          margin: '0 auto'
+        }}>
+          <h2 style={{
+            fontSize: '2rem',
+            fontWeight: '700',
+            marginBottom: '1rem',
+            textAlign: 'center',
+            color: '#ffffff'
+          }}>
+            Our Service Process
+          </h2>
+          <p style={{
+            fontSize: '1rem',
+            color: '#9ca3af',
+            textAlign: 'center',
+            marginBottom: '3rem',
+            maxWidth: '600px',
+            margin: '0 auto 3rem'
+          }}>
+            Experience seamless automotive service from start to finish
+          </p>
+          
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+            gap: '2rem',
+            position: 'relative'
+          }}>
+            {processSteps.map((step, index) => (
+              <div key={index} style={{ position: 'relative' }}>
+                <div 
+                  className="process-step"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    padding: '2rem 1.5rem',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    textAlign: 'center',
+                    transition: 'all 0.3s ease',
+                    position: 'relative',
+                    zIndex: 2
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 107, 53, 0.1)';
+                    e.currentTarget.style.borderColor = '#ff6b35';
+                    e.currentTarget.style.transform = 'translateY(-5px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }}
+                >
+                  <div style={{
+                    fontSize: '2rem',
+                    marginBottom: '1rem'
+                  }}>
+                    {step.icon}
+                  </div>
+                  <div style={{
+                    color: '#ff6b35',
+                    fontSize: '0.8rem',
+                    fontWeight: '700',
+                    marginBottom: '0.5rem',
+                    letterSpacing: '1px'
+                  }}>
+                    STEP {step.step}
+                  </div>
+                  <h3 style={{
+                    fontSize: '1rem',
+                    fontWeight: '600',
+                    marginBottom: '0.5rem',
+                    color: 'white'
+                  }}>
+                    {step.title}
+                  </h3>
+                  <p style={{
+                    color: '#9ca3af',
+                    fontSize: '0.85rem',
+                    lineHeight: '1.4'
+                  }}>
+                    {step.description}
+                  </p>
+                </div>
+                
+                {/* Connecting Line */}
+                {index < processSteps.length - 1 && (
+                  <div 
+                    className="process-line"
+                    style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '100%',
+                      width: 'calc(100% - 80px)',
+                      height: '2px',
+                      background: 'linear-gradient(90deg, #ff6b35, rgba(255, 107, 53, 0.3))',
+                      transformOrigin: 'left center',
+                      zIndex: 1
+                    }}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Before & After Gallery */}
+      <section ref={galleryRef} style={{
+        padding: '5rem 2rem',
+        background: '#000000'
+      }}>
+        <div style={{
+          maxWidth: '1200px',
+          margin: '0 auto'
+        }}>
+          <h2 style={{
+            fontSize: '2rem',
+            fontWeight: '700',
+            marginBottom: '3rem',
+            textAlign: 'center',
+            color: '#ffffff'
+          }}>
+            Our Work Speaks for Itself
+          </h2>
+          
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
+            gap: '2rem'
+          }}>
+            {beforeAfterGallery.map((item, index) => (
+              <div 
+                key={index}
+                className="gallery-item"
+                style={{
+                  position: 'relative',
+                  borderRadius: '12px',
+                  overflow: 'hidden',
+                  height: '300px',
+                  cursor: 'pointer'
+                }}
+              >
+                {/* Before Image */}
+                <img 
+                  src={item.before}
+                  alt="Before"
+                  style={{
+                    position: 'absolute',
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover'
+                  }}
+                />
+                
+                {/* After Image with Slider */}
+                <div 
+                  className="before-after-slider"
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '50%',
+                    height: '100%',
+                    overflow: 'hidden',
+                    borderRight: '3px solid #ff6b35'
+                  }}
+                >
+                  <img 
+                    src={item.after}
+                    alt="After"
+                    style={{
+                      position: 'absolute',
+                      width: '100vw',
+                      maxWidth: 'none',
+                      height: '100%',
+                      objectFit: 'cover'
+                    }}
+                  />
+                </div>
+                
+                {/* Labels */}
+                <div style={{
+                  position: 'absolute',
+                  bottom: '20px',
+                  left: '20px',
+                  right: '20px',
+                  display: 'flex',
+                  justifyContent: 'space-between'
+                }}>
+                  <span style={{
+                    background: 'rgba(0,0,0,0.7)',
+                    color: 'white',
+                    padding: '0.5rem 1rem',
+                    borderRadius: '6px',
+                    fontSize: '0.9rem',
+                    fontWeight: '600'
+                  }}>
+                    BEFORE
+                  </span>
+                  <span style={{
+                    background: '#ff6b35',
+                    color: 'white',
+                    padding: '0.5rem 1rem',
+                    borderRadius: '6px',
+                    fontSize: '0.9rem',
+                    fontWeight: '600'
+                  }}>
+                    AFTER
+                  </span>
+                </div>
+                
+                <h3 style={{
+                  position: 'absolute',
+                  top: '20px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  background: 'rgba(0,0,0,0.8)',
+                  color: 'white',
+                  padding: '0.5rem 1.5rem',
+                  borderRadius: '6px',
+                  fontSize: '1rem',
+                  fontWeight: '600',
+                  whiteSpace: 'nowrap'
+                }}>
+                  {item.title}
+                </h3>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section ref={testimonialsRef} style={{
+        padding: '5rem 2rem',
+        background: '#111111'
       }}>
         <div style={{
           maxWidth: '1000px',
@@ -1136,30 +1881,53 @@ const AutoServiceShop = () => {
               {
                 name: 'Sarah Johnson',
                 review: 'Outstanding service! They diagnosed and fixed my car\'s issue quickly. Fair pricing and honest recommendations.',
-                rating: 5
+                rating: 5,
+                vehicle: '2022 Honda Accord',
+                service: 'Engine Diagnostic'
               },
               {
                 name: 'Michael Chen',
                 review: 'Best auto shop in town. Professional staff, quality work, and they always explain everything clearly.',
-                rating: 5
+                rating: 5,
+                vehicle: '2021 Tesla Model 3',
+                service: 'Brake Service'
               },
               {
                 name: 'Emily Rodriguez',
                 review: 'I\'ve been coming here for years. Trustworthy, reliable, and they stand behind their work. Highly recommend!',
-                rating: 5
+                rating: 5,
+                vehicle: '2020 Toyota RAV4',
+                service: 'Regular Maintenance'
               }
             ].map((testimonial, index) => (
-              <div key={index} style={{
-                background: 'rgba(255, 255, 255, 0.05)',
-                padding: '2rem',
-                borderRadius: '8px',
-                border: '1px solid rgba(255, 255, 255, 0.1)'
-              }}>
+              <div 
+                key={index} 
+                className="testimonial-card"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  padding: '2rem',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+              >
+                <div style={{
+                  position: 'absolute',
+                  top: '10px',
+                  right: '20px',
+                  fontSize: '3rem',
+                  color: 'rgba(255, 107, 53, 0.2)'
+                }}>
+                  "
+                </div>
+                
                 <div style={{ marginBottom: '1rem' }}>
                   {[...Array(testimonial.rating)].map((_, i) => (
-                    <span key={i} style={{ color: '#dc2626', fontSize: '1.2rem' }}>★</span>
+                    <span key={i} style={{ color: '#ff6b35', fontSize: '1.2rem' }}>★</span>
                   ))}
                 </div>
+                
                 <p style={{
                   color: '#d1d5db',
                   fontSize: '0.95rem',
@@ -1169,13 +1937,26 @@ const AutoServiceShop = () => {
                 }}>
                   "{testimonial.review}"
                 </p>
-                <p style={{
-                  color: '#ffffff',
-                  fontWeight: '600',
-                  fontSize: '0.9rem'
+                
+                <div style={{
+                  borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+                  paddingTop: '1rem'
                 }}>
-                  - {testimonial.name}
-                </p>
+                  <p style={{
+                    color: '#ffffff',
+                    fontWeight: '600',
+                    fontSize: '0.9rem',
+                    marginBottom: '0.25rem'
+                  }}>
+                    - {testimonial.name}
+                  </p>
+                  <p style={{
+                    color: '#9ca3af',
+                    fontSize: '0.8rem'
+                  }}>
+                    {testimonial.vehicle} • {testimonial.service}
+                  </p>
+                </div>
               </div>
             ))}
           </div>
@@ -1212,22 +1993,22 @@ const AutoServiceShop = () => {
           
           <button style={{
             background: 'transparent',
-            color: '#dc2626',
+            color: '#ff6b35',
             padding: '0.875rem 2rem',
             borderRadius: '6px',
             fontWeight: '600',
-            border: '2px solid #dc2626',
+            border: '2px solid #ff6b35',
             cursor: 'pointer',
             fontSize: '0.95rem',
             transition: 'all 0.2s ease'
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#dc2626';
+            e.currentTarget.style.background = '#ff6b35';
             e.currentTarget.style.color = 'white';
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.background = 'transparent';
-            e.currentTarget.style.color = '#dc2626';
+            e.currentTarget.style.color = '#ff6b35';
           }}>
             Meet Our Team 
             
@@ -1239,6 +2020,36 @@ const AutoServiceShop = () => {
         @keyframes fadeIn {
           from { opacity: 0; }
           to { opacity: 1; }
+        }
+        
+        @keyframes slideDown {
+          from { 
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to { 
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        .main-nav.nav-scrolled {
+          background: rgba(0, 0, 0, 0.95) !important;
+          backdrop-filter: blur(10px);
+          box-shadow: 0 2px 20px rgba(0,0,0,0.5);
+        }
+        
+        .hover-glow:hover {
+          opacity: 1 !important;
+        }
+        
+        .service-card {
+          transform-style: preserve-3d;
+          perspective: 1000px;
+        }
+        
+        .testimonial-card {
+          transform-style: preserve-3d;
         }
       `}</style>
     </div>
