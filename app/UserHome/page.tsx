@@ -3,26 +3,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { gsap } from 'gsap';
-<<<<<<< HEAD
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-
-interface Notification {
-  id: string;
-  user_id: string;
-  title: string;
-  message: string;
-  type: 'info' | 'warning' | 'success' | 'error';
-  is_read: boolean;
-  created_at: string;
-  expires_at: string | null;
-=======
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { TextPlugin } from 'gsap/TextPlugin';
 
 // Register GSAP plugins
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger, TextPlugin);
->>>>>>> b499fba6dd8a8d1d9f4d75e517fba50037029ebe
 }
 
 const AutoServiceShop = () => {
@@ -33,19 +19,19 @@ const AutoServiceShop = () => {
   const router = useRouter();
 
   // Refs for GSAP animations
-  const navRef = useRef<HTMLElement>(null);
-  const logoRef = useRef<HTMLDivElement>(null);
-  const titleRef = useRef<HTMLHeadingElement>(null);
-  const subtitleRef = useRef<HTMLParagraphElement>(null);
+  const navRef = useRef(null);
+  const logoRef = useRef(null);
+  const titleRef = useRef(null);
+  const subtitleRef = useRef(null);
   const buttonsRef = useRef<(HTMLButtonElement | null)[]>([]);
   const brandsRef = useRef<HTMLDivElement>(null);
-  const statsRef = useRef<HTMLDivElement>(null);
-  const servicesRef = useRef<HTMLDivElement>(null);
-  const heroRef = useRef<HTMLDivElement>(null);
-  const aboutRef = useRef<HTMLDivElement>(null);
-  const testimonialsRef = useRef<HTMLDivElement>(null);
-  const galleryRef = useRef<HTMLDivElement>(null);
-  const processRef = useRef<HTMLDivElement>(null);
+  const statsRef = useRef(null);
+  const servicesRef = useRef<HTMLDivElement | null>(null);
+  const heroRef = useRef(null);
+  const aboutRef = useRef(null);
+  const testimonialsRef = useRef(null);
+  const galleryRef = useRef(null);
+  const processRef = useRef(null);
 
   const heroSlides = [
     {
@@ -264,7 +250,7 @@ const AutoServiceShop = () => {
 
       // Stats counter animation
       if (statsRef.current) {
-        const statElements = statsRef.current.querySelectorAll('.stat-number');
+        const statElements = (statsRef.current as HTMLElement).querySelectorAll('.stat-number');
         statElements.forEach((stat) => {
           const endValue = stat.textContent;
           const isPercentage = endValue.includes('%');
@@ -351,7 +337,7 @@ const AutoServiceShop = () => {
 
       // About section text reveal
       if (aboutRef.current) {
-        const aboutText = aboutRef.current.querySelectorAll('p, h2, h3');
+        const aboutText = (aboutRef.current as HTMLElement).querySelectorAll('p, h2, h3');
         
         gsap.fromTo(aboutText,
           {
@@ -378,7 +364,7 @@ const AutoServiceShop = () => {
 
       // Process steps animation
       if (processRef.current) {
-        const steps = processRef.current.querySelectorAll('.process-step');
+        const steps = (processRef.current as HTMLElement).querySelectorAll('.process-step');
         
         steps.forEach((step, index) => {
           gsap.fromTo(step,
@@ -405,7 +391,7 @@ const AutoServiceShop = () => {
         });
 
         // Connecting lines animation
-        const lines = processRef.current.querySelectorAll('.process-line');
+        const lines = (processRef.current as HTMLElement).querySelectorAll('.process-line');
         lines.forEach((line, index) => {
           gsap.fromTo(line,
             { scaleX: 0 },
@@ -427,7 +413,7 @@ const AutoServiceShop = () => {
 
       // Gallery animation
       if (galleryRef.current) {
-        const galleryItems = galleryRef.current.querySelectorAll('.gallery-item');
+        const galleryItems = (galleryRef.current as HTMLElement).querySelectorAll('.gallery-item');
         
         galleryItems.forEach((item, index) => {
           const slider = item.querySelector('.before-after-slider');
@@ -456,7 +442,7 @@ const AutoServiceShop = () => {
 
       // Testimonials fade in
       if (testimonialsRef.current) {
-        const testimonialCards = testimonialsRef.current.querySelectorAll('.testimonial-card');
+        const testimonialCards = (testimonialsRef.current as HTMLElement).querySelectorAll('.testimonial-card');
         
         gsap.fromTo(testimonialCards,
           { 
@@ -583,11 +569,11 @@ const AutoServiceShop = () => {
           gap: '3rem',
           alignItems: 'center'
         }}>
-          {['HOME', 'SERVICES', 'ABOUT', 'GALLERY', 'CONTACT'].map((item) => (
+          {['HOME', 'SERVICES', 'ABOUT', 'APPOINTMENTS', 'CONTACT'].map((item) => (
             <button
               key={item}
               style={{
-                color: item === 'SERVICES' || item === 'GALLERY' ? '#ff6b35' : 'rgba(255, 255, 255, 0.9)',
+                color: item === 'SERVICES' || item === 'APPOINTMENTS' ? '#ff6b35' : 'rgba(255, 255, 255, 0.9)',
                 fontSize: '0.875rem',
                 fontWeight: '700',
                 background: 'none',
@@ -603,10 +589,14 @@ const AutoServiceShop = () => {
                 e.currentTarget.style.transform = 'translateY(-2px)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.color = item === 'SERVICES' || item === 'GALLERY' ? '#ff6b35' : 'rgba(255, 255, 255, 0.9)';
+                e.currentTarget.style.color = item === 'SERVICES' || item === 'APPOINTMENTS' ? '#ff6b35' : 'rgba(255, 255, 255, 0.9)';
                 e.currentTarget.style.transform = 'translateY(0)';
               }}
-              onClick={() => handleNavigation(item === 'HOME' ? '/UserHome' : `/${item.charAt(0) + item.slice(1).toLowerCase()}`)}
+              onClick={() => handleNavigation(
+                item === 'HOME' ? '/UserHome' : 
+                item === 'APPOINTMENTS' ? '/Appointment' :
+                `/${item.charAt(0) + item.slice(1).toLowerCase()}`
+              )}
             >
               {item}
             </button>
@@ -1642,7 +1632,7 @@ const AutoServiceShop = () => {
         </div>
       </section>
 
-      <style jsx>{`
+      <style>{`
         @keyframes fadeIn {
           from { opacity: 0; }
           to { opacity: 1; }
