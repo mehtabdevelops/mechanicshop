@@ -3,7 +3,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { gsap } from 'gsap';
-<<<<<<< HEAD
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 interface Notification {
@@ -15,14 +14,6 @@ interface Notification {
   is_read: boolean;
   created_at: string;
   expires_at: string | null;
-=======
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { TextPlugin } from 'gsap/TextPlugin';
-
-// Register GSAP plugins
-if (typeof window !== 'undefined') {
-  gsap.registerPlugin(ScrollTrigger, TextPlugin);
->>>>>>> d7358a270e2b75e020169a750931f4bb77e6b518
 }
 
 const AutoServiceShop = () => {
