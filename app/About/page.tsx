@@ -12,6 +12,7 @@ const ORANGE_RGBA = (a: number) => `rgba(255, 140, 0, ${a})`;
 
 const About = () => {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [heroTextReady, setHeroTextReady] = useState(false);
   const prefersReducedMotion =
     typeof window !== 'undefined'
       ? window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
@@ -134,40 +135,80 @@ const About = () => {
     }
   }, [mousePos, prefersReducedMotion]);
 
+  // Mark when hero text is ready for animation
+  useEffect(() => {
+    if (heroTextRef.current) {
+      setHeroTextReady(true);
+    }
+  }, []);
+
   // ---- MAIN ANIMATIONS ----
   useLayoutEffect(() => {
+    if (!heroTextReady || prefersReducedMotion) return;
+
     const ctx = gsap.context(() => {
-      if (prefersReducedMotion) return;
+      // HERO: Character animation with proper sequencing
+      const tl = gsap.timeline({ 
+        defaults: { ease: 'back.out(1.7)' },
+        delay: 0.2 // Small delay to ensure DOM is ready
+      });
 
-      // HERO: robust per-line character animation (prevents gradient clipping/flicker)
-      const tl = gsap.timeline({ defaults: { ease: 'back.out(1.6)' } });
+      // Get all character spans
+      const allChars = heroTextRef.current?.querySelectorAll('.hero-char');
+      
+      if (allChars && allChars.length > 0) {
+        // Set initial state - characters start invisible and slightly below
+        gsap.set(allChars, { 
+          opacity: 0, 
+          y: 40,
+          scale: 0.5,
+          rotationX: -90
+        });
 
-      const line1Chars = heroTextRef.current?.querySelectorAll('.hero-line-1 .hero-char');
-      const line2Chars = heroTextRef.current?.querySelectorAll('.hero-line-2 .hero-char');
-
-      // Start hidden (no layout jump)
-      gsap.set([line1Chars, line2Chars], { autoAlpha: 0, y: 18, rotate: 0.01, scale: 0.98 });
-
-      if (line1Chars && line1Chars.length) {
-        tl.to(line1Chars, {
-          autoAlpha: 1,
+        // Animate all characters with stagger
+        tl.to(allChars, {
+          opacity: 1,
           y: 0,
           scale: 1,
-          duration: 0.7,
-          stagger: 0.025,
-          force3D: true
+          rotationX: 0,
+          duration: 0.8,
+          stagger: {
+            each: 0.03,
+            from: "start"
+          },
+          force3D: true,
+          transformPerspective: 1000
+        });
+
+        // Add a subtle bounce effect after main animation
+        tl.to(allChars, {
+          y: -5,
+          duration: 0.3,
+          stagger: 0.02,
+          ease: "power2.out"
+        }, "+=0.1");
+        
+        tl.to(allChars, {
+          y: 0,
+          duration: 0.3,
+          stagger: 0.02,
+          ease: "bounce.out"
         });
       }
 
-      if (line2Chars && line2Chars.length) {
-        tl.to(line2Chars, {
-          autoAlpha: 1,
-          y: 0,
-          scale: 1,
-          duration: 0.75,
-          stagger: 0.02,
-          force3D: true
-        }, "-=0.2"); // slight overlap with line1 end
+      // Hero subtitle fade in
+      const heroSubtitle = heroRef.current?.querySelector('p');
+      if (heroSubtitle) {
+        gsap.fromTo(heroSubtitle,
+          { opacity: 0, y: 30 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 1,
+            delay: 1.2,
+            ease: "power3.out"
+          }
+        );
       }
 
       // Stats counter animation
@@ -175,19 +216,19 @@ const About = () => {
       statNumbers?.forEach((stat) => {
         const el = stat as HTMLElement;
         const target = parseFloat(el.dataset.target || '0');
-        gsap.from(stat, {
-          textContent: 0,
-          duration: 2,
-          ease: "power1.out",
-          snap: { textContent: target < 100 ? 0.1 : 1 },
+        const obj = { val: 0 };
+        
+        gsap.to(obj, {
+          val: target,
+          duration: 2.5,
+          ease: "power2.out",
           scrollTrigger: {
             trigger: stat,
-            start: "top 80%",
+            start: "top 85%",
+            once: true
           },
-          onUpdate: function () {
-            const numeric = Number((this.targets()[0] as HTMLElement).textContent || '0');
-            const rounded = Math.ceil(isNaN(numeric) ? 0 : numeric);
-            (stat as HTMLElement).textContent = String(rounded);
+          onUpdate: function() {
+            el.textContent = Math.ceil(obj.val).toString();
           }
         });
       });
@@ -224,7 +265,8 @@ const About = () => {
             ease: "power3.out",
             scrollTrigger: {
               trigger: valuesRef.current,
-              start: "top 70%"
+              start: "top 70%",
+              once: true
             }
           }
         );
@@ -234,19 +276,24 @@ const About = () => {
       const teamCards = teamRef.current?.querySelectorAll('.team-card');
       if (teamCards) {
         teamCards.forEach((card, index) => {
-          (card as HTMLElement).style.willChange = 'transform';
           gsap.fromTo(card,
-            { opacity: 0, rotation: index % 2 === 0 ? -180 : 180, scale: 0.3 },
+            { 
+              opacity: 0, 
+              rotationY: index % 2 === 0 ? -180 : 180, 
+              scale: 0.3 
+            },
             {
               opacity: 1,
-              rotation: 0,
+              rotationY: 0,
               scale: 1,
-              duration: 1,
+              duration: 1.2,
               ease: "back.out(1.4)",
               scrollTrigger: {
                 trigger: card,
-                start: "top 80%"
-              }
+                start: "top 85%",
+                once: true
+              },
+              transformPerspective: 1000
             }
           );
         });
@@ -255,16 +302,19 @@ const About = () => {
       // CTA section
       if (ctaRef.current) {
         gsap.fromTo(ctaRef.current,
-          { opacity: 0, scale: 0.9 },
+          { opacity: 0, scale: 0.8, rotationY: -15 },
           {
             opacity: 1,
             scale: 1,
-            duration: 1,
-            ease: "elastic.out(1, 0.6)",
+            rotationY: 0,
+            duration: 1.2,
+            ease: "elastic.out(1, 0.5)",
             scrollTrigger: {
               trigger: ctaRef.current,
-              start: "top 80%"
-            }
+              start: "top 80%",
+              once: true
+            },
+            transformPerspective: 1000
           }
         );
       }
@@ -275,33 +325,18 @@ const About = () => {
         gsap.to(shape, {
           y: "+=20",
           rotation: "+=360",
-          duration: 3 + index,
+          duration: 3 + index * 0.5,
           repeat: -1,
           yoyo: true,
-          ease: "sine.inOut",
-          force3D: true
+          ease: "sine.inOut"
         });
       });
     }, rootRef);
 
     return () => ctx.revert();
-  }, [prefersReducedMotion]);
+  }, [heroTextReady, prefersReducedMotion]);
 
-  // ---- Types ----
-  interface TeamMember {
-    name: string;
-    position: string;
-    experience: string;
-    specialization: string;
-    image: string;
-    quote: string;
-    certifications: string;
-  }
-  interface ValueItem { icon: string; title: string; description: string; metric: string; }
-  interface StatItem { number: string; label: string; suffix: string; }
-  interface Milestone { year: string; event: string; }
-
-  // Split into characters
+  // Split text into characters for animation
   const splitText = (text: string): React.ReactElement[] =>
     text.split('').map((char, index) => (
       <span
@@ -311,6 +346,12 @@ const About = () => {
           display: 'inline-block',
           willChange: 'transform, opacity',
           backfaceVisibility: 'hidden',
+          transformStyle: 'preserve-3d',
+          background: 'inherit',
+          backgroundClip: 'inherit',
+          WebkitBackgroundClip: 'inherit',
+          WebkitTextFillColor: 'inherit',
+          color: 'inherit'
         }}
       >
         {char === ' ' ? '\u00A0' : char}
@@ -486,25 +527,24 @@ const About = () => {
               marginBottom: '2rem',
               letterSpacing: '-2px',
               lineHeight: '1.1',
-              willChange: 'opacity, transform'
+              perspective: '1000px'
             }}
           >
-            <span className="hero-line hero-line-1" style={{ display: 'inline-block' }}>
+            <div className="hero-line hero-line-1" style={{ display: 'block' }}>
               {splitText('DRIVEN BY')}
-            </span>
-            <br />
-            <span
+            </div>
+            <div
               className="hero-line hero-line-2"
               style={{
-                display: 'inline-block',
-                background: `linear-gradient(135deg, ${ORANGE}, #FFFFFF)`,
+                display: 'block',
+                background: `linear-gradient(135deg, ${ORANGE}, ${ORANGE_LIGHT}, #FFFFFF)`,
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text'
               }}
             >
               {splitText('EXCELLENCE')}
-            </span>
+            </div>
           </div>
           <p
             style={{
@@ -513,7 +553,8 @@ const About = () => {
               maxWidth: '700px',
               margin: '0 auto',
               lineHeight: '1.8',
-              fontWeight: '300'
+              fontWeight: '300',
+              opacity: 0
             }}
           >
             For over 15 years, we've been more than mechanics—we're automotive craftsmen,
@@ -542,8 +583,7 @@ const About = () => {
                   transition: 'all 0.3s ease',
                   cursor: 'pointer',
                   position: 'relative',
-                  overflow: 'hidden',
-                  willChange: 'transform, box-shadow, border-color'
+                  overflow: 'hidden'
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-10px)';
@@ -701,7 +741,7 @@ const About = () => {
           </div>
         </div>
 
-        {/* Showcase Gallery — organized, varied spans */}
+        {/* Showcase Gallery */}
         <section style={{ marginBottom: '8rem' }}>
           <h2
             style={{
@@ -734,7 +774,7 @@ const About = () => {
             {gallery.map((g, i) => (
               <figure
                 key={i}
-                className="value-card"
+                className="gallery-item"
                 style={{
                   position: 'relative',
                   borderRadius: '16px',
@@ -743,18 +783,18 @@ const About = () => {
                   background: `linear-gradient(135deg, ${ORANGE_RGBA(0.04)}, rgba(0,0,0,0.9))`,
                   transition: 'transform .3s ease, box-shadow .3s ease, border-color .3s ease',
                   cursor: 'zoom-in',
-                  gridColumn: g.wide ? 'span 2' as any : 'span 1',
-                  gridRow: g.tall ? 'span 2' as any : 'span 1'
+                  gridColumn: g.wide ? 'span 2' : 'span 1',
+                  gridRow: g.tall ? 'span 2' : 'span 1'
                 }}
                 onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-6px)';
-                  (e.currentTarget as HTMLDivElement).style.borderColor = ORANGE;
-                  (e.currentTarget as HTMLDivElement).style.boxShadow = `0 12px 30px ${ORANGE_RGBA(0.25)}`;
+                  e.currentTarget.style.transform = 'translateY(-6px)';
+                  e.currentTarget.style.borderColor = ORANGE;
+                  e.currentTarget.style.boxShadow = `0 12px 30px ${ORANGE_RGBA(0.25)}`;
                 }}
                 onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)';
-                  (e.currentTarget as HTMLDivElement).style.borderColor = ORANGE_RGBA(0.2);
-                  (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.borderColor = ORANGE_RGBA(0.2);
+                  e.currentTarget.style.boxShadow = 'none';
                 }}
               >
                 <img
@@ -825,8 +865,7 @@ const About = () => {
                   transition: 'all 0.3s ease',
                   cursor: 'pointer',
                   position: 'relative',
-                  overflow: 'hidden',
-                  willChange: 'transform, border-color'
+                  overflow: 'hidden'
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-10px) scale(1.02)';
