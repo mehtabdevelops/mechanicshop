@@ -20,7 +20,16 @@ interface ServicePrices {
 const OrderSummary = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+  const carImages = [
+    "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
+    "https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
+    "https://images.unsplash.com/photo-1542362567-b07e54358753?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
+    "https://images.unsplash.com/photo-1619405399517-d7fce0f13302?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80"
+  ];
+
+  // Select a random background image
+  const backgroundImage = carImages[Math.floor(Math.random() * carImages.length)];
+
   // Service prices mapping with proper typing
   const servicePrices: ServicePrices = {
     'Oil Change': 49.99,
@@ -69,7 +78,7 @@ const OrderSummary = () => {
         email,
         phone
       });
-      
+
       // Set the price based on service type with proper type checking
       if (serviceType in servicePrices) {
         setServicePrice(servicePrices[serviceType]);
@@ -80,7 +89,7 @@ const OrderSummary = () => {
       if (storedData) {
         const parsedData = JSON.parse(storedData);
         setAppointmentData(parsedData);
-        
+
         // Set the price based on service type with proper type checking
         if (parsedData.serviceType && parsedData.serviceType in servicePrices) {
           setServicePrice(servicePrices[parsedData.serviceType]);
@@ -91,7 +100,7 @@ const OrderSummary = () => {
 
   const formatDate = (dateString: string) => {
     if (!dateString) return 'Not specified';
-    
+
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
@@ -102,12 +111,12 @@ const OrderSummary = () => {
 
   const formatTime = (timeString: string) => {
     if (!timeString) return 'Not specified';
-    
+
     const [hours, minutes] = timeString.split(':');
     const hour = parseInt(hours);
     const period = hour >= 12 ? 'PM' : 'AM';
     const formattedHour = hour % 12 || 12;
-    
+
     return `${formattedHour}:${minutes} ${period}`;
   };
 
@@ -127,55 +136,55 @@ const OrderSummary = () => {
     }}>
       {/* Navigation */}
       <header
-  style={{
-    position: 'relative',
-    zIndex: 2,
-    padding: '20px',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.9)',
-    marginBottom: '2rem',
-  }}
->
-  {/* Clickable logo */}
-  <h1
-    onClick={() => router.push('/')}
-    style={{
-      fontSize: '2.5rem',
-      fontWeight: '600',
-      marginBottom: '0.75rem',
-      letterSpacing: '1px',
-      cursor: 'pointer',
-    }}
-  >
-    <span style={{ color: '#ff8c00' }}>Sunny</span>
-    <span style={{ color: '#ffffff' }}>Auto</span>
-  </h1>
+        style={{
+          position: 'relative',
+          zIndex: 2,
+          padding: '20px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          backgroundColor: 'rgba(0, 0, 0, 0.9)',
+          marginBottom: '2rem',
+        }}
+      >
+        {/* Clickable logo */}
+        <h1
+          onClick={() => router.push('/')}
+          style={{
+            fontSize: '2.5rem',
+            fontWeight: '600',
+            marginBottom: '0.75rem',
+            letterSpacing: '1px',
+            cursor: 'pointer',
+          }}
+        >
+          <span style={{ color: '#ff8c00' }}>Sunny</span>
+          <span style={{ color: '#ffffff' }}>Auto</span>
+        </h1>
 
-  {/* Back to Dashboard button */}
-  <button
-    onClick={() => router.push('/AdminHome')}
-    style={{
-      backgroundColor: '#ff8c00',
-      color: '#ffffff',
-      padding: '10px 20px',
-      borderRadius: '8px',
-      border: 'none',
-      cursor: 'pointer',
-      fontWeight: 'bold',
-      transition: 'background 0.3s ease',
-    }}
-    onMouseOver={(e) => {
-      e.currentTarget.style.backgroundColor = '#ffa733';
-    }}
-    onMouseOut={(e) => {
-      e.currentTarget.style.backgroundColor = '#ff8c00';
-    }}
-  >
-    Back to Dashboard
-  </button>
-</header>
+        {/* Back to Dashboard button */}
+        <button
+          onClick={() => router.push('/AdminHome')}
+          style={{
+            backgroundColor: '#ff8c00',
+            color: '#ffffff',
+            padding: '10px 20px',
+            borderRadius: '8px',
+            border: 'none',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            transition: 'background 0.3s ease',
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.backgroundColor = '#ffa733';
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.backgroundColor = '#ff8c00';
+          }}
+        >
+          Back to Dashboard
+        </button>
+      </header>
 
       {/* Main Content */}
       <div style={{
@@ -188,22 +197,51 @@ const OrderSummary = () => {
           textAlign: 'center',
           marginBottom: '3rem',
           padding: '2rem',
-          background: '#172554',
           borderRadius: '12px',
           border: '1px solid #fbbf24',
-          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
+          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+          backgroundImage: `url(${backgroundImage})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          position: 'relative',
+          overflow: 'hidden',
         }}>
+          {/*Overlay layer - frosted +tinted */}
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.6)', // darker transparent tint over car
+            backdropFilter: 'blue(6x)', //slight blue (frosted effect)
+            WebkitBackdropFilter: 'blur(6px)',
+            zIndex: 1,
+          }}></div>
+
+          {/* "Screen door" pattern layer */}
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            backgroundImage:
+              'linear-gradient(0deg, rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)',
+    backgroundSize: '20px 20px', // adjust this to make the grid tighter/looser
+    zIndex: 2,
+    pointerEvents: 'none', // ensures it doesn’t block clicks
+  }}></div>
+        
+
+
+
           <h1 style={{
             fontSize: '2.5rem',
             fontWeight: '700',
             marginBottom: '1rem',
-            color: '#fbbf24'
+            color: '#FF8C00'
           }}>
             Order Summary
           </h1>
           <p style={{
             fontSize: '1.1rem',
-            color: '#fbbf24',
+            color: '#c2bdb7ff',
             maxWidth: '600px',
             margin: '0 auto',
             lineHeight: '1.6'
@@ -329,7 +367,7 @@ const OrderSummary = () => {
           </div>
 
           {/* Confirmation Button */}
-          <button 
+          <button
             onClick={handleConfirm}
             style={{
               background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
