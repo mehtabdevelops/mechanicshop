@@ -576,11 +576,7 @@ const AutoServiceShop = () => {
             <button
               key={item}
               style={{
-<<<<<<< Updated upstream
                 color: item === 'SERVICES' || item === 'GALLERY' ? '#ff6b35' : 'rgba(255, 255, 255, 0.9)',
-=======
-                color: item === 'SERVICES' || item === 'APPOINTMENTS' ? ORANGE : 'rgba(255, 255, 255, 0.9)',
->>>>>>> Stashed changes
                 fontSize: '0.875rem',
                 fontWeight: '700',
                 background: 'none',
@@ -596,11 +592,7 @@ const AutoServiceShop = () => {
                 e.currentTarget.style.transform = 'translateY(-2px)';
               }}
               onMouseLeave={(e) => {
-<<<<<<< Updated upstream
                 e.currentTarget.style.color = item === 'SERVICES' || item === 'GALLERY' ? '#ff6b35' : 'rgba(255, 255, 255, 0.9)';
-=======
-                e.currentTarget.style.color = item === 'SERVICES' || item === 'APPOINTMENTS' ? ORANGE : 'rgba(255, 255, 255, 0.9)';
->>>>>>> Stashed changes
                 e.currentTarget.style.transform = 'translateY(0)';
               }}
               onClick={() => handleNavigation(item === 'HOME' ? '/UserHome' : `/${item.charAt(0) + item.slice(1).toLowerCase()}`)}
