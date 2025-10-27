@@ -4,6 +4,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { gsap } from 'gsap';
 
+const ORANGE = '#FF8C00';          // primary accent
+const ORANGE_LIGHT = '#FFA500';
+const ORANGE_DARK = '#CC5500';
+const ORANGE_DEEP = '#7F3F00';
+const ORANGE_RGBA = (alpha: number) => `rgba(255, 140, 0, ${alpha})`;
+const ORANGE_LIGHT_RGBA = (alpha: number) => `rgba(255, 165, 0, ${alpha})`;
+
 const HomePage = () => {
   const [hoveredButton, setHoveredButton] = useState<string | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -222,7 +229,7 @@ const HomePage = () => {
     // Add glow effect to content card when any button is hovered
     gsap.to(contentCardRef.current, {
       boxShadow: isHovering 
-        ? '0 15px 40px rgba(220, 38, 38, 0.28), 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08)'
+        ? `0 15px 40px ${ORANGE_RGBA(0.28)}, 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08)`
         : '0 8px 32px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
       duration: 0.4,
       ease: "power2.out"
@@ -249,8 +256,8 @@ const HomePage = () => {
           position: 'absolute',
           inset: 0,
           backgroundImage: `
-            radial-gradient(circle at 25% 25%, rgba(220, 38, 38, 0.08) 2px, transparent 0),
-            radial-gradient(circle at 75% 75%, rgba(220, 38, 38, 0.05) 1px, transparent 0)
+            radial-gradient(circle at 25% 25%, ${ORANGE_LIGHT_RGBA(0.08)} 2px, transparent 0),
+            radial-gradient(circle at 75% 75%, ${ORANGE_LIGHT_RGBA(0.05)} 1px, transparent 0)
           `,
           backgroundSize: '60px 60px, 40px 40px',
           zIndex: 1,
@@ -282,7 +289,7 @@ const HomePage = () => {
           inset: 0,
           background: `
             linear-gradient(135deg, rgba(12, 12, 12, 0.92) 0%, rgba(18, 18, 18, 0.9) 50%, rgba(0, 0, 0, 0.96) 100%),
-            linear-gradient(45deg, rgba(220, 38, 38, 0.18) 0%, transparent 65%),
+            linear-gradient(45deg, ${ORANGE_RGBA(0.18)} 0%, transparent 65%),
             radial-gradient(ellipse at 30% 50%, transparent 0%, rgba(10, 10, 10, 0.7) 50%, rgba(0, 0, 0, 0.96) 100%)
           `,
           zIndex: 4,
@@ -305,7 +312,7 @@ const HomePage = () => {
             0 8px 32px rgba(0, 0, 0, 0.6),
             inset 0 1px 0 rgba(255, 255, 255, 0.08)
           `,
-          border: '1px solid rgba(220, 38, 38, 0.35)',
+          border: `1px solid ${ORANGE_RGBA(0.35)}`,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -326,7 +333,7 @@ const HomePage = () => {
             transform: 'translateX(-50%)',
             width: '80%',
             height: '3px',
-            background: 'linear-gradient(90deg, transparent, #dc2626, #f87171, #dc2626, transparent)',
+            background: `linear-gradient(90deg, transparent, ${ORANGE}, ${ORANGE_LIGHT}, ${ORANGE}, transparent)`,
             opacity: 0,
             filter: 'blur(0.5px)'
           }} 
@@ -338,7 +345,7 @@ const HomePage = () => {
             fontSize: '3.75rem',
             fontWeight: '800',
             marginBottom: '24px',
-            background: 'linear-gradient(135deg, #ffffff 0%, #f87171 45%, #dc2626 100%)',
+            background: `linear-gradient(135deg, #ffffff 0%, ${ORANGE_LIGHT} 45%, ${ORANGE} 100%)`,
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
@@ -346,7 +353,7 @@ const HomePage = () => {
             width: '100%',
             opacity: 0,
             letterSpacing: '4px',
-            textShadow: '0 4px 30px rgba(220, 38, 38, 0.45)',
+            textShadow: `0 4px 30px ${ORANGE_RGBA(0.45)}`,
             fontFamily: 'Georgia, serif'
           }}
         >
@@ -387,12 +394,12 @@ const HomePage = () => {
               style={{
                 background: button.isPrimary 
                   ? (hoveredButton === button.text 
-                      ? 'linear-gradient(135deg, #fca5a5 0%, #dc2626 55%, #b91c1c 100%)' 
-                      : 'linear-gradient(135deg, #dc2626 0%, #b91c1c 50%, #7f1d1d 100%)')
+              ? `linear-gradient(135deg, ${ORANGE_LIGHT} 0%, ${ORANGE} 55%, ${ORANGE_DARK} 100%)` 
+                : `linear-gradient(135deg, ${ORANGE} 0%, ${ORANGE_DARK} 50%, ${ORANGE_DEEP} 100%)`)
                   : 'rgba(255, 255, 255, 0.08)',
-                color: button.isPrimary ? '#ffffff' : '#fca5a5',
+                color: button.isPrimary ? '#ffffff' : ORANGE_LIGHT,
                 padding: '18px 36px',
-                border: button.isPrimary ? 'none' : '1px solid rgba(248, 113, 113, 0.5)',
+                border: button.isPrimary ? 'none' : `1px solid ${ORANGE_LIGHT_RGBA(0.5)}`,
                 borderRadius: '12px',
                 cursor: 'pointer',
                 fontSize: '1.05rem',
@@ -402,10 +409,10 @@ const HomePage = () => {
                 textAlign: 'center',
                 letterSpacing: '0.8px',
                 boxShadow: button.isPrimary && hoveredButton === button.text
-                  ? '0 8px 30px rgba(220, 38, 38, 0.55), 0 2px 12px rgba(0, 0, 0, 0.45)'
+                  ? `0 8px 30px ${ORANGE_RGBA(0.55)}, 0 2px 12px rgba(0, 0, 0, 0.45)`
                   : button.isPrimary 
-                    ? '0 6px 22px rgba(220, 38, 38, 0.35)'
-                    : '0 4px 18px rgba(248, 113, 113, 0.25)',
+                    ? `0 6px 22px ${ORANGE_RGBA(0.35)}`
+                    : `0 4px 18px ${ORANGE_LIGHT_RGBA(0.25)}`,
                 opacity: 0,
                 position: 'relative',
                 overflow: 'hidden'
@@ -448,7 +455,7 @@ const HomePage = () => {
           marginTop: '35px',
           width: '60%',
           height: '2px',
-          background: 'linear-gradient(90deg, transparent, rgba(220, 38, 38, 0.35), rgba(220, 38, 38, 0.55), rgba(220, 38, 38, 0.35), transparent)',
+          background: `linear-gradient(90deg, transparent, ${ORANGE_RGBA(0.35)}, ${ORANGE_RGBA(0.55)}, ${ORANGE_RGBA(0.35)}, transparent)`,
           borderRadius: '2px'
         }} />
 

@@ -11,6 +11,9 @@ if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger, TextPlugin);
 }
 
+const ORANGE = '#FF8C00';
+const ORANGE_LIGHT = '#FFA500';
+
 const AutoServiceShop = () => {
   const [showWelcome, setShowWelcome] = useState(true);
   const [isClient, setIsClient] = useState(false);
@@ -516,13 +519,13 @@ const AutoServiceShop = () => {
                 marginBottom: '0.75rem',
                 letterSpacing: '1px'
               }}>
-                <span style={{ color: '#ff6b35' }}>Sunny</span>
+                <span style={{ color: ORANGE }}>Sunny</span>
                 <span style={{ color: '#ffffff' }}>Auto</span>
               </h1>
               <div style={{
                 width: '120px',
                 height: '2px',
-                background: 'linear-gradient(90deg, transparent, #ff6b35, transparent)',
+                background: `linear-gradient(90deg, transparent, ${ORANGE}, transparent)`,
                 margin: '0 auto 0.75rem'
               }}></div>
               <p style={{
@@ -559,7 +562,7 @@ const AutoServiceShop = () => {
             fontWeight: '700',
             margin: 0
           }}>
-            <span style={{ color: '#ff6b35' }}>SUNNY</span>
+            <span style={{ color: ORANGE }}>SUNNY</span>
             <span style={{ color: '#ffffff' }}>AUTO</span>
           </h1>
         </div>
@@ -573,7 +576,11 @@ const AutoServiceShop = () => {
             <button
               key={item}
               style={{
+<<<<<<< Updated upstream
                 color: item === 'SERVICES' || item === 'GALLERY' ? '#ff6b35' : 'rgba(255, 255, 255, 0.9)',
+=======
+                color: item === 'SERVICES' || item === 'APPOINTMENTS' ? ORANGE : 'rgba(255, 255, 255, 0.9)',
+>>>>>>> Stashed changes
                 fontSize: '0.875rem',
                 fontWeight: '700',
                 background: 'none',
@@ -585,11 +592,15 @@ const AutoServiceShop = () => {
                 textTransform: 'uppercase'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.color = '#ff6b35';
+                e.currentTarget.style.color = ORANGE;
                 e.currentTarget.style.transform = 'translateY(-2px)';
               }}
               onMouseLeave={(e) => {
+<<<<<<< Updated upstream
                 e.currentTarget.style.color = item === 'SERVICES' || item === 'GALLERY' ? '#ff6b35' : 'rgba(255, 255, 255, 0.9)';
+=======
+                e.currentTarget.style.color = item === 'SERVICES' || item === 'APPOINTMENTS' ? ORANGE : 'rgba(255, 255, 255, 0.9)';
+>>>>>>> Stashed changes
                 e.currentTarget.style.transform = 'translateY(0)';
               }}
               onClick={() => handleNavigation(item === 'HOME' ? '/UserHome' : `/${item.charAt(0) + item.slice(1).toLowerCase()}`)}
@@ -663,7 +674,7 @@ const AutoServiceShop = () => {
           <div style={{
             width: '3px',
             height: '200px',
-            background: '#ff6b35',
+            background: ORANGE,
             position: 'absolute',
             left: '-40px',
             top: '50%',
@@ -676,7 +687,7 @@ const AutoServiceShop = () => {
             lineHeight: 1.2,
             marginBottom: '1.5rem'
           }}>
-            <span style={{ color: '#ff6b35' }}>{heroSlides[currentSlide].title}</span>
+            <span style={{ color: ORANGE }}>{heroSlides[currentSlide].title}</span>
             <span style={{ color: '#ffffff', display: 'block' }}>- Drive with Confidence</span>
           </h1>
           <p ref={subtitleRef} style={{
@@ -698,7 +709,7 @@ const AutoServiceShop = () => {
             <button
               ref={el => { buttonsRef.current[0] = el }}
               style={{
-                background: '#ff6b35',
+                background: ORANGE,
                 color: 'white',
                 padding: '0.875rem 2rem',
                 borderRadius: '6px',
@@ -709,11 +720,11 @@ const AutoServiceShop = () => {
                 transition: 'all 0.2s ease'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#e55a2b';
+                e.currentTarget.style.background = ORANGE_LIGHT;
                 e.currentTarget.style.transform = 'translateY(-1px)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = '#ff6b35';
+                e.currentTarget.style.background = ORANGE;
                 e.currentTarget.style.transform = 'translateY(0)';
               }}
               onClick={handleBookAppointment}
@@ -774,7 +785,7 @@ const AutoServiceShop = () => {
                 style={{
                   width: '40px',
                   height: '2px',
-                  background: index === currentSlide ? '#ff6b35' : 'rgba(255, 255, 255, 0.3)',
+                  background: index === currentSlide ? ORANGE : 'rgba(255, 255, 255, 0.3)',
                   transition: 'background 0.3s ease',
                   cursor: 'pointer'
                 }}
@@ -810,9 +821,9 @@ const AutoServiceShop = () => {
               fontSize: '0.9rem'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 107, 53, 0.1)';
-              e.currentTarget.style.borderColor = '#ff6b35';
-              e.currentTarget.style.color = '#ff6b35';
+              e.currentTarget.style.background = 'rgba(255, 140, 0, 0.1)';
+              e.currentTarget.style.borderColor = ORANGE;
+              e.currentTarget.style.color = ORANGE;
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = 'transparent';
@@ -933,7 +944,7 @@ const AutoServiceShop = () => {
                   right: '-50%',
                   width: '200%',
                   height: '200%',
-                  background: 'radial-gradient(circle, rgba(255,107,53,0.1) 0%, transparent 70%)',
+                  background: 'radial-gradient(circle, rgba(255,140,0,0.1) 0%, transparent 70%)',
                   pointerEvents: 'none',
                   opacity: 0,
                   transition: 'opacity 0.3s ease'
@@ -990,7 +1001,7 @@ const AutoServiceShop = () => {
                 <div className="stat-number" style={{
                   fontSize: '2rem',
                   fontWeight: '700',
-                  background: 'linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%)',
+                  background: `linear-gradient(135deg, ${ORANGE} 0%, ${ORANGE_LIGHT} 100%)`,
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
@@ -1050,7 +1061,7 @@ const AutoServiceShop = () => {
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-4px) scale(1.02)';
-                  e.currentTarget.style.borderColor = '#ff6b35';
+                  e.currentTarget.style.borderColor = ORANGE;
                   const overlay = e.currentTarget.querySelector('.service-overlay') as HTMLElement;
                   if (overlay) overlay.style.opacity = '0.7';
                 }}
@@ -1095,7 +1106,7 @@ const AutoServiceShop = () => {
                       position: 'absolute',
                       top: '10px',
                       right: '10px',
-                      background: '#ff6b35',
+                      background: ORANGE,
                       color: 'white',
                       padding: '0.25rem 0.75rem',
                       borderRadius: '20px',
@@ -1127,7 +1138,7 @@ const AutoServiceShop = () => {
                       {service.title}
                     </h3>
                     <span style={{
-                      color: '#ff6b35',
+                      color: ORANGE,
                       fontSize: '1.1rem',
                       fontWeight: '600'
                     }}>
@@ -1155,7 +1166,7 @@ const AutoServiceShop = () => {
                       ⏱️ {service.duration}
                     </span>
                     <span style={{
-                      color: '#ff6b35',
+                      color: ORANGE,
                       cursor: 'pointer'
                     }}>
                       Learn more →
@@ -1171,7 +1182,7 @@ const AutoServiceShop = () => {
                       animation: 'slideDown 0.3s ease'
                     }}>
                       <button style={{
-                        background: '#ff6b35',
+                        background: ORANGE,
                         color: 'white',
                         padding: '0.5rem 1.5rem',
                         borderRadius: '6px',
@@ -1199,7 +1210,7 @@ const AutoServiceShop = () => {
             marginTop: '3rem'
           }}>
             <button style={{
-              background: '#ff6b35',
+              background: ORANGE,
               color: 'white',
               padding: '1rem 2.5rem',
               borderRadius: '6px',
@@ -1210,11 +1221,11 @@ const AutoServiceShop = () => {
               transition: 'all 0.2s ease'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = '#e55a2b';
+              e.currentTarget.style.background = ORANGE_LIGHT;
               e.currentTarget.style.transform = 'translateY(-2px)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = '#ff6b35';
+              e.currentTarget.style.background = ORANGE;
               e.currentTarget.style.transform = 'translateY(0)';
             }}
             onClick={handleViewServices}>
@@ -1276,8 +1287,8 @@ const AutoServiceShop = () => {
                     zIndex: 2
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 107, 53, 0.1)';
-                    e.currentTarget.style.borderColor = '#ff6b35';
+                    e.currentTarget.style.background = 'rgba(255, 140, 0, 0.1)';
+                    e.currentTarget.style.borderColor = ORANGE;
                     e.currentTarget.style.transform = 'translateY(-5px)';
                   }}
                   onMouseLeave={(e) => {
@@ -1293,7 +1304,7 @@ const AutoServiceShop = () => {
                     {step.icon}
                   </div>
                   <div style={{
-                    color: '#ff6b35',
+                    color: ORANGE,
                     fontSize: '0.8rem',
                     fontWeight: '700',
                     marginBottom: '0.5rem',
@@ -1328,7 +1339,7 @@ const AutoServiceShop = () => {
                       left: '100%',
                       width: 'calc(100% - 80px)',
                       height: '2px',
-                      background: 'linear-gradient(90deg, #ff6b35, rgba(255, 107, 53, 0.3))',
+                      background: `linear-gradient(90deg, ${ORANGE}, rgba(255, 140, 0, 0.3))`,
                       transformOrigin: 'left center',
                       zIndex: 1
                     }}
@@ -1398,7 +1409,7 @@ const AutoServiceShop = () => {
                     width: '50%',
                     height: '100%',
                     overflow: 'hidden',
-                    borderRight: '3px solid #ff6b35'
+                    borderRight: `3px solid ${ORANGE}`
                   }}
                 >
                   <img 
@@ -1434,7 +1445,7 @@ const AutoServiceShop = () => {
                     BEFORE
                   </span>
                   <span style={{
-                    background: '#ff6b35',
+                    background: ORANGE,
                     color: 'white',
                     padding: '0.5rem 1rem',
                     borderRadius: '6px',
@@ -1530,14 +1541,14 @@ const AutoServiceShop = () => {
                   top: '10px',
                   right: '20px',
                   fontSize: '3rem',
-                  color: 'rgba(255, 107, 53, 0.2)'
+                  color: 'rgba(255, 140, 0, 0.2)'
                 }}>
                   "
                 </div>
                 
                 <div style={{ marginBottom: '1rem' }}>
                   {[...Array(testimonial.rating)].map((_, i) => (
-                    <span key={i} style={{ color: '#ff6b35', fontSize: '1.2rem' }}>★</span>
+                    <span key={i} style={{ color: ORANGE, fontSize: '1.2rem' }}>★</span>
                   ))}
                 </div>
                 
@@ -1606,22 +1617,22 @@ const AutoServiceShop = () => {
           
           <button style={{
             background: 'transparent',
-            color: '#ff6b35',
+            color: ORANGE,
             padding: '0.875rem 2rem',
             borderRadius: '6px',
             fontWeight: '600',
-            border: '2px solid #ff6b35',
+            border: `2px solid ${ORANGE}`,
             cursor: 'pointer',
             fontSize: '0.95rem',
             transition: 'all 0.2s ease'
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#ff6b35';
+            e.currentTarget.style.background = ORANGE;
             e.currentTarget.style.color = 'white';
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.background = 'transparent';
-            e.currentTarget.style.color = '#ff6b35';
+            e.currentTarget.style.color = ORANGE;
           }}>
             Meet Our Team
           </button>
