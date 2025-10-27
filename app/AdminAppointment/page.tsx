@@ -36,7 +36,7 @@ const AdminAppointments = () => {
 
   // Color scheme - Red accent (#dc2626) with dark theme
   const colors = {
-    primary: '#dc2626',
+    primary: '#ff6b35',
     primaryLight: '#ef4444',
     primaryDark: '#b91c1c',
     background: '#0a0a0a',
@@ -49,7 +49,7 @@ const AdminAppointments = () => {
     success: '#10b981',
     warning: '#f59e0b',
     error: '#ef4444',
-    info: '#3b82f6',
+    info: '#9ca3af',
     border: 'rgba(255, 255, 255, 0.1)',
     borderLight: 'rgba(255, 255, 255, 0.2)'
   };

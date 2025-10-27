@@ -42,20 +42,22 @@ const AdminProfile = () => {
         alignItems: 'center',
         backgroundColor: 'rgba(0, 0, 0, 0.9)'
       }}>
-        <h1 style={{ 
-          fontSize: '2rem', 
-          fontWeight: 'bold',
-          color: 'orange',
-          margin: 0
-        }}>
-          SUNNY AUTO ADMIN
-        </h1>
+              <h1 style={{
+                fontSize: '2.5rem',
+                fontWeight: '600',
+                marginBottom: '0.75rem',
+                letterSpacing: '1px'
+              }}>
+                <span style={{ color: '#ff6b35' }}>Sunny</span>
+                <span style={{ color: '#ffffff' }}>Auto</span>
+              </h1>
+        
         
         <button 
           onClick={handleBackToDashboard}
           style={{
-            backgroundColor: 'orange',
-            color: 'black',
+            backgroundColor: '#e55a2b',
+            color: '#ffffff',
             padding: '10px 20px',
             borderRadius: '8px',
             border: 'none',
@@ -89,7 +91,7 @@ const AdminProfile = () => {
             fontSize: '2.5rem', 
             fontWeight: 'bold', 
             marginBottom: '30px',
-            color: 'orange'
+            color: '#d1d5db'
           }}>
             ADMIN PROFILE
           </h2>
@@ -99,7 +101,7 @@ const AdminProfile = () => {
             width: '120px',
             height: '120px',
             borderRadius: '50%',
-            backgroundColor: 'orange',
+            backgroundColor: '#ff6b35',
             margin: '0 auto 20px',
             display: 'flex',
             alignItems: 'center',
@@ -119,16 +121,16 @@ const AdminProfile = () => {
             borderRadius: '10px'
           }}>
             <div style={{ marginBottom: '15px' }}>
-              <strong style={{ color: 'orange' }}>Name:</strong> Admin User
+              <strong style={{ color: '#e55a2b' }}>Name:</strong> Admin User
             </div>
             <div style={{ marginBottom: '15px' }}>
-              <strong style={{ color: 'orange' }}>Email:</strong> admin@sunnyauto.com
+              <strong style={{ color: '#e55a2b' }}>Email:</strong> admin@sunnyauto.com
             </div>
             <div style={{ marginBottom: '15px' }}>
-              <strong style={{ color: 'orange' }}>Role:</strong> Super Administrator
+              <strong style={{ color: '#e55a2b' }}>Role:</strong> Super Administrator
             </div>
             <div>
-              <strong style={{ color: 'orange' }}>Last Login:</strong> Today at 2:45 PM
+              <strong style={{ color: '#e55a2b' }}>Last Login:</strong> Today at 2:45 PM
             </div>
           </div>
 
@@ -138,8 +140,8 @@ const AdminProfile = () => {
             <button 
               onClick={handleLogout}
               style={{
-                backgroundColor: 'orange',
-                color: 'black',
+                backgroundColor: '#ff6b35',
+                color: '#ffffff',
                 padding: '12px 24px',
                 border: 'none',
                 borderRadius: '8px',
