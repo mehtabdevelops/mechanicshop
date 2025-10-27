@@ -54,6 +54,7 @@ const OrderSummary = () => {
   });
 
   const [servicePrice, setServicePrice] = useState(0);
+const [isHovered, setIsHovered] = useState(false);
   const taxRate = 0.08; // 8% tax
   const taxAmount = servicePrice * taxRate;
   const totalAmount = servicePrice + taxAmount;
@@ -186,68 +187,68 @@ const OrderSummary = () => {
         </button>
       </header>
 
-      {/* Main Content */}
-      <div style={{
-        maxWidth: '1000px',
-        margin: '0 auto',
-        padding: '0 2rem 3rem'
-      }}>
-        {/* Header */}
-        <div style={{
-          textAlign: 'center',
-          marginBottom: '3rem',
-          padding: '2rem',
-          borderRadius: '12px',
-          border: '1px solid #fbbf24',
-          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
-          backgroundImage: `url(${backgroundImage})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          position: 'relative',
-          overflow: 'hidden',
-        }}>
-          {/*Overlay layer - frosted +tinted */}
-          <div style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'rgba(0, 0, 0, 0.6)', // darker transparent tint over car
-            backdropFilter: 'blue(6x)', //slight blue (frosted effect)
-            WebkitBackdropFilter: 'blur(6px)',
-            zIndex: 1,
-          }}></div>
+   {/* Main content */}
+      <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '0 2rem 3rem' }}>
+        {/* Order Summary box */}
+        <div
+          style={{
+            textAlign: 'center',
+            marginBottom: '3rem',
+            padding: '2rem',
+            borderRadius: '12px',
+            border: '1px solid #fbbf24',
+            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+            backgroundImage: `url(${backgroundImage})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            position: 'relative',
+            overflow: 'hidden',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease', // Added smooth hover transition
+          }}
+          onMouseEnter={() => setIsHovered(true)} //Added hover handlers
+          onMouseLeave={() => setIsHovered(false)}
+        >
+          {/* Overlay layer */}
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'rgba(0, 0, 0, 0.4)',
+              backdropFilter: 'blur(6px)', 
+              WebkitBackdropFilter: 'blur(6px)',
+              zIndex: 1,
+            }}
+          ></div>
 
-          {/* "Screen door" pattern layer */}
-          <div style={{
-            position: 'absolute',
-            inset: 0,
-            backgroundImage:
-              'linear-gradient(0deg, rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)',
-    backgroundSize: '20px 20px', // adjust this to make the grid tighter/looser
-    zIndex: 2,
-    pointerEvents: 'none', // ensures it doesn’t block clicks
-  }}></div>
-        
-
-
-
-          <h1 style={{
-            fontSize: '2.5rem',
-            fontWeight: '700',
-            marginBottom: '1rem',
-            color: '#FF8C00'
-          }}>
-            Order Summary
-          </h1>
-          <p style={{
-            fontSize: '1.1rem',
-            color: '#c2bdb7ff',
-            maxWidth: '600px',
-            margin: '0 auto',
-            lineHeight: '1.6'
-          }}>
-            Review your appointment details before confirmation
-          </p>
+          {/* Text content */}
+          <div style={{ position: 'relative', zIndex: 2 }}>
+            <h1
+              style={{
+                fontSize: '2.5rem',
+                fontWeight: '700',
+                marginBottom: '1rem',
+                color: isHovered ? '#ffd37f' : '#FF8C00', // Brightens on hover
+                textShadow: isHovered ? '0 0 10px #ffd37f' : 'none', // Glow on hover
+                transition: 'color 0.3s ease, text-shadow 0.3s ease',
+              }}
+            >
+              Order Summary
+            </h1>
+            <p
+              style={{
+                fontSize: '1.1rem',
+                color: isHovered ? '#ffffff' : '#c2bdb7ff', //Text brightens
+                maxWidth: '600px',
+                margin: '0 auto',
+                lineHeight: '1.6',
+                transition: 'color 0.3s ease',
+              }}
+            >
+              Review your appointment details before confirmation
+            </p>
+          </div>
         </div>
 
         <div style={{
