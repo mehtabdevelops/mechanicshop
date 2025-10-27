@@ -48,7 +48,7 @@ const AdminProfile = () => {
                 marginBottom: '0.75rem',
                 letterSpacing: '1px'
               }}>
-                <span style={{ color: '#ff6b35' }}>Sunny</span>
+                <span style={{ color: '#ff8c00' }}>Sunny</span>
                 <span style={{ color: '#ffffff' }}>Auto</span>
               </h1>
         
@@ -56,7 +56,7 @@ const AdminProfile = () => {
         <button 
           onClick={handleBackToDashboard}
           style={{
-            backgroundColor: '#e55a2b',
+            backgroundColor: '#ff8c00',
             color: '#ffffff',
             padding: '10px 20px',
             borderRadius: '8px',
@@ -101,7 +101,7 @@ const AdminProfile = () => {
             width: '120px',
             height: '120px',
             borderRadius: '50%',
-            backgroundColor: '#ff6b35',
+            backgroundColor: '#ff8c00',
             margin: '0 auto 20px',
             display: 'flex',
             alignItems: 'center',
@@ -121,16 +121,16 @@ const AdminProfile = () => {
             borderRadius: '10px'
           }}>
             <div style={{ marginBottom: '15px' }}>
-              <strong style={{ color: '#e55a2b' }}>Name:</strong> Admin User
+              <strong style={{ color: '#FFA500' }}>Name:</strong> Admin User
             </div>
             <div style={{ marginBottom: '15px' }}>
-              <strong style={{ color: '#e55a2b' }}>Email:</strong> admin@sunnyauto.com
+              <strong style={{ color: '#FFA500' }}>Email:</strong> admin@sunnyauto.com
             </div>
             <div style={{ marginBottom: '15px' }}>
-              <strong style={{ color: '#e55a2b' }}>Role:</strong> Super Administrator
+              <strong style={{ color: '#FFA500' }}>Role:</strong> Super Administrator
             </div>
             <div>
-              <strong style={{ color: '#e55a2b' }}>Last Login:</strong> Today at 2:45 PM
+              <strong style={{ color: '#FFA500' }}>Last Login:</strong> Today at 2:45 PM
             </div>
           </div>
 
@@ -140,7 +140,7 @@ const AdminProfile = () => {
             <button 
               onClick={handleLogout}
               style={{
-                backgroundColor: '#ff6b35',
+                backgroundColor: '#ff8c00',
                 color: '#ffffff',
                 padding: '12px 24px',
                 border: 'none',

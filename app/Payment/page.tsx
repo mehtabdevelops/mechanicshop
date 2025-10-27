@@ -119,14 +119,14 @@ const OrderSummary = () => {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#172554',
-      color: '#fbbf24',
+      background: '#000000',
+      color: '#FF8C00',
       fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       padding: '0'
     }}>
       {/* Navigation */}
       <nav style={{
-        background: '#172554',
+        background: '#000000',
         padding: '1.5rem 2rem',
         display: 'flex',
         justifyContent: 'space-between',
@@ -141,7 +141,7 @@ const OrderSummary = () => {
           <h1 style={{
             fontSize: '2.0rem',
             fontWeight: '700',
-            color: '#fbbf24',
+            color: '#FF8C00',
             cursor: 'pointer'
           }} onClick={() => router.push('/')}>
             SUNNY AUTO
