@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
+
 // Define the service prices with a type
 interface ServicePrices {
   [key: string]: number;
@@ -125,50 +126,56 @@ const OrderSummary = () => {
       padding: '0'
     }}>
       {/* Navigation */}
-      <nav style={{
-        background: '#000000',
-        padding: '1.5rem 2rem',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        position: 'sticky',
-        top: 0,
-        zIndex: 40,
-        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
-        marginBottom: '2rem',
-      }}>
-        <div>
-          <h1 style={{
-            fontSize: '2.0rem',
-            fontWeight: '700',
-            color: '#FF8C00',
-            cursor: 'pointer'
-          }} onClick={() => router.push('/')}>
-            SUNNY AUTO
-          </h1>
-        </div>
-        
-        <button style={{
-          background: 'transparent',
-          color: '#fbbf24',
-          padding: '0.75rem 1.5rem',
-          borderRadius: '8px',
-          fontWeight: '500',
-          border: '1px solid #fbbf24',
-          cursor: 'pointer',
-          transition: 'all 0.2s ease',
-          fontSize: '1rem'
-        }} 
-        onMouseOver={(e) => {
-          e.currentTarget.style.backgroundColor = 'rgba(251, 191, 36, 0.1)';
-        }}
-        onMouseOut={(e) => {
-          e.currentTarget.style.backgroundColor = 'transparent';
-        }}
-        onClick={() => router.push('/Appointment')}>
-          Back to Appointment
-        </button>
-      </nav>
+      <header
+  style={{
+    position: 'relative',
+    zIndex: 2,
+    padding: '20px',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    marginBottom: '2rem',
+  }}
+>
+  {/* Clickable logo */}
+  <h1
+    onClick={() => router.push('/')}
+    style={{
+      fontSize: '2.5rem',
+      fontWeight: '600',
+      marginBottom: '0.75rem',
+      letterSpacing: '1px',
+      cursor: 'pointer',
+    }}
+  >
+    <span style={{ color: '#ff8c00' }}>Sunny</span>
+    <span style={{ color: '#ffffff' }}>Auto</span>
+  </h1>
+
+  {/* Back to Dashboard button */}
+  <button
+    onClick={() => router.push('/AdminHome')}
+    style={{
+      backgroundColor: '#ff8c00',
+      color: '#ffffff',
+      padding: '10px 20px',
+      borderRadius: '8px',
+      border: 'none',
+      cursor: 'pointer',
+      fontWeight: 'bold',
+      transition: 'background 0.3s ease',
+    }}
+    onMouseOver={(e) => {
+      e.currentTarget.style.backgroundColor = '#ffa733';
+    }}
+    onMouseOut={(e) => {
+      e.currentTarget.style.backgroundColor = '#ff8c00';
+    }}
+  >
+    Back to Dashboard
+  </button>
+</header>
 
       {/* Main Content */}
       <div style={{
