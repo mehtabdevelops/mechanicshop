@@ -484,7 +484,11 @@ const AutoServiceShop = () => {
   const handleBookAppointment = () => router.push('/Appointment');
   const handleProfile = () => router.push('/UserProfile');
   const handleViewServices = () => router.push('/Services');
-  const handleNavigation = (path: string): void => router.push(path);
+  const handleContactUs = () => router.push('/Contactus'); // Fixed route
+
+  const handleNavigation = (path: string): void => {
+    router.push(path);
+  };
 
   if (!isClient) {
     return null;
@@ -572,11 +576,17 @@ const AutoServiceShop = () => {
           gap: '3rem',
           alignItems: 'center'
         }}>
-          {['HOME', 'SERVICES', 'ABOUT', 'APPOINTMENTS', 'CONTACT'].map((item) => (
+          {[
+            { label: 'HOME', path: '/UserHome' },
+            { label: 'SERVICES', path: '/Services' },
+            { label: 'ABOUT', path: '/About' },
+            { label: 'APPOINTMENTS', path: '/Appointment' },
+            { label: 'CONTACT', path: '/Contactus' } // Fixed route
+          ].map((item) => (
             <button
-              key={item}
+              key={item.label}
               style={{
-                color: item === 'SERVICES' || item === 'APPOINTMENTS' ? '#ff6b35' : 'rgba(255, 255, 255, 0.9)',
+                color: item.label === 'SERVICES' || item.label === 'APPOINTMENTS' ? ORANGE : 'rgba(255, 255, 255, 0.9)',
                 fontSize: '0.875rem',
                 fontWeight: '700',
                 background: 'none',
@@ -592,16 +602,12 @@ const AutoServiceShop = () => {
                 e.currentTarget.style.transform = 'translateY(-2px)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.color = item === 'SERVICES' || item === 'APPOINTMENTS' ? '#ff6b35' : 'rgba(255, 255, 255, 0.9)';
+                e.currentTarget.style.color = item.label === 'SERVICES' || item.label === 'APPOINTMENTS' ? ORANGE : 'rgba(255, 255, 255, 0.9)';
                 e.currentTarget.style.transform = 'translateY(0)';
               }}
-              onClick={() => handleNavigation(
-                item === 'HOME' ? '/UserHome' : 
-                item === 'APPOINTMENTS' ? '/Appointment' :
-                `/${item.charAt(0) + item.slice(1).toLowerCase()}`
-              )}
+              onClick={() => handleNavigation(item.path)}
             >
-              {item}
+              {item.label}
             </button>
           ))}
           <button style={{
@@ -1629,8 +1635,9 @@ const AutoServiceShop = () => {
           onMouseLeave={(e) => {
             e.currentTarget.style.background = 'transparent';
             e.currentTarget.style.color = ORANGE;
-          }}>
-            Meet Our Team
+          }}
+          onClick={handleContactUs}>
+            Contact Us
           </button>
         </div>
       </section>
