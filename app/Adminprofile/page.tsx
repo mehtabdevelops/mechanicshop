@@ -505,151 +505,63 @@ const AdminProfile = () => {
   return (
     <div
       style={{
-        background: colors.background,
+        backgroundImage:
+          'url("https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1974&q=80")',
+        backgroundSize: "cover",
+        backgroundPosition: "center",
         minHeight: "100vh",
-        color: colors.text,
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
+        color: "white",
         position: "relative",
-        overflow: "hidden",
       }}
     >
-      {/* Animated background elements */}
       <div
         style={{
-          position: "fixed",
+          position: "absolute",
           top: 0,
           left: 0,
           width: "100%",
           height: "100%",
-          pointerEvents: "none",
-          zIndex: 0,
-          opacity: 0.1,
+          backgroundColor: "rgba(0, 0, 0, 0.7)",
         }}
-      >
-        {[...Array(3)].map((_, i) => (
-          <div
-            key={i}
-            style={{
-              position: "absolute",
-              width: `${100 + i * 50}px`,
-              height: `${100 + i * 50}px`,
-              borderRadius: "50%",
-              border: `2px solid ${colors.primary}`,
-              top: `${20 + i * 20}%`,
-              right: `${10 + i * 15}%`,
-              animation: `float ${6 + i * 2}s ease-in-out infinite`,
-            }}
-          />
-        ))}
-      </div>
+      ></div>
 
-      {/* Header */}
       <header
         style={{
-          padding: "1.5rem 2rem",
+          position: "relative",
+          zIndex: 2,
+          padding: "20px",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          backgroundColor: "rgba(0, 0, 0, 0.95)",
-          borderBottom: `1px solid ${colors.primary}20`,
-          position: "sticky",
-          top: 0,
-          zIndex: 100,
-          backdropFilter: "blur(20px)",
+          backgroundColor: "rgba(0, 0, 0, 0.9)",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-          <h1
-            style={{
-              fontSize: "2rem",
-              fontWeight: "900",
-              background: `linear-gradient(135deg, #FFFFFF, ${colors.primary})`,
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
-              cursor: "pointer",
-              letterSpacing: "1px",
-              margin: 0,
-            }}
-            onClick={handleBackToDashboard}
-          >
-            SUNNY AUTO
-          </h1>
-          <div
-            style={{
-              color: colors.primary,
-              fontSize: "0.8rem",
-              fontWeight: "700",
-              padding: "0.4rem 1rem",
-              backgroundColor: `${colors.primary}15`,
-              borderRadius: "20px",
-              border: `1px solid ${colors.primary}30`,
-              textTransform: "uppercase",
-              letterSpacing: "1px",
-            }}
-          >
-            ADMIN
-          </div>
-        </div>
+        <h1
+          style={{
+            fontSize: "2.5rem",
+            fontWeight: "600",
+            marginBottom: "0.75rem",
+            letterSpacing: "1px",
+          }}
+        >
+          <span style={{ color: "#ff6b35" }}>Sunny</span>
+          <span style={{ color: "#ffffff" }}>Auto</span>
+        </h1>
 
-        <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-          <button
-            onClick={handleBackToDashboard}
-            style={{
-              backgroundColor: "transparent",
-              color: colors.primary,
-              border: `1px solid ${colors.primary}50`,
-              padding: "0.75rem 1.5rem",
-              borderRadius: "8px",
-              cursor: "pointer",
-              fontWeight: "600",
-              fontSize: "0.9rem",
-              transition: "all 0.3s ease",
-              textTransform: "uppercase",
-              letterSpacing: "0.5px",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = colors.primary;
-              e.currentTarget.style.color = colors.background;
-              e.currentTarget.style.transform = "translateY(-2px)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "transparent";
-              e.currentTarget.style.color = colors.primary;
-              e.currentTarget.style.transform = "translateY(0)";
-            }}
-          >
-            Dashboard
-          </button>
-          <button
-            onClick={handleLogout}
-            style={{
-              backgroundColor: "transparent",
-              color: colors.primary,
-              border: `1px solid ${colors.primary}50`,
-              padding: "0.75rem 1.5rem",
-              borderRadius: "8px",
-              cursor: "pointer",
-              fontWeight: "600",
-              fontSize: "0.9rem",
-              transition: "all 0.3s ease",
-              textTransform: "uppercase",
-              letterSpacing: "0.5px",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = colors.primary;
-              e.currentTarget.style.color = colors.background;
-              e.currentTarget.style.transform = "translateY(-2px)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "transparent";
-              e.currentTarget.style.color = colors.primary;
-              e.currentTarget.style.transform = "translateY(0)";
-            }}
-          >
-            Logout
-          </button>
-        </div>
+        <button
+          onClick={handleBackToDashboard}
+          style={{
+            backgroundColor: "#e55a2b",
+            color: "#ffffff",
+            padding: "10px 20px",
+            borderRadius: "8px",
+            border: "none",
+            cursor: "pointer",
+            fontWeight: "bold",
+          }}
+        >
+          Back to Dashboard
+        </button>
       </header>
 
       {/* Main Content */}
