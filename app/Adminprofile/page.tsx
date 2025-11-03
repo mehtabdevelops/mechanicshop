@@ -167,7 +167,6 @@ const AdminProfile = () => {
       bio: null,
       avatar_url: user.user_metadata?.avatar_url || null,
       phone: user.user_metadata?.phone || null,
-      role: "Super Administrator",
       updated_at: new Date().toISOString(),
       created_at: new Date().toISOString(),
     };
@@ -218,8 +217,13 @@ const AdminProfile = () => {
         throw new Error("Unauthorized: This profile does not belong to you");
       }
 
+      // Create update object with all editable fields
       const updatedProfile = {
-        ...editedProfile,
+        full_name: editedProfile.full_name,
+        email: editedProfile.email,
+        bio: editedProfile.bio,
+        avatar_url: editedProfile.avatar_url,
+        phone: editedProfile.phone,
         updated_at: new Date().toISOString(),
       };
 
@@ -230,8 +234,14 @@ const AdminProfile = () => {
 
       if (error) throw error;
 
-      setProfile(updatedProfile);
-      setEditedProfile(updatedProfile);
+      // Update local state with the complete profile data
+      const completeProfile = {
+        ...editedProfile,
+        ...updatedProfile,
+      };
+
+      setProfile(completeProfile);
+      setEditedProfile(completeProfile);
       setIsEditing(false);
 
       // Animate success
@@ -240,8 +250,12 @@ const AdminProfile = () => {
         { backgroundColor: colors.primary + "20" },
         { backgroundColor: colors.surface, duration: 0.5, ease: "power2.out" }
       );
+
+      // Show success message
+      alert("Profile updated successfully!");
     } catch (err: any) {
       setError(err.message || "Error saving profile");
+      console.error("Save error:", err);
     } finally {
       setSaving(false);
     }
@@ -594,6 +608,21 @@ const AdminProfile = () => {
           >
             {/* Profile Header with Avatar */}
             <div style={{ textAlign: "center", marginBottom: "3rem" }}>
+              <h2
+                style={{
+                  fontSize: "2.5rem",
+                  fontWeight: "900",
+                  marginBottom: "2rem",
+                  background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryLight})`,
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                  letterSpacing: "-1px",
+                }}
+              >
+                Administrator Profile
+              </h2>
+
               <div
                 ref={avatarRef}
                 style={{
@@ -684,29 +713,6 @@ const AdminProfile = () => {
                 )}
               </div>
 
-              <h2
-                style={{
-                  fontSize: "2.5rem",
-                  fontWeight: "900",
-                  marginBottom: "1rem",
-                  background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryLight})`,
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  backgroundClip: "text",
-                  letterSpacing: "-1px",
-                }}
-              >
-                Administrator Profile
-              </h2>
-              <p
-                style={{
-                  color: colors.textSecondary,
-                  fontSize: "1.1rem",
-                  marginBottom: "0.5rem",
-                }}
-              >
-                Welcome back, {editedProfile?.full_name || "Admin"}
-              </p>
               <div
                 style={{
                   display: "inline-block",
@@ -722,7 +728,7 @@ const AdminProfile = () => {
                   marginTop: "1rem",
                 }}
               >
-                {editedProfile?.role || "Super Administrator"}
+                {editedProfile?.full_name || "Administrator"}
               </div>
             </div>
 
@@ -752,7 +758,7 @@ const AdminProfile = () => {
                   style={{
                     ...detailValue,
                     fontFamily: "monospace",
-                    fontSize: "0.85em",
+                    fontSize: "15px",
                     wordBreak: "break-all",
                     color: colors.textMuted,
                   }}
@@ -767,14 +773,22 @@ const AdminProfile = () => {
                   <input
                     type="email"
                     value={editedProfile?.email || ""}
-                    disabled
+                    onChange={(e) => handleInputChange("email", e.target.value)}
                     style={{
                       ...inputField,
-                      backgroundColor: "#374151",
-                      color: colors.textMuted,
-                      cursor: "not-allowed",
+                      backgroundColor: "rgba(0, 0, 0, 0.3)",
+                      color: colors.text,
+                      cursor: "text",
                     }}
-                    title="Email cannot be changed"
+                    placeholder="Enter your email address"
+                    onFocus={(e) => {
+                      e.target.style.borderColor = colors.primary;
+                      e.target.style.boxShadow = `0 0 0 3px ${colors.primary}20`;
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = colors.border;
+                      e.target.style.boxShadow = "none";
+                    }}
                   />
                 ) : (
                   <p style={detailValue}>{editedProfile?.email}</p>
