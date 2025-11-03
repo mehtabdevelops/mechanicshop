@@ -261,7 +261,7 @@ const [isHovered, setIsHovered] = useState(false);
         }}>
           {/* Order Details */}
           <div style={{
-            background: '#172554',
+            background: '#000000',
             padding: '2.5rem',
             borderRadius: '12px',
             border: '1px solid #fbbf24',
@@ -370,9 +370,12 @@ const [isHovered, setIsHovered] = useState(false);
           {/* Confirmation Button */}
           <button
             onClick={handleConfirm}
+            onMouseEnter={()=> setIsHovered(true)} //Added hover handler
+            onMouseLeave={()=> setIsHovered(false)}
             style={{
               background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-              color: '#fbbf24',
+              color: isHovered ? '#ffd37f' : '#fbbf24', // Brightens on hover 
+              textShadow: isHovered ? '0 0 10px #fbbf24' : 'none', // Glow on hover
               padding: '1rem 2rem',
               borderRadius: '8px',
               fontWeight: '600',
@@ -380,8 +383,12 @@ const [isHovered, setIsHovered] = useState(false);
               cursor: 'pointer',
               fontSize: '1.1rem',
               transition: 'all 0.2s ease',
-              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-              width: '100%'
+              boxShadow: isHovered
+      ? '0 0 20px rgba(251, 191, 36, 0.5)' 
+      : '0 4px 6px rgba(0, 0, 0, 0.1)',  // Glow Effect
+              width: '100%',
+              backgroundColor: isHovered ? 'rgba(251, 191, 36, 0.15)' : 'transparent' // Subtle background change
+             
             }}
             onMouseOver={(e) => {
               e.currentTarget.style.background = 'linear-gradient(135deg, #1e293b 0%, #334155 100%)';
