@@ -1,0 +1,1586 @@
+"use client";
+
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+
+// Black and Yellow color scheme
+const YELLOW = '#Fbbf24';
+const YELLOW_LIGHT = '#FFA500';
+const YELLOW_DARK = '#Fbbf24';
+const YELLOW_DEEP = '#FFB700';
+const BLACK = '#000000';
+const BLACK_LIGHT = '#1A1A1A';
+const BLACK_DARK = '#0D0D0D';
+const GRAY = '#2A2A2A';
+const GRAY_LIGHT = '#3A3A3A';
+const GRAY_DARK = '#1A1A1A';
+
+const YELLOW_RGBA = (alpha: number) => `rgba(255, 215, 0, ${alpha})`;
+const YELLOW_LIGHT_RGBA = (alpha: number) => `rgba(255, 238, 50, ${alpha})`;
+
+// Combined interface for payments with appointment info
+interface PaymentWithAppointment {
+  id: string;
+  created_at: string;
+  profile_id: string;
+  invoice_number: string;
+  payment_method: string;
+  amount: number;
+  currency: string;
+  client_email: string;
+  client_name: string;
+  payment_intent_id: string;
+  receipt_url: string;
+  updated_at: string;
+  payment_status: string;
+  
+  // Appointment fields (joined data)
+  appointment_id?: string;
+  service_type: string;
+  vehicle_type: string;
+  preferred_date: string;
+  preferred_time: string;
+  phone: string;
+  status: string;
+}
+
+interface ReportData {
+  totalRevenue: number;
+  completedPayments: number;
+  pendingPayments: number;
+  averagePaymentValue: number;
+  monthlyRevenue: { month: string; revenue: number }[];
+  popularServices: { service: string; count: number; revenue: number }[];
+  customerStats: {
+    totalCustomers: number;
+    newCustomers: number;
+    returningCustomers: number;
+  };
+}
+
+interface ManualReportForm {
+  report_name: string;
+  report_type: 'financial' | 'service' | 'customer' | 'custom';
+  date_range: {
+    start: string;
+    end: string;
+  };
+  filters: {
+    service_type: string[];
+    payment_status: string[];
+    min_amount: number;
+    max_amount: number;
+  };
+  include_charts: boolean;
+  export_format: 'pdf' | 'excel' | 'csv';
+}
+
+const AdminReports = () => {
+  const router = useRouter();
+  const supabase = createClientComponentClient();
+  
+  const [payments, setPayments] = useState<PaymentWithAppointment[]>([]);
+  const [reportData, setReportData] = useState<ReportData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [generatingReport, setGeneratingReport] = useState(false);
+  const [dateRange, setDateRange] = useState({
+    start: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
+    end: new Date().toISOString().split('T')[0]
+  });
+  const [selectedReport, setSelectedReport] = useState<'financial' | 'service' | 'customer'>('financial');
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState<PaymentWithAppointment | null>(null);
+  const [showCreateReportModal, setShowCreateReportModal] = useState(false);
+  const [manualReportForm, setManualReportForm] = useState<ManualReportForm>({
+    report_name: '',
+    report_type: 'financial',
+    date_range: {
+      start: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
+      end: new Date().toISOString().split('T')[0]
+    },
+    filters: {
+      service_type: [],
+      payment_status: [],
+      min_amount: 0,
+      max_amount: 10000
+    },
+    include_charts: true,
+    export_format: 'pdf'
+  });
+
+  // Black and Yellow color scheme
+  const colors = {
+    primary: YELLOW,
+    primaryLight: YELLOW_LIGHT,
+    primaryDark: YELLOW_DARK,
+    primaryDeep: YELLOW_DEEP,
+    background: BLACK,
+    surface: BLACK_LIGHT,
+    surfaceLight: GRAY,
+    surfaceDark: GRAY_DARK,
+    text: '#FFFFFF',
+    textSecondary: '#CCCCCC',
+    textMuted: '#999999',
+    success: '#10B981',
+    warning: '#F59E0B',
+    error: '#EF4444',
+    info: '#3B82F6',
+    border: GRAY_LIGHT,
+    accent: YELLOW
+  };
+
+  useEffect(() => {
+    fetchCombinedData();
+  }, []);
+
+  const fetchCombinedData = async () => {
+    try {
+      setLoading(true);
+      
+      const { data: paymentsData, error: paymentsError } = await supabase
+        .from('payments')
+        .select(`
+          *,
+          appointments (
+            id,
+            service_type,
+            vehicle_type,
+            preferred_date,
+            preferred_time,
+            phone,
+            status,
+            name,
+            email
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (paymentsError) {
+        console.error('Error fetching payments:', paymentsError);
+        return;
+      }
+
+      const combinedData: PaymentWithAppointment[] = (paymentsData || []).map(payment => {
+        const appointment = payment.appointments?.[0] || payment.appointments;
+        return {
+          id: payment.id,
+          created_at: payment.created_at,
+          profile_id: payment.profile_id,
+          invoice_number: payment.invoice_number,
+          payment_method: payment.payment_method,
+          amount: payment.amount,
+          currency: payment.currency,
+          client_email: payment.client_email,
+          client_name: payment.client_name,
+          payment_intent_id: payment.payment_intent_id,
+          receipt_url: payment.receipt_url,
+          updated_at: payment.updated_at,
+          payment_status: payment.payment_status,
+          
+          appointment_id: appointment?.id,
+          service_type: appointment?.service_type || 'General Service',
+          vehicle_type: appointment?.vehicle_type || 'Not specified',
+          preferred_date: appointment?.preferred_date || payment.created_at,
+          preferred_time: appointment?.preferred_time || '',
+          phone: appointment?.phone || '',
+          status: appointment?.status || 'completed'
+        };
+      });
+
+      setPayments(combinedData);
+      generateReportData(combinedData);
+      
+    } catch (error) {
+      console.error('Error fetching combined data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const generateReportData = (paymentsData: PaymentWithAppointment[]) => {
+    const completedPayments = paymentsData.filter(p => 
+      p.payment_status === 'completed' || p.payment_status === 'paid'
+    );
+    
+    const totalRevenue = completedPayments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
+    
+    const monthlyRevenue = Array.from({ length: 6 }, (_, i) => {
+      const date = new Date();
+      date.setMonth(date.getMonth() - i);
+      const month = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      
+      const monthPayments = completedPayments.filter(payment => {
+        const paymentDate = new Date(payment.created_at);
+        return paymentDate.getMonth() === date.getMonth() && paymentDate.getFullYear() === date.getFullYear();
+      });
+      
+      const revenue = monthPayments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
+      
+      return { month, revenue };
+    }).reverse();
+
+    const serviceCounts: { [key: string]: { count: number; revenue: number } } = {};
+    completedPayments.forEach(payment => {
+      const service = payment.service_type;
+      if (!serviceCounts[service]) {
+        serviceCounts[service] = { count: 0, revenue: 0 };
+      }
+      serviceCounts[service].count++;
+      serviceCounts[service].revenue += payment.amount || 0;
+    });
+
+    const popularServices = Object.entries(serviceCounts)
+      .map(([service, data]) => ({
+        service,
+        count: data.count,
+        revenue: data.revenue
+      }))
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 5);
+
+    const customerEmails = new Set(completedPayments.map(p => p.client_email));
+    const newCustomers = paymentsData.filter(p => {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      return new Date(p.created_at) >= thirtyDaysAgo;
+    }).length;
+
+    const data: ReportData = {
+      totalRevenue,
+      completedPayments: completedPayments.length,
+      pendingPayments: paymentsData.filter(p => p.payment_status === 'pending').length,
+      averagePaymentValue: completedPayments.length > 0 ? totalRevenue / completedPayments.length : 0,
+      monthlyRevenue,
+      popularServices,
+      customerStats: {
+        totalCustomers: customerEmails.size,
+        newCustomers,
+        returningCustomers: customerEmails.size - newCustomers
+      }
+    };
+
+    setReportData(data);
+  };
+
+  const handleGenerateReport = () => {
+    setGeneratingReport(true);
+    setTimeout(() => {
+      generateReportData(payments);
+      setGeneratingReport(false);
+    }, 1500);
+  };
+
+  const handleCreateManualReport = async () => {
+    try {
+      setGeneratingReport(true);
+      
+      // Apply filters based on manual report form
+      let filteredPayments = payments;
+      
+      // Date range filter
+      filteredPayments = filteredPayments.filter(payment => {
+        const paymentDate = new Date(payment.created_at);
+        const startDate = new Date(manualReportForm.date_range.start);
+        const endDate = new Date(manualReportForm.date_range.end);
+        return paymentDate >= startDate && paymentDate <= endDate;
+      });
+      
+      // Service type filter
+      if (manualReportForm.filters.service_type.length > 0) {
+        filteredPayments = filteredPayments.filter(payment =>
+          manualReportForm.filters.service_type.includes(payment.service_type)
+        );
+      }
+      
+      // Payment status filter
+      if (manualReportForm.filters.payment_status.length > 0) {
+        filteredPayments = filteredPayments.filter(payment =>
+          manualReportForm.filters.payment_status.includes(payment.payment_status)
+        );
+      }
+      
+      // Amount range filter
+      filteredPayments = filteredPayments.filter(payment =>
+        payment.amount >= manualReportForm.filters.min_amount &&
+        payment.amount <= manualReportForm.filters.max_amount
+      );
+      
+      // Generate report with filtered data
+      generateReportData(filteredPayments);
+      
+      // Simulate export
+      if (manualReportForm.export_format === 'pdf') {
+        alert(`PDF report "${manualReportForm.report_name}" generated successfully!`);
+      } else if (manualReportForm.export_format === 'excel') {
+        alert(`Excel report "${manualReportForm.report_name}" generated successfully!`);
+      } else {
+        alert(`CSV report "${manualReportForm.report_name}" generated successfully!`);
+      }
+      
+      setShowCreateReportModal(false);
+      
+    } catch (error) {
+      console.error('Error creating manual report:', error);
+      alert('Error creating report. Please try again.');
+    } finally {
+      setGeneratingReport(false);
+    }
+  };
+
+  const handleBackToDashboard = () => {
+    router.push('/AdminHome');
+  };
+
+  const handleCreateInvoice = (payment: PaymentWithAppointment) => {
+    setSelectedPayment(payment);
+    setShowInvoiceModal(true);
+  };
+
+  const handlePrintInvoice = () => {
+    window.print();
+  };
+
+  const handleDownloadPDF = () => {
+    alert('PDF download functionality would be implemented here with a PDF generation library');
+  };
+
+  const handleSendInvoice = () => {
+    alert(`Invoice would be sent to ${selectedPayment?.client_email}`);
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  if (loading) {
+    return (
+      <div style={{ 
+        background: colors.background,
+        minHeight: '100vh', 
+        color: colors.text,
+        fontFamily: 'Inter, sans-serif',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{
+            width: '50px',
+            height: '50px',
+            border: `3px solid ${colors.surfaceLight}`,
+            borderTop: `3px solid ${colors.primary}`,
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 1rem'
+          }} />
+          <p style={{ color: colors.primary, fontSize: '1.1rem', fontWeight: '600' }}>Loading Reports...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ 
+      background: colors.background,
+      minHeight: '100vh', 
+      color: colors.text,
+      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    }}>
+      {/* Header */}
+      <header style={{
+        padding: '1.5rem 2rem',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        backgroundColor: colors.surface,
+        borderBottom: `2px solid ${colors.primary}`,
+        position: 'sticky',
+        top: 0,
+        zIndex: 50,
+        boxShadow: '0 2px 20px rgba(255, 215, 0, 0.1)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+      {/* Clickable logo */}
+        <h1
+          onClick={() => router.push('/')}
+          style={{
+            fontSize: '2.5rem',
+            fontWeight: '600',
+            marginBottom: '0.75rem',
+            letterSpacing: '1px',
+            cursor: 'pointer',
+          }}
+        >
+          <span style={{ color: '#ff8c00' }}>Sunny</span>
+          <span style={{ color: '#ffffff' }}>Auto</span>
+        </h1>
+          <div style={{ 
+            color: colors.primary, 
+            fontSize: '0.9rem',
+            fontWeight: '700',
+            padding: '0.5rem 1rem',
+            backgroundColor: YELLOW_RGBA(0.1),
+            borderRadius: '8px',
+            border: `1px solid ${YELLOW_RGBA(0.3)}`
+          }}>
+            📊 REPORTS & ANALYTICS
+          </div>
+        </div>
+        
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <button 
+            onClick={() => setShowCreateReportModal(true)}
+            style={{
+              backgroundColor: colors.primary,
+              color: colors.background,
+              padding: '0.75rem 1.5rem',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: '700',
+              fontSize: '0.9rem',
+              transition: 'all 0.2s ease',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              boxShadow: '0 2px 10px rgba(255, 215, 0, 0.3)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = colors.primaryDark;
+              e.currentTarget.style.transform = 'translateY(-1px)';
+              e.currentTarget.style.boxShadow = '0 4px 15px rgba(255, 215, 0, 0.4)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = colors.primary;
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 2px 10px rgba(255, 215, 0, 0.3)';
+            }}
+          >
+            📝 Create Custom Report
+          </button>
+          
+          <button 
+            onClick={handleGenerateReport}
+            disabled={generatingReport}
+            style={{
+              backgroundColor: generatingReport ? colors.textMuted : colors.primary,
+              color: colors.background,
+              padding: '0.75rem 1.5rem',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: generatingReport ? 'not-allowed' : 'pointer',
+              fontWeight: '700',
+              fontSize: '0.9rem',
+              transition: 'all 0.2s ease',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              boxShadow: '0 2px 10px rgba(255, 215, 0, 0.3)'
+            }}
+            onMouseEnter={(e) => {
+              if (!generatingReport) {
+                e.currentTarget.style.backgroundColor = colors.primaryDark;
+                e.currentTarget.style.transform = 'translateY(-1px)';
+                e.currentTarget.style.boxShadow = '0 4px 15px rgba(255, 215, 0, 0.4)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!generatingReport) {
+                e.currentTarget.style.backgroundColor = colors.primary;
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 2px 10px rgba(255, 215, 0, 0.3)';
+              }
+            }}
+          >
+            {generatingReport ? (
+              <>
+                <div style={{
+                  width: '16px',
+                  height: '16px',
+                  border: `2px solid transparent`,
+                  borderTop: `2px solid ${colors.background}`,
+                  borderRadius: '50%',
+                  animation: 'spin 1s linear infinite'
+                }} />
+                Generating...
+              </>
+            ) : (
+              <>
+                📈 Generate Report
+              </>
+            )}
+          </button>
+          
+          <button 
+            onClick={handleBackToDashboard}
+            style={{
+              backgroundColor: 'transparent',
+              color: colors.primary,
+              padding: '0.75rem 1.5rem',
+              border: `2px solid ${colors.primary}`,
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: '700',
+              fontSize: '0.9rem',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = colors.primary;
+              e.currentTarget.style.color = colors.background;
+              e.currentTarget.style.transform = 'translateY(-1px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.color = colors.primary;
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
+          >
+            ← Dashboard
+          </button>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <div style={{ 
+        padding: '2rem',
+        minHeight: 'calc(100vh - 100px)',
+        backgroundColor: colors.surface
+      }}>
+        <div style={{ 
+          maxWidth: '1400px',
+          margin: '0 auto'
+        }}>
+          {/* Header Section */}
+          <div style={{ 
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-end',
+            marginBottom: '2rem'
+          }}>
+            <div>
+              <h2 style={{ 
+                fontSize: '2.2rem', 
+                fontWeight: '800',
+                color: '#ff8c00',
+                margin: '0 0 0.5rem 0',
+                textShadow: '0 0 10px rgba(255, 215, 0, 0.3)'
+              }}>
+                Business Intelligence Dashboard
+              </h2>
+              <p style={{ 
+                color: colors.textSecondary,
+                margin: 0,
+                fontSize: '1.1rem',
+                fontWeight: '500'
+              }}>
+                Comprehensive analytics and financial reporting
+              </p>
+            </div>
+            
+            {/* Date Range Selector */}
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+              <div>
+                <label style={{ 
+                  display: 'block', 
+                  fontSize: '0.8rem', 
+                  color: colors.primary,
+                  marginBottom: '0.25rem',
+                  fontWeight: '700'
+                }}>
+                  From Date
+                </label>
+                <input
+                  type="date"
+                  value={dateRange.start}
+                  onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+                  style={{
+                    padding: '0.6rem',
+                    borderRadius: '6px',
+                    border: `2px solid ${colors.border}`,
+                    backgroundColor: colors.surfaceLight,
+                    color: colors.text,
+                    fontWeight: '500'
+                  }}
+                />
+              </div>
+              <div>
+                <label style={{ 
+                  display: 'block', 
+                  fontSize: '0.8rem', 
+                  color: colors.primary,
+                  marginBottom: '0.25rem',
+                  fontWeight: '700'
+                }}>
+                  To Date
+                </label>
+                <input
+                  type="date"
+                  value={dateRange.end}
+                  onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+                  style={{
+                    padding: '0.6rem',
+                    borderRadius: '6px',
+                    border: `2px solid ${colors.border}`,
+                    backgroundColor: colors.surfaceLight,
+                    color: colors.text,
+                    fontWeight: '500'
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Report Type Tabs */}
+          <div style={{
+            display: 'flex',
+            gap: '0.5rem',
+            marginBottom: '2rem',
+            backgroundColor: colors.surfaceLight,
+            padding: '0.5rem',
+            borderRadius: '10px',
+            border: `2px solid ${colors.border}`,
+            width: 'fit-content',
+            boxShadow: '0 2px 10px rgba(0,0,0,0.3)'
+          }}>
+            {[
+              { key: 'financial', label: 'Financial Reports', icon: '💰' },
+              { key: 'service', label: 'Service Analytics', icon: '🔧' },
+              { key: 'customer', label: 'Customer Insights', icon: '👥' }
+            ].map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => setSelectedReport(tab.key as any)}
+                style={{
+                  backgroundColor: selectedReport === tab.key ? colors.primary : 'transparent',
+                  color: selectedReport === tab.key ? colors.background : colors.text,
+                  padding: '0.8rem 1.8rem',
+                  borderRadius: '8px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontWeight: '700',
+                  fontSize: '0.9rem',
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  boxShadow: selectedReport === tab.key ? `0 2px 10px ${YELLOW_RGBA(0.4)}` : 'none'
+                }}
+                onMouseEnter={(e) => {
+                  if (selectedReport !== tab.key) {
+                    e.currentTarget.style.backgroundColor = YELLOW_RGBA(0.1);
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (selectedReport !== tab.key) {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }
+                }}
+              >
+                <span style={{ fontSize: '1.1rem' }}>{tab.icon}</span>
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Financial Reports */}
+          {selectedReport === 'financial' && reportData && (
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '2fr 1fr',
+              gap: '2rem',
+              marginBottom: '2rem'
+            }}>
+              {/* Main Financial Metrics */}
+              <div style={{
+                backgroundColor: colors.surfaceLight,
+                padding: '2rem',
+                borderRadius: '12px',
+                border: `2px solid ${colors.border}`,
+                boxShadow: '0 4px 20px rgba(0,0,0,0.3)'
+              }}>
+                <h3 style={{ 
+                  color: colors.primary,
+                  margin: '0 0 1.5rem 0',
+                  fontSize: '1.4rem',
+                  fontWeight: '800',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}>
+                  💰 Financial Overview
+                </h3>
+                
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '1.5rem',
+                  marginBottom: '2rem'
+                }}>
+                  <div style={{
+                    background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`,
+                    padding: '1.8rem',
+                    borderRadius: '10px',
+                    textAlign: 'center',
+                    color: colors.background,
+                    boxShadow: `0 4px 15px ${YELLOW_RGBA(0.4)}`
+                  }}>
+                    <div style={{ fontSize: '2.2rem', fontWeight: '800', marginBottom: '0.5rem' }}>
+                      {formatCurrency(reportData.totalRevenue)}
+                    </div>
+                    <div style={{ fontSize: '0.9rem', fontWeight: '600', opacity: 0.9 }}>
+                      Total Revenue
+                    </div>
+                  </div>
+                  
+                  <div style={{
+                    backgroundColor: colors.success,
+                    padding: '1.8rem',
+                    borderRadius: '10px',
+                    textAlign: 'center',
+                    color: colors.background,
+                    boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)'
+                  }}>
+                    <div style={{ fontSize: '2.2rem', fontWeight: '800', marginBottom: '0.5rem' }}>
+                      {reportData.completedPayments}
+                    </div>
+                    <div style={{ fontSize: '0.9rem', fontWeight: '600', opacity: 0.9 }}>
+                      Completed Payments
+                    </div>
+                  </div>
+                  
+                  <div style={{
+                    backgroundColor: colors.info,
+                    padding: '1.8rem',
+                    borderRadius: '10px',
+                    textAlign: 'center',
+                    color: colors.background,
+                    boxShadow: '0 4px 15px rgba(59, 130, 246, 0.4)'
+                  }}>
+                    <div style={{ fontSize: '2.2rem', fontWeight: '800', marginBottom: '0.5rem' }}>
+                      {formatCurrency(reportData.averagePaymentValue)}
+                    </div>
+                    <div style={{ fontSize: '0.9rem', fontWeight: '600', opacity: 0.9 }}>
+                      Average Payment Value
+                    </div>
+                  </div>
+                  
+                  <div style={{
+                    backgroundColor: colors.warning,
+                    padding: '1.8rem',
+                    borderRadius: '10px',
+                    textAlign: 'center',
+                    color: colors.background,
+                    boxShadow: '0 4px 15px rgba(245, 158, 11, 0.4)'
+                  }}>
+                    <div style={{ fontSize: '2.2rem', fontWeight: '800', marginBottom: '0.5rem' }}>
+                      {reportData.pendingPayments}
+                    </div>
+                    <div style={{ fontSize: '0.9rem', fontWeight: '600', opacity: 0.9 }}>
+                      Pending Payments
+                    </div>
+                  </div>
+                </div>
+
+                {/* Revenue Chart */}
+                <div>
+                  <h4 style={{ 
+                    color: colors.primary,
+                    margin: '0 0 1rem 0',
+                    fontSize: '1.2rem',
+                    fontWeight: '700'
+                  }}>
+                    📈 Monthly Revenue Trend
+                  </h4>
+                  <div style={{ display: 'flex', alignItems: 'end', gap: '1rem', height: '200px', padding: '1rem', backgroundColor: colors.surface, borderRadius: '8px' }}>
+                    {reportData.monthlyRevenue.map((month, index) => (
+                      <div key={month.month} style={{ flex: 1, textAlign: 'center' }}>
+                        <div style={{ 
+                          height: `${(month.revenue / Math.max(...reportData.monthlyRevenue.map(m => m.revenue))) * 150}px`,
+                          background: `linear-gradient(to top, ${colors.primary}, ${colors.primaryLight})`,
+                          borderRadius: '6px',
+                          marginBottom: '0.5rem',
+                          position: 'relative',
+                          boxShadow: `0 2px 8px ${YELLOW_RGBA(0.4)}`
+                        }} />
+                        <div style={{ fontSize: '0.8rem', color: colors.text, fontWeight: '600' }}>
+                          {month.month}
+                        </div>
+                        <div style={{ fontSize: '0.8rem', color: colors.primary, fontWeight: '700' }}>
+                          {formatCurrency(month.revenue)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Popular Services */}
+              <div style={{
+                backgroundColor: colors.surfaceLight,
+                padding: '2rem',
+                borderRadius: '12px',
+                border: `2px solid ${colors.border}`,
+                boxShadow: '0 4px 20px rgba(0,0,0,0.3)'
+              }}>
+                <h3 style={{ 
+                  color: colors.primary,
+                  margin: '0 0 1.5rem 0',
+                  fontSize: '1.4rem',
+                  fontWeight: '800',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}>
+                  🏆 Top Services
+                </h3>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {reportData.popularServices.map((service, index) => (
+                    <div key={service.service} style={{
+                      backgroundColor: colors.surface,
+                      padding: '1.2rem',
+                      borderRadius: '8px',
+                      border: `1px solid ${colors.border}`,
+                      transition: 'all 0.2s ease',
+                      cursor: 'pointer'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                      e.currentTarget.style.boxShadow = '0 4px 15px rgba(255, 215, 0, 0.2)';
+                      e.currentTarget.style.borderColor = colors.primary;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = 'none';
+                      e.currentTarget.style.borderColor = colors.border;
+                    }}
+                    >
+                      <div style={{ 
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: '0.5rem'
+                      }}>
+                        <span style={{ fontWeight: '700', color: colors.text, fontSize: '0.95rem' }}>
+                          {service.service}
+                        </span>
+                        <span style={{ 
+                          backgroundColor: colors.primary,
+                          color: colors.background,
+                          padding: '0.3rem 0.7rem',
+                          borderRadius: '12px',
+                          fontSize: '0.75rem',
+                          fontWeight: '800'
+                        }}>
+                          {service.count} services
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '0.9rem', color: colors.primary, fontWeight: '600' }}>
+                        Revenue: {formatCurrency(service.revenue)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Billing and Invoices Section */}
+          <div style={{
+            backgroundColor: colors.surfaceLight,
+            padding: '2rem',
+            borderRadius: '12px',
+            border: `2px solid ${colors.border}`,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.3)'
+          }}>
+            <h3 style={{ 
+             color: '#ff8c00',
+              margin: '0 0 1.5rem 0',
+              fontSize: '1.4rem',
+              fontWeight: '800',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
+              💳 Payments & Invoices
+            </h3>
+            
+            <div style={{ maxHeight: '400px', overflowY: 'auto', borderRadius: '8px', border: `1px solid ${colors.border}` }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ 
+                    backgroundColor: colors.primary,
+                    color: colors.background
+                  }}>
+                    <th style={{ padding: '1.2rem', textAlign: 'left', fontWeight: '700', fontSize: '0.9rem' }}>Invoice #</th>
+                    <th style={{ padding: '1.2rem', textAlign: 'left', fontWeight: '700', fontSize: '0.9rem' }}>Customer</th>
+                    <th style={{ padding: '1.2rem', textAlign: 'left', fontWeight: '700', fontSize: '0.9rem' }}>Service</th>
+                    <th style={{ padding: '1.2rem', textAlign: 'left', fontWeight: '700', fontSize: '0.9rem' }}>Date</th>
+                    <th style={{ padding: '1.2rem', textAlign: 'left', fontWeight: '700', fontSize: '0.9rem' }}>Amount</th>
+                    <th style={{ padding: '1.2rem', textAlign: 'left', fontWeight: '700', fontSize: '0.9rem' }}>Status</th>
+                    <th style={{ padding: '1.2rem', textAlign: 'left', fontWeight: '700', fontSize: '0.9rem' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {payments.map((payment, index) => (
+                    <tr 
+                      key={payment.id} 
+                      style={{ 
+                        borderBottom: `1px solid ${colors.border}`,
+                        backgroundColor: index % 2 === 0 ? colors.surfaceLight : colors.surface,
+                        transition: 'background-color 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = colors.surface;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = index % 2 === 0 ? colors.surfaceLight : colors.surface;
+                      }}
+                    >
+                      <td style={{ padding: '1.2rem', color: colors.text, fontWeight: '600' }}>{payment.invoice_number}</td>
+                      <td style={{ padding: '1.2rem', color: colors.text, fontWeight: '500' }}>{payment.client_name}</td>
+                      <td style={{ padding: '1.2rem', color: colors.text, fontWeight: '500' }}>{payment.service_type}</td>
+                      <td style={{ padding: '1.2rem', color: colors.text, fontWeight: '500' }}>{formatDate(payment.created_at)}</td>
+                      <td style={{ padding: '1.2rem', color: colors.primary, fontWeight: '700', fontSize: '1rem' }}>
+                        {formatCurrency(payment.amount || 0)}
+                      </td>
+                      <td style={{ padding: '1.2rem' }}>
+                        <span style={{
+                          backgroundColor: payment.payment_status === 'paid' || payment.payment_status === 'completed' ? '#10B981' : 
+                                         payment.payment_status === 'pending' ? '#F59E0B' : '#EF4444',
+                          color: colors.background,
+                          padding: '0.4rem 1rem',
+                          borderRadius: '20px',
+                          fontSize: '0.75rem',
+                          fontWeight: '800',
+                          textTransform: 'uppercase'
+                        }}>
+                          {payment.payment_status}
+                        </span>
+                      </td>
+                      <td style={{ padding: '1.2rem' }}>
+                        <button
+                          onClick={() => handleCreateInvoice(payment)}
+                          style={{
+                            background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`,
+                            color: colors.background,
+                            border: 'none',
+                            padding: '0.6rem 1.2rem',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '0.8rem',
+                            fontWeight: '700',
+                            transition: 'all 0.2s ease',
+                            boxShadow: `0 2px 8px ${YELLOW_RGBA(0.4)}`
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'translateY(-1px)';
+                            e.currentTarget.style.boxShadow = `0 4px 15px ${YELLOW_RGBA(0.6)}`;
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'translateY(0)';
+                            e.currentTarget.style.boxShadow = `0 2px 8px ${YELLOW_RGBA(0.4)}`;
+                          }}
+                        >
+                          View Invoice
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Create Manual Report Modal */}
+      {showCreateReportModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '2rem'
+        }}>
+          <div style={{
+            backgroundColor: colors.surfaceLight,
+            borderRadius: '12px',
+            padding: '2.5rem',
+            maxWidth: '600px',
+            width: '100%',
+            maxHeight: '90vh',
+            overflow: 'auto',
+            border: `3px solid ${colors.primary}`,
+            boxShadow: `0 10px 30px rgba(255, 215, 0, 0.2)`
+          }}>
+            <h3 style={{ 
+              color: colors.primary,
+              margin: '0 0 1.5rem 0',
+              fontSize: '1.8rem',
+              fontWeight: '800',
+              textAlign: 'center'
+            }}>
+              📊 Create Custom Report
+            </h3>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              {/* Report Name */}
+              <div>
+                <label style={{ 
+                  display: 'block', 
+                  fontSize: '0.9rem', 
+                  color: colors.primary,
+                  marginBottom: '0.5rem',
+                  fontWeight: '700'
+                }}>
+                  Report Name
+                </label>
+                <input
+                  type="text"
+                  value={manualReportForm.report_name}
+                  onChange={(e) => setManualReportForm(prev => ({ ...prev, report_name: e.target.value }))}
+                  placeholder="Enter report name..."
+                  style={{
+                    width: '100%',
+                    padding: '0.8rem',
+                    borderRadius: '6px',
+                    border: `2px solid ${colors.border}`,
+                    backgroundColor: colors.surface,
+                    color: colors.text,
+                    fontWeight: '500'
+                  }}
+                />
+              </div>
+
+              {/* Report Type */}
+              <div>
+                <label style={{ 
+                  display: 'block', 
+                  fontSize: '0.9rem', 
+                  color: colors.primary,
+                  marginBottom: '0.5rem',
+                  fontWeight: '700'
+                }}>
+                  Report Type
+                </label>
+                <select
+                  value={manualReportForm.report_type}
+                  onChange={(e) => setManualReportForm(prev => ({ ...prev, report_type: e.target.value as any }))}
+                  style={{
+                    width: '100%',
+                    padding: '0.8rem',
+                    borderRadius: '6px',
+                    border: `2px solid ${colors.border}`,
+                    backgroundColor: colors.surface,
+                    color: colors.text,
+                    fontWeight: '500'
+                  }}
+                >
+                  <option value="financial">Financial Report</option>
+                  <option value="service">Service Analytics</option>
+                  <option value="customer">Customer Insights</option>
+                  <option value="custom">Custom Report</option>
+                </select>
+              </div>
+
+              {/* Date Range */}
+              <div>
+                <label style={{ 
+                  display: 'block', 
+                  fontSize: '0.9rem', 
+                  color: colors.primary,
+                  marginBottom: '0.5rem',
+                  fontWeight: '700'
+                }}>
+                  Date Range
+                </label>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <input
+                    type="date"
+                    value={manualReportForm.date_range.start}
+                    onChange={(e) => setManualReportForm(prev => ({ 
+                      ...prev, 
+                      date_range: { ...prev.date_range, start: e.target.value } 
+                    }))}
+                    style={{
+                      flex: 1,
+                      padding: '0.8rem',
+                      borderRadius: '6px',
+                      border: `2px solid ${colors.border}`,
+                      backgroundColor: colors.surface,
+                      color: colors.text,
+                      fontWeight: '500'
+                    }}
+                  />
+                  <input
+                    type="date"
+                    value={manualReportForm.date_range.end}
+                    onChange={(e) => setManualReportForm(prev => ({ 
+                      ...prev, 
+                      date_range: { ...prev.date_range, end: e.target.value } 
+                    }))}
+                    style={{
+                      flex: 1,
+                      padding: '0.8rem',
+                      borderRadius: '6px',
+                      border: `2px solid ${colors.border}`,
+                      backgroundColor: colors.surface,
+                      color: colors.text,
+                      fontWeight: '500'
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Export Format */}
+              <div>
+                <label style={{ 
+                  display: 'block', 
+                  fontSize: '0.9rem', 
+                  color: colors.primary,
+                  marginBottom: '0.5rem',
+                  fontWeight: '700'
+                }}>
+                  Export Format
+                </label>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  {['pdf', 'excel', 'csv'].map(format => (
+                    <label key={format} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                      <input
+                        type="radio"
+                        value={format}
+                        checked={manualReportForm.export_format === format}
+                        onChange={(e) => setManualReportForm(prev => ({ ...prev, export_format: e.target.value as any }))}
+                        style={{ accentColor: colors.primary }}
+                      />
+                      <span style={{ color: colors.text, fontWeight: '500', textTransform: 'uppercase' }}>
+                        {format}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Include Charts */}
+              <div>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={manualReportForm.include_charts}
+                    onChange={(e) => setManualReportForm(prev => ({ ...prev, include_charts: e.target.checked }))}
+                    style={{ accentColor: colors.primary }}
+                  />
+                  <span style={{ color: colors.primary, fontWeight: '700' }}>
+                    Include Charts and Visualizations
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{
+              display: 'flex',
+              gap: '1rem',
+              justifyContent: 'flex-end',
+              marginTop: '2rem',
+              flexWrap: 'wrap'
+            }}>
+              <button
+                onClick={() => setShowCreateReportModal(false)}
+                style={{
+                  backgroundColor: 'transparent',
+                  color: colors.textSecondary,
+                  padding: '0.8rem 1.6rem',
+                  border: `2px solid ${colors.textSecondary}`,
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: '700',
+                  fontSize: '0.9rem',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = colors.textSecondary;
+                  e.currentTarget.style.color = colors.background;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = colors.textSecondary;
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreateManualReport}
+                disabled={!manualReportForm.report_name || generatingReport}
+                style={{
+                  background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`,
+                  color: colors.background,
+                  padding: '0.8rem 1.6rem',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: !manualReportForm.report_name || generatingReport ? 'not-allowed' : 'pointer',
+                  fontWeight: '700',
+                  fontSize: '0.9rem',
+                  transition: 'all 0.2s ease',
+                  boxShadow: `0 2px 8px ${YELLOW_RGBA(0.4)}`,
+                  opacity: !manualReportForm.report_name || generatingReport ? 0.6 : 1
+                }}
+                onMouseEnter={(e) => {
+                  if (manualReportForm.report_name && !generatingReport) {
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                    e.currentTarget.style.boxShadow = `0 4px 15px ${YELLOW_RGBA(0.6)}`;
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (manualReportForm.report_name && !generatingReport) {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = `0 2px 8px ${YELLOW_RGBA(0.4)}`;
+                  }
+                }}
+              >
+                {generatingReport ? 'Creating Report...' : '📊 Create Report'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Invoice Modal */}
+      {showInvoiceModal && selectedPayment && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '2rem'
+        }}>
+          <div style={{
+            backgroundColor: colors.surfaceLight,
+            borderRadius: '12px',
+            padding: '2.5rem',
+            maxWidth: '800px',
+            width: '100%',
+            maxHeight: '90vh',
+            overflow: 'auto',
+            border: `3px solid ${colors.primary}`,
+            boxShadow: `0 10px 30px rgba(255, 215, 0, 0.2)`
+          }}>
+            {/* Invoice Header */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'flex-start',
+              marginBottom: '2rem',
+              paddingBottom: '1.5rem',
+              borderBottom: `3px solid ${colors.primary}`
+            }}>
+              <div>
+                <h2 style={{ 
+                  color: colors.primary, 
+                  margin: '0 0 0.5rem 0', 
+                  fontSize: '2rem', 
+                  fontWeight: '800',
+                  textShadow: '0 0 10px rgba(255, 215, 0, 0.3)'
+                }}>
+                  SUNNY AUTO
+                </h2>
+                <p style={{ color: colors.textSecondary, margin: 0, fontWeight: '500' }}>
+                  123 Automotive Drive<br />
+                  Service City, SC 12345<br />
+                  (555) 123-4567<br />
+                  billing@sunnyauto.com
+                </p>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <h3 style={{ 
+                  color: colors.primary, 
+                  margin: '0 0 1rem 0', 
+                  fontSize: '1.8rem', 
+                  fontWeight: '800',
+                  textShadow: '0 0 10px rgba(255, 215, 0, 0.3)'
+                }}>
+                  INVOICE
+                </h3>
+                <p style={{ color: colors.text, margin: '0 0 0.25rem 0', fontWeight: '600' }}>
+                  <strong style={{ color: colors.primary }}>Invoice #:</strong> {selectedPayment.invoice_number}
+                </p>
+                <p style={{ color: colors.text, margin: '0 0 0.25rem 0', fontWeight: '600' }}>
+                  <strong style={{ color: colors.primary }}>Date:</strong> {formatDate(selectedPayment.created_at)}
+                </p>
+                <p style={{ color: colors.text, margin: 0, fontWeight: '600' }}>
+                  <strong style={{ color: colors.primary }}>Due Date:</strong> {formatDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString())}
+                </p>
+              </div>
+            </div>
+
+            {/* Bill To */}
+            <div style={{ marginBottom: '2rem' }}>
+              <h4 style={{ 
+                color: colors.primary, 
+                margin: '0 0 1rem 0', 
+                fontSize: '1.2rem', 
+                fontWeight: '700'
+              }}>
+                Bill To:
+              </h4>
+              <div style={{ 
+                backgroundColor: YELLOW_RGBA(0.05), 
+                padding: '1.2rem', 
+                borderRadius: '8px',
+                border: `1px solid ${YELLOW_RGBA(0.2)}`
+              }}>
+                <p style={{ color: colors.text, margin: '0 0 0.5rem 0', fontWeight: '700', fontSize: '1.1rem' }}>
+                  {selectedPayment.client_name}
+                </p>
+                <p style={{ color: colors.textSecondary, margin: '0 0 0.25rem 0', fontWeight: '500' }}>
+                  {selectedPayment.client_email}
+                </p>
+                <p style={{ color: colors.textSecondary, margin: 0, fontWeight: '500' }}>
+                  {selectedPayment.phone}
+                </p>
+              </div>
+            </div>
+
+            {/* Service Details */}
+            <div style={{ marginBottom: '2rem' }}>
+              <h4 style={{ 
+                color: colors.primary, 
+                margin: '0 0 1rem 0', 
+                fontSize: '1.2rem', 
+                fontWeight: '700'
+              }}>
+                Service Details:
+              </h4>
+              <div style={{
+                backgroundColor: YELLOW_RGBA(0.05),
+                padding: '1.2rem',
+                borderRadius: '8px',
+                border: `1px solid ${YELLOW_RGBA(0.2)}`
+              }}>
+                <p style={{ color: colors.text, margin: '0 0 0.5rem 0', fontWeight: '600' }}>
+                  <strong style={{ color: colors.primary }}>Service Type:</strong> {selectedPayment.service_type}
+                </p>
+                <p style={{ color: colors.text, margin: '0 0 0.5rem 0', fontWeight: '600' }}>
+                  <strong style={{ color: colors.primary }}>Vehicle:</strong> {selectedPayment.vehicle_type}
+                </p>
+                <p style={{ color: colors.text, margin: '0 0 0.5rem 0', fontWeight: '600' }}>
+                  <strong style={{ color: colors.primary }}>Service Date:</strong> {formatDate(selectedPayment.preferred_date)}
+                </p>
+                <p style={{ color: colors.text, margin: 0, fontWeight: '600' }}>
+                  <strong style={{ color: colors.primary }}>Payment Method:</strong> {selectedPayment.payment_method}
+                </p>
+              </div>
+            </div>
+
+            {/* Payment Summary */}
+            <div style={{
+              backgroundColor: YELLOW_RGBA(0.05),
+              padding: '1.8rem',
+              borderRadius: '8px',
+              marginBottom: '2rem',
+              border: `1px solid ${YELLOW_RGBA(0.2)}`
+            }}>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '1rem'
+              }}>
+                <span style={{ color: colors.text, fontWeight: '600' }}>Subtotal:</span>
+                <span style={{ color: colors.text, fontWeight: '600' }}>
+                  {formatCurrency(selectedPayment.amount || 0)}
+                </span>
+              </div>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '1rem'
+              }}>
+                <span style={{ color: colors.text, fontWeight: '600' }}>Tax (8.5%):</span>
+                <span style={{ color: colors.text, fontWeight: '600' }}>
+                  {formatCurrency((selectedPayment.amount || 0) * 0.085)}
+                </span>
+              </div>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                paddingTop: '1rem',
+                borderTop: `2px solid ${colors.primary}`
+              }}>
+                <span style={{ color: colors.text, fontSize: '1.3rem', fontWeight: '800' }}>Total:</span>
+                <span style={{ 
+                  color: colors.primary, 
+                  fontSize: '1.5rem', 
+                  fontWeight: '800',
+                  textShadow: '0 0 10px rgba(255, 215, 0, 0.3)'
+                }}>
+                  {formatCurrency((selectedPayment.amount || 0) * 1.085)}
+                </span>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{
+              display: 'flex',
+              gap: '1rem',
+              justifyContent: 'flex-end',
+              flexWrap: 'wrap'
+            }}>
+              <button
+                onClick={() => setShowInvoiceModal(false)}
+                style={{
+                  backgroundColor: 'transparent',
+                  color: colors.textSecondary,
+                  padding: '0.8rem 1.6rem',
+                  border: `2px solid ${colors.textSecondary}`,
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: '700',
+                  fontSize: '0.9rem',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = colors.textSecondary;
+                  e.currentTarget.style.color = colors.background;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = colors.textSecondary;
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handlePrintInvoice}
+                style={{
+                  background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`,
+                  color: colors.background,
+                  padding: '0.8rem 1.6rem',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: '700',
+                  fontSize: '0.9rem',
+                  transition: 'all 0.2s ease',
+                  boxShadow: `0 2px 8px ${YELLOW_RGBA(0.4)}`
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                  e.currentTarget.style.boxShadow = `0 4px 15px ${YELLOW_RGBA(0.6)}`;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = `0 2px 8px ${YELLOW_RGBA(0.4)}`;
+                }}
+              >
+                🖨️ Print Invoice
+              </button>
+              <button
+                onClick={handleDownloadPDF}
+                style={{
+                  background: `linear-gradient(135deg, ${colors.success}, #059669)`,
+                  color: colors.background,
+                  padding: '0.8rem 1.6rem',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: '700',
+                  fontSize: '0.9rem',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 2px 8px rgba(16, 185, 129, 0.4)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                  e.currentTarget.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.6)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(16, 185, 129, 0.4)';
+                }}
+              >
+                📥 Download PDF
+              </button>
+              <button
+                onClick={handleSendInvoice}
+                style={{
+                  background: `linear-gradient(135deg, ${colors.info}, #1D4ED8)`,
+                  color: colors.background,
+                  padding: '0.8rem 1.6rem',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: '700',
+                  fontSize: '0.9rem',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 2px 8px rgba(59, 130, 246, 0.4)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                  e.currentTarget.style.boxShadow = '0 4px 15px rgba(59, 130, 246, 0.6)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(59, 130, 246, 0.4)';
+                }}
+              >
+                ✉️ Send to Customer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style jsx>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          .invoice-modal, .invoice-modal * {
+            visibility: visible;
+          }
+          .invoice-modal {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+          }
+        }
+      `}</style>
+    </div>
+  );
+};
+
+export default AdminReports;
+
