@@ -708,7 +708,9 @@ const AdminProfile = () => {
                       document.getElementById("avatar-upload")?.click()
                     }
                   >
-                    {uploading ? "Uploading..." : "Change Profile Picture"}
+                    {uploading
+                      ? "Uploading..."
+                      : "Click to change profile picture"}
                   </p>
                 )}
               </div>
@@ -878,7 +880,7 @@ const AdminProfile = () => {
               </div>
 
               <div className="detail-row" style={detailRow}>
-                <label style={detailLabel}>Avatar URL</label>
+                <label style={detailLabel}>Profile Picture URL</label>
                 {isEditing ? (
                   <input
                     type="url"
@@ -887,7 +889,7 @@ const AdminProfile = () => {
                       handleInputChange("avatar_url", e.target.value)
                     }
                     style={inputField}
-                    placeholder="https://example.com/avatar.jpg"
+                    placeholder="https://example.com/profilepic.jpg"
                     onFocus={(e) => {
                       e.target.style.borderColor = colors.primary;
                       e.target.style.boxShadow = `0 0 0 3px ${colors.primary}20`;
@@ -899,7 +901,8 @@ const AdminProfile = () => {
                   />
                 ) : (
                   <p style={detailValue}>
-                    {editedProfile?.avatar_url || "No avatar URL provided"}
+                    {editedProfile?.avatar_url ||
+                      "No profile picture URL provided"}
                   </p>
                 )}
               </div>
