@@ -77,7 +77,7 @@ const AutoServiceShop = () => {
       title: 'Tire Rotation', 
       price: 'From $24.99',
       description: 'Professional tire rotation and pressure adjustment',
-      image: 'https://images.unsplash.com/photo-1621939514649-280e2ee25f60?q=80&w=1000&auto=format&fit=crop',
+      image: 'https://images.unsplash.com/photo-1625047509248-ec889cbff17f?q=80&w=1000&auto=format&fit=crop',
       duration: '20 mins',
       popular: false
     },

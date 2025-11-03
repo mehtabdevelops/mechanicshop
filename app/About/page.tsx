@@ -96,7 +96,7 @@ const About = () => {
     { src: 'https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&w=1600&q=80', title: 'Turbo Bay', tall: true },
     { src: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=1600&q=80', title: 'Classic Shine' },
     { src: 'https://images.unsplash.com/photo-1502877338535-766e1452684a?auto=format&fit=crop&w=1600&q=80', title: 'Shop Glow' },
-    { src: 'https://images.unsplash.com/photo-1515923162077-3f8a8e5b4d36?auto=format&fit=crop&w=1600&q=80', title: 'Detailing Bay', wide: true },
+    { src: 'https://images.unsplash.com/photo-1487754180451-c456f719a1fc?auto=format&fit=crop&w=1600&q=80', title: 'Detailing Bay', wide: true },
     { src: 'https://images.unsplash.com/photo-1506619216599-9d16d0903dfd?auto=format&fit=crop&w=1600&q=80', title: 'City Cruise' },
   ];
 
@@ -721,7 +721,7 @@ const About = () => {
               }}
             >
               <img
-                src="https://images.unsplash.com/photo-1603712610490-8dfb147f0dc1?auto=format&fit=crop&w=1200&q=80"
+                src="https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&w=1200&q=80"
                 alt="Our Workshop"
                 style={{ width: '100%', display: 'block', filter: 'grayscale(100%) contrast(1.2)' }}
                 loading="lazy"
