@@ -4,28 +4,46 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
-interface Appointment {
+// Your exact color scheme
+const ORANGE = '#FF8C00';
+const ORANGE_LIGHT = '#FFA500';
+const ORANGE_DARK = '#CC5500';
+const ORANGE_DEEP = '#7F3F00';
+const ORANGE_RGBA = (alpha: number) => `rgba(255, 140, 0, ${alpha})`;
+const ORANGE_LIGHT_RGBA = (alpha: number) => `rgba(255, 165, 0, ${alpha})`;
+
+// Combined interface for payments with appointment info
+interface PaymentWithAppointment {
+  // Payment fields
   id: string;
-  name: string;
-  email: string;
-  phone: string;
-  vehicle_type: string;
+  created_at: string;
+  profile_id: string;
+  invoice_number: string;
+  payment_method: string;
+  amount: number;
+  currency: string;
+  client_email: string;
+  client_name: string;
+  payment_intent_id: string;
+  receipt_url: string;
+  updated_at: string;
+  payment_status: string;
+  
+  // Appointment fields (joined data)
+  appointment_id?: string;
   service_type: string;
+  vehicle_type: string;
   preferred_date: string;
   preferred_time: string;
-  message: string;
+  phone: string;
   status: string;
-  created_at: string;
-  amount?: number;
-  payment_status?: string;
-  invoice_number?: string;
 }
 
 interface ReportData {
   totalRevenue: number;
-  completedServices: number;
-  pendingServices: number;
-  averageServiceValue: number;
+  completedPayments: number;
+  pendingPayments: number;
+  averagePaymentValue: number;
   monthlyRevenue: { month: string; revenue: number }[];
   popularServices: { service: string; count: number; revenue: number }[];
   customerStats: {
@@ -39,7 +57,7 @@ const AdminReports = () => {
   const router = useRouter();
   const supabase = createClientComponentClient();
   
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [payments, setPayments] = useState<PaymentWithAppointment[]>([]);
   const [reportData, setReportData] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(true);
   const [generatingReport, setGeneratingReport] = useState(false);
@@ -49,80 +67,107 @@ const AdminReports = () => {
   });
   const [selectedReport, setSelectedReport] = useState<'financial' | 'service' | 'customer'>('financial');
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
-  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const [selectedPayment, setSelectedPayment] = useState<PaymentWithAppointment | null>(null);
 
-  // Color scheme - Professional White and Orange
+  // Updated color scheme with your exact orange colors
   const colors = {
-    primary: '#FF6B35',
-    primaryLight: '#FF8C42',
-    primaryDark: '#E55A2B',
+    primary: ORANGE,
+    primaryLight: ORANGE_LIGHT,
+    primaryDark: ORANGE_DARK,
+    primaryDeep: ORANGE_DEEP,
     background: '#FFFFFF',
-    surface: '#F8FAFC',
-    surfaceLight: '#F1F5F9',
-    surfaceDark: '#E2E8F0',
-    text: '#1E293B',
-    textSecondary: '#475569',
-    textMuted: '#64748B',
+    surface: '#F8F9FA',
+    surfaceLight: '#F1F3F5',
+    surfaceDark: '#E9ECEF',
+    text: '#000000',
+    textSecondary: '#2D3748',
+    textMuted: '#4A5568',
     success: '#10B981',
     warning: '#F59E0B',
     error: '#EF4444',
-    info: '#3B82F6'
+    info: '#3B82F6',
+    border: '#E2E8F0'
   };
 
   useEffect(() => {
-    fetchAppointments();
+    fetchCombinedData();
   }, []);
 
-  const fetchAppointments = async () => {
+  const fetchCombinedData = async () => {
     try {
       setLoading(true);
       
-      const { data: appointmentsData, error } = await supabase
-        .from('appointments')
-        .select('*')
-        .order('preferred_date', { ascending: false });
+      // Fetch payments with appointment information
+      const { data: paymentsData, error: paymentsError } = await supabase
+        .from('payments')
+        .select(`
+          *,
+          appointments (
+            id,
+            service_type,
+            vehicle_type,
+            preferred_date,
+            preferred_time,
+            phone,
+            status,
+            name,
+            email
+          )
+        `)
+        .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching appointments:', error);
+      if (paymentsError) {
+        console.error('Error fetching payments:', paymentsError);
         return;
       }
 
-      // Add mock financial data for demonstration
-      const appointmentsWithFinancials = (appointmentsData || []).map(appointment => ({
-        ...appointment,
-        amount: calculateServiceAmount(appointment.service_type),
-        payment_status: appointment.status === 'completed' ? 'paid' : 'pending',
-        invoice_number: `INV-${appointment.id.slice(0, 8).toUpperCase()}`
-      }));
+      // Transform the data to combine payments with appointment info
+      const combinedData: PaymentWithAppointment[] = (paymentsData || []).map(payment => {
+        const appointment = payment.appointments?.[0] || payment.appointments; // Handle array or object
+        return {
+          // Payment fields
+          id: payment.id,
+          created_at: payment.created_at,
+          profile_id: payment.profile_id,
+          invoice_number: payment.invoice_number,
+          payment_method: payment.payment_method,
+          amount: payment.amount,
+          currency: payment.currency,
+          client_email: payment.client_email,
+          client_name: payment.client_name,
+          payment_intent_id: payment.payment_intent_id,
+          receipt_url: payment.receipt_url,
+          updated_at: payment.updated_at,
+          payment_status: payment.payment_status,
+          
+          // Appointment fields
+          appointment_id: appointment?.id,
+          service_type: appointment?.service_type || 'General Service',
+          vehicle_type: appointment?.vehicle_type || 'Not specified',
+          preferred_date: appointment?.preferred_date || payment.created_at,
+          preferred_time: appointment?.preferred_time || '',
+          phone: appointment?.phone || '',
+          status: appointment?.status || 'completed'
+        };
+      });
 
-      setAppointments(appointmentsWithFinancials);
-      generateReportData(appointmentsWithFinancials);
+      setPayments(combinedData);
+      generateReportData(combinedData);
       
     } catch (error) {
-      console.error('Error fetching appointments:', error);
+      console.error('Error fetching combined data:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const calculateServiceAmount = (serviceType: string): number => {
-    const prices: { [key: string]: number } = {
-      'oil change': 89.99,
-      'tire rotation': 49.99,
-      'brake service': 199.99,
-      'engine diagnostic': 79.99,
-      'transmission service': 149.99,
-      'battery replacement': 129.99,
-      'ac service': 119.99,
-      'full service': 299.99
-    };
+  const generateReportData = (paymentsData: PaymentWithAppointment[]) => {
+    // Filter completed payments
+    const completedPayments = paymentsData.filter(p => 
+      p.payment_status === 'completed' || p.payment_status === 'paid'
+    );
     
-    return prices[serviceType.toLowerCase()] || 99.99;
-  };
-
-  const generateReportData = (appointmentsData: Appointment[]) => {
-    const completedAppointments = appointmentsData.filter(a => a.status === 'completed');
-    const totalRevenue = completedAppointments.reduce((sum, appt) => sum + (appt.amount || 0), 0);
+    const totalRevenue = completedPayments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
     
     // Monthly revenue data (last 6 months)
     const monthlyRevenue = Array.from({ length: 6 }, (_, i) => {
@@ -130,25 +175,25 @@ const AdminReports = () => {
       date.setMonth(date.getMonth() - i);
       const month = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
       
-      const monthAppointments = completedAppointments.filter(appt => {
-        const apptDate = new Date(appt.preferred_date);
-        return apptDate.getMonth() === date.getMonth() && apptDate.getFullYear() === date.getFullYear();
+      const monthPayments = completedPayments.filter(payment => {
+        const paymentDate = new Date(payment.created_at);
+        return paymentDate.getMonth() === date.getMonth() && paymentDate.getFullYear() === date.getFullYear();
       });
       
-      const revenue = monthAppointments.reduce((sum, appt) => sum + (appt.amount || 0), 0);
+      const revenue = monthPayments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
       
       return { month, revenue };
     }).reverse();
 
     // Popular services
     const serviceCounts: { [key: string]: { count: number; revenue: number } } = {};
-    completedAppointments.forEach(appt => {
-      const service = appt.service_type;
+    completedPayments.forEach(payment => {
+      const service = payment.service_type;
       if (!serviceCounts[service]) {
         serviceCounts[service] = { count: 0, revenue: 0 };
       }
       serviceCounts[service].count++;
-      serviceCounts[service].revenue += appt.amount || 0;
+      serviceCounts[service].revenue += payment.amount || 0;
     });
 
     const popularServices = Object.entries(serviceCounts)
@@ -161,18 +206,18 @@ const AdminReports = () => {
       .slice(0, 5);
 
     // Customer stats
-    const customerEmails = new Set(completedAppointments.map(a => a.email));
-    const newCustomers = appointmentsData.filter(a => {
+    const customerEmails = new Set(completedPayments.map(p => p.client_email));
+    const newCustomers = paymentsData.filter(p => {
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      return new Date(a.created_at) >= thirtyDaysAgo;
+      return new Date(p.created_at) >= thirtyDaysAgo;
     }).length;
 
     const data: ReportData = {
       totalRevenue,
-      completedServices: completedAppointments.length,
-      pendingServices: appointmentsData.filter(a => a.status === 'pending').length,
-      averageServiceValue: completedAppointments.length > 0 ? totalRevenue / completedAppointments.length : 0,
+      completedPayments: completedPayments.length,
+      pendingPayments: paymentsData.filter(p => p.payment_status === 'pending').length,
+      averagePaymentValue: completedPayments.length > 0 ? totalRevenue / completedPayments.length : 0,
       monthlyRevenue,
       popularServices,
       customerStats: {
@@ -188,7 +233,7 @@ const AdminReports = () => {
   const handleGenerateReport = () => {
     setGeneratingReport(true);
     setTimeout(() => {
-      generateReportData(appointments);
+      generateReportData(payments);
       setGeneratingReport(false);
     }, 1500);
   };
@@ -197,8 +242,8 @@ const AdminReports = () => {
     router.push('/AdminHome');
   };
 
-  const handleCreateInvoice = (appointment: Appointment) => {
-    setSelectedAppointment(appointment);
+  const handleCreateInvoice = (payment: PaymentWithAppointment) => {
+    setSelectedPayment(payment);
     setShowInvoiceModal(true);
   };
 
@@ -211,7 +256,7 @@ const AdminReports = () => {
   };
 
   const handleSendInvoice = () => {
-    alert(`Invoice would be sent to ${selectedAppointment?.email}`);
+    alert(`Invoice would be sent to ${selectedPayment?.client_email}`);
   };
 
   const formatCurrency = (amount: number) => {
@@ -250,7 +295,7 @@ const AdminReports = () => {
             animation: 'spin 1s linear infinite',
             margin: '0 auto 1rem'
           }} />
-          <p style={{ color: colors.primary, fontSize: '1.1rem' }}>Loading Reports...</p>
+          <p style={{ color: colors.primary, fontSize: '1.1rem', fontWeight: '600' }}>Loading Reports...</p>
         </div>
       </div>
     );
@@ -270,10 +315,11 @@ const AdminReports = () => {
         justifyContent: 'space-between',
         alignItems: 'center',
         backgroundColor: colors.background,
-        borderBottom: `1px solid ${colors.surfaceDark}`,
+        borderBottom: `2px solid ${colors.primary}`,
         position: 'sticky',
         top: 0,
-        zIndex: 50
+        zIndex: 50,
+        boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <h1 style={{ 
@@ -281,19 +327,21 @@ const AdminReports = () => {
             fontWeight: '800',
             color: colors.primary,
             margin: 0,
-            cursor: 'pointer'
+            cursor: 'pointer',
+            textShadow: '1px 1px 2px rgba(0,0,0,0.1)'
           }} onClick={handleBackToDashboard}>
             SUNNY AUTO
           </h1>
           <div style={{ 
-            color: colors.textSecondary, 
+            color: colors.text, 
             fontSize: '0.9rem',
-            fontWeight: '500',
-            padding: '0.25rem 0.75rem',
-            backgroundColor: colors.surfaceLight,
-            borderRadius: '20px'
+            fontWeight: '700',
+            padding: '0.5rem 1rem',
+            backgroundColor: ORANGE_RGBA(0.1),
+            borderRadius: '8px',
+            border: `1px solid ${ORANGE_RGBA(0.3)}`
           }}>
-            REPORTS & ANALYTICS
+            📊 REPORTS & ANALYTICS
           </div>
         </div>
         
@@ -306,23 +354,28 @@ const AdminReports = () => {
               color: colors.background,
               padding: '0.75rem 1.5rem',
               border: 'none',
-              borderRadius: '12px',
+              borderRadius: '8px',
               cursor: generatingReport ? 'not-allowed' : 'pointer',
-              fontWeight: '600',
+              fontWeight: '700',
               fontSize: '0.9rem',
               transition: 'all 0.2s ease',
               display: 'flex',
               alignItems: 'center',
-              gap: '0.5rem'
+              gap: '0.5rem',
+              boxShadow: '0 2px 4px rgba(255, 140, 0, 0.3)'
             }}
             onMouseEnter={(e) => {
               if (!generatingReport) {
                 e.currentTarget.style.backgroundColor = colors.primaryDark;
+                e.currentTarget.style.transform = 'translateY(-1px)';
+                e.currentTarget.style.boxShadow = '0 4px 8px rgba(255, 140, 0, 0.4)';
               }
             }}
             onMouseLeave={(e) => {
               if (!generatingReport) {
                 e.currentTarget.style.backgroundColor = colors.primary;
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 2px 4px rgba(255, 140, 0, 0.3)';
               }
             }}
           >
@@ -340,14 +393,7 @@ const AdminReports = () => {
               </>
             ) : (
               <>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" strokeWidth="2"/>
-                  <polyline points="14,2 14,8 20,8" stroke="currentColor" strokeWidth="2"/>
-                  <line x1="16" y1="13" x2="8" y2="13" stroke="currentColor" strokeWidth="2"/>
-                  <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" strokeWidth="2"/>
-                  <polyline points="10,9 9,9 8,9" stroke="currentColor" strokeWidth="2"/>
-                </svg>
-                Generate Report
+                📈 Generate Report
               </>
             )}
           </button>
@@ -358,23 +404,25 @@ const AdminReports = () => {
               backgroundColor: 'transparent',
               color: colors.primary,
               padding: '0.75rem 1.5rem',
-              border: `1px solid ${colors.primary}`,
-              borderRadius: '12px',
+              border: `2px solid ${colors.primary}`,
+              borderRadius: '8px',
               cursor: 'pointer',
-              fontWeight: '600',
+              fontWeight: '700',
               fontSize: '0.9rem',
               transition: 'all 0.2s ease'
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = colors.primary;
               e.currentTarget.style.color = colors.background;
+              e.currentTarget.style.transform = 'translateY(-1px)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = 'transparent';
               e.currentTarget.style.color = colors.primary;
+              e.currentTarget.style.transform = 'translateY(0)';
             }}
           >
-            Back to Dashboard
+            ← Dashboard
           </button>
         </div>
       </header>
@@ -382,7 +430,8 @@ const AdminReports = () => {
       {/* Main Content */}
       <div style={{ 
         padding: '2rem',
-        minHeight: 'calc(100vh - 100px)'
+        minHeight: 'calc(100vh - 100px)',
+        backgroundColor: colors.surfaceLight
       }}>
         <div style={{ 
           maxWidth: '1400px',
@@ -397,19 +446,23 @@ const AdminReports = () => {
           }}>
             <div>
               <h2 style={{ 
-                fontSize: '2rem', 
+                fontSize: '2.2rem', 
                 fontWeight: '800',
                 color: colors.text,
-                margin: '0 0 0.5rem 0'
+                margin: '0 0 0.5rem 0',
+                background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`,
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent'
               }}>
-                Business Reports & Analytics
+                Business Intelligence Dashboard
               </h2>
               <p style={{ 
                 color: colors.textSecondary,
                 margin: 0,
-                fontSize: '1rem'
+                fontSize: '1.1rem',
+                fontWeight: '500'
               }}>
-                Generate financial reports, service analytics, and customer insights
+                Comprehensive analytics and financial reporting
               </p>
             </div>
             
@@ -419,9 +472,9 @@ const AdminReports = () => {
                 <label style={{ 
                   display: 'block', 
                   fontSize: '0.8rem', 
-                  color: colors.textSecondary,
+                  color: colors.text,
                   marginBottom: '0.25rem',
-                  fontWeight: '600'
+                  fontWeight: '700'
                 }}>
                   From Date
                 </label>
@@ -430,11 +483,12 @@ const AdminReports = () => {
                   value={dateRange.start}
                   onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
                   style={{
-                    padding: '0.5rem',
-                    borderRadius: '8px',
-                    border: `1px solid ${colors.surfaceDark}`,
+                    padding: '0.6rem',
+                    borderRadius: '6px',
+                    border: `2px solid ${colors.border}`,
                     backgroundColor: colors.background,
-                    color: colors.text
+                    color: colors.text,
+                    fontWeight: '500'
                   }}
                 />
               </div>
@@ -442,9 +496,9 @@ const AdminReports = () => {
                 <label style={{ 
                   display: 'block', 
                   fontSize: '0.8rem', 
-                  color: colors.textSecondary,
+                  color: colors.text,
                   marginBottom: '0.25rem',
-                  fontWeight: '600'
+                  fontWeight: '700'
                 }}>
                   To Date
                 </label>
@@ -453,11 +507,12 @@ const AdminReports = () => {
                   value={dateRange.end}
                   onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
                   style={{
-                    padding: '0.5rem',
-                    borderRadius: '8px',
-                    border: `1px solid ${colors.surfaceDark}`,
+                    padding: '0.6rem',
+                    borderRadius: '6px',
+                    border: `2px solid ${colors.border}`,
                     backgroundColor: colors.background,
-                    color: colors.text
+                    color: colors.text,
+                    fontWeight: '500'
                   }}
                 />
               </div>
@@ -469,11 +524,12 @@ const AdminReports = () => {
             display: 'flex',
             gap: '0.5rem',
             marginBottom: '2rem',
-            backgroundColor: colors.surface,
+            backgroundColor: colors.background,
             padding: '0.5rem',
-            borderRadius: '12px',
-            border: `1px solid ${colors.surfaceDark}`,
-            width: 'fit-content'
+            borderRadius: '10px',
+            border: `2px solid ${colors.border}`,
+            width: 'fit-content',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
           }}>
             {[
               { key: 'financial', label: 'Financial Reports', icon: '💰' },
@@ -485,20 +541,31 @@ const AdminReports = () => {
                 onClick={() => setSelectedReport(tab.key as any)}
                 style={{
                   backgroundColor: selectedReport === tab.key ? colors.primary : 'transparent',
-                  color: selectedReport === tab.key ? colors.background : colors.textSecondary,
-                  padding: '0.75rem 1.5rem',
+                  color: selectedReport === tab.key ? colors.background : colors.text,
+                  padding: '0.8rem 1.8rem',
                   borderRadius: '8px',
                   border: 'none',
                   cursor: 'pointer',
-                  fontWeight: '600',
+                  fontWeight: '700',
                   fontSize: '0.9rem',
                   transition: 'all 0.2s ease',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.5rem'
+                  gap: '0.5rem',
+                  boxShadow: selectedReport === tab.key ? `0 2px 8px ${ORANGE_RGBA(0.4)}` : 'none'
+                }}
+                onMouseEnter={(e) => {
+                  if (selectedReport !== tab.key) {
+                    e.currentTarget.style.backgroundColor = ORANGE_RGBA(0.1);
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (selectedReport !== tab.key) {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }
                 }}
               >
-                <span>{tab.icon}</span>
+                <span style={{ fontSize: '1.1rem' }}>{tab.icon}</span>
                 {tab.label}
               </button>
             ))}
@@ -514,18 +581,22 @@ const AdminReports = () => {
             }}>
               {/* Main Financial Metrics */}
               <div style={{
-                backgroundColor: colors.surface,
+                backgroundColor: colors.background,
                 padding: '2rem',
-                borderRadius: '16px',
-                border: `1px solid ${colors.surfaceDark}`
+                borderRadius: '12px',
+                border: `2px solid ${colors.border}`,
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
               }}>
                 <h3 style={{ 
                   color: colors.text,
                   margin: '0 0 1.5rem 0',
-                  fontSize: '1.3rem',
-                  fontWeight: '700'
+                  fontSize: '1.4rem',
+                  fontWeight: '800',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
                 }}>
-                  Financial Overview
+                  💰 Financial Overview
                 </h3>
                 
                 <div style={{
@@ -535,62 +606,66 @@ const AdminReports = () => {
                   marginBottom: '2rem'
                 }}>
                   <div style={{
-                    backgroundColor: colors.background,
-                    padding: '1.5rem',
-                    borderRadius: '12px',
-                    border: `1px solid ${colors.surfaceDark}`,
-                    textAlign: 'center'
+                    background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`,
+                    padding: '1.8rem',
+                    borderRadius: '10px',
+                    textAlign: 'center',
+                    color: colors.background,
+                    boxShadow: `0 4px 12px ${ORANGE_RGBA(0.3)}`
                   }}>
-                    <div style={{ fontSize: '2rem', fontWeight: '800', color: colors.primary }}>
+                    <div style={{ fontSize: '2.2rem', fontWeight: '800', marginBottom: '0.5rem' }}>
                       {formatCurrency(reportData.totalRevenue)}
                     </div>
-                    <div style={{ fontSize: '0.9rem', color: colors.textSecondary, fontWeight: '600' }}>
+                    <div style={{ fontSize: '0.9rem', fontWeight: '600', opacity: 0.9 }}>
                       Total Revenue
                     </div>
                   </div>
                   
                   <div style={{
-                    backgroundColor: colors.background,
-                    padding: '1.5rem',
-                    borderRadius: '12px',
-                    border: `1px solid ${colors.surfaceDark}`,
-                    textAlign: 'center'
+                    backgroundColor: colors.success,
+                    padding: '1.8rem',
+                    borderRadius: '10px',
+                    textAlign: 'center',
+                    color: colors.background,
+                    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
                   }}>
-                    <div style={{ fontSize: '2rem', fontWeight: '800', color: colors.success }}>
-                      {reportData.completedServices}
+                    <div style={{ fontSize: '2.2rem', fontWeight: '800', marginBottom: '0.5rem' }}>
+                      {reportData.completedPayments}
                     </div>
-                    <div style={{ fontSize: '0.9rem', color: colors.textSecondary, fontWeight: '600' }}>
-                      Completed Services
+                    <div style={{ fontSize: '0.9rem', fontWeight: '600', opacity: 0.9 }}>
+                      Completed Payments
                     </div>
                   </div>
                   
                   <div style={{
-                    backgroundColor: colors.background,
-                    padding: '1.5rem',
-                    borderRadius: '12px',
-                    border: `1px solid ${colors.surfaceDark}`,
-                    textAlign: 'center'
+                    backgroundColor: colors.info,
+                    padding: '1.8rem',
+                    borderRadius: '10px',
+                    textAlign: 'center',
+                    color: colors.background,
+                    boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)'
                   }}>
-                    <div style={{ fontSize: '2rem', fontWeight: '800', color: colors.info }}>
-                      {formatCurrency(reportData.averageServiceValue)}
+                    <div style={{ fontSize: '2.2rem', fontWeight: '800', marginBottom: '0.5rem' }}>
+                      {formatCurrency(reportData.averagePaymentValue)}
                     </div>
-                    <div style={{ fontSize: '0.9rem', color: colors.textSecondary, fontWeight: '600' }}>
-                      Average Service Value
+                    <div style={{ fontSize: '0.9rem', fontWeight: '600', opacity: 0.9 }}>
+                      Average Payment Value
                     </div>
                   </div>
                   
                   <div style={{
-                    backgroundColor: colors.background,
-                    padding: '1.5rem',
-                    borderRadius: '12px',
-                    border: `1px solid ${colors.surfaceDark}`,
-                    textAlign: 'center'
+                    backgroundColor: colors.warning,
+                    padding: '1.8rem',
+                    borderRadius: '10px',
+                    textAlign: 'center',
+                    color: colors.background,
+                    boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)'
                   }}>
-                    <div style={{ fontSize: '2rem', fontWeight: '800', color: colors.warning }}>
-                      {reportData.pendingServices}
+                    <div style={{ fontSize: '2.2rem', fontWeight: '800', marginBottom: '0.5rem' }}>
+                      {reportData.pendingPayments}
                     </div>
-                    <div style={{ fontSize: '0.9rem', color: colors.textSecondary, fontWeight: '600' }}>
-                      Pending Services
+                    <div style={{ fontSize: '0.9rem', fontWeight: '600', opacity: 0.9 }}>
+                      Pending Payments
                     </div>
                   </div>
                 </div>
@@ -600,24 +675,26 @@ const AdminReports = () => {
                   <h4 style={{ 
                     color: colors.text,
                     margin: '0 0 1rem 0',
-                    fontSize: '1.1rem',
-                    fontWeight: '600'
+                    fontSize: '1.2rem',
+                    fontWeight: '700'
                   }}>
-                    Monthly Revenue Trend
+                    📈 Monthly Revenue Trend
                   </h4>
-                  <div style={{ display: 'flex', alignItems: 'end', gap: '1rem', height: '200px' }}>
+                  <div style={{ display: 'flex', alignItems: 'end', gap: '1rem', height: '200px', padding: '1rem', backgroundColor: colors.surface, borderRadius: '8px' }}>
                     {reportData.monthlyRevenue.map((month, index) => (
                       <div key={month.month} style={{ flex: 1, textAlign: 'center' }}>
                         <div style={{ 
                           height: `${(month.revenue / Math.max(...reportData.monthlyRevenue.map(m => m.revenue))) * 150}px`,
-                          backgroundColor: colors.primary,
-                          borderRadius: '4px',
-                          marginBottom: '0.5rem'
+                          background: `linear-gradient(to top, ${colors.primary}, ${colors.primaryLight})`,
+                          borderRadius: '6px',
+                          marginBottom: '0.5rem',
+                          position: 'relative',
+                          boxShadow: `0 2px 6px ${ORANGE_RGBA(0.3)}`
                         }} />
-                        <div style={{ fontSize: '0.8rem', color: colors.textSecondary }}>
+                        <div style={{ fontSize: '0.8rem', color: colors.text, fontWeight: '600' }}>
                           {month.month}
                         </div>
-                        <div style={{ fontSize: '0.8rem', color: colors.text, fontWeight: '600' }}>
+                        <div style={{ fontSize: '0.8rem', color: colors.primary, fontWeight: '700' }}>
                           {formatCurrency(month.revenue)}
                         </div>
                       </div>
@@ -628,49 +705,64 @@ const AdminReports = () => {
 
               {/* Popular Services */}
               <div style={{
-                backgroundColor: colors.surface,
+                backgroundColor: colors.background,
                 padding: '2rem',
-                borderRadius: '16px',
-                border: `1px solid ${colors.surfaceDark}`
+                borderRadius: '12px',
+                border: `2px solid ${colors.border}`,
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
               }}>
                 <h3 style={{ 
                   color: colors.text,
                   margin: '0 0 1.5rem 0',
-                  fontSize: '1.3rem',
-                  fontWeight: '700'
+                  fontSize: '1.4rem',
+                  fontWeight: '800',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
                 }}>
-                  Top Services
+                  🏆 Top Services
                 </h3>
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   {reportData.popularServices.map((service, index) => (
                     <div key={service.service} style={{
-                      backgroundColor: colors.background,
-                      padding: '1rem',
+                      backgroundColor: colors.surface,
+                      padding: '1.2rem',
                       borderRadius: '8px',
-                      border: `1px solid ${colors.surfaceDark}`
-                    }}>
+                      border: `1px solid ${colors.border}`,
+                      transition: 'all 0.2s ease',
+                      cursor: 'pointer'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
+                    >
                       <div style={{ 
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
                         marginBottom: '0.5rem'
                       }}>
-                        <span style={{ fontWeight: '600', color: colors.text }}>
+                        <span style={{ fontWeight: '700', color: colors.text, fontSize: '0.95rem' }}>
                           {service.service}
                         </span>
                         <span style={{ 
                           backgroundColor: colors.primary,
                           color: colors.background,
-                          padding: '0.2rem 0.5rem',
+                          padding: '0.3rem 0.7rem',
                           borderRadius: '12px',
-                          fontSize: '0.7rem',
-                          fontWeight: '600'
+                          fontSize: '0.75rem',
+                          fontWeight: '800'
                         }}>
                           {service.count} services
                         </span>
                       </div>
-                      <div style={{ fontSize: '0.9rem', color: colors.textSecondary }}>
+                      <div style={{ fontSize: '0.9rem', color: colors.primary, fontWeight: '600' }}>
                         Revenue: {formatCurrency(service.revenue)}
                       </div>
                     </div>
@@ -683,19 +775,23 @@ const AdminReports = () => {
           {/* Service Analytics */}
           {selectedReport === 'service' && reportData && (
             <div style={{
-              backgroundColor: colors.surface,
+              backgroundColor: colors.background,
               padding: '2rem',
-              borderRadius: '16px',
-              border: `1px solid ${colors.surfaceDark}`,
-              marginBottom: '2rem'
+              borderRadius: '12px',
+              border: `2px solid ${colors.border}`,
+              marginBottom: '2rem',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
             }}>
               <h3 style={{ 
                 color: colors.text,
                 margin: '0 0 1.5rem 0',
-                fontSize: '1.3rem',
-                fontWeight: '700'
+                fontSize: '1.4rem',
+                fontWeight: '800',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
               }}>
-                Service Performance Analytics
+                🔧 Service Performance Analytics
               </h3>
               
               <div style={{
@@ -704,36 +800,38 @@ const AdminReports = () => {
                 gap: '1.5rem'
               }}>
                 <div style={{
-                  backgroundColor: colors.background,
-                  padding: '1.5rem',
-                  borderRadius: '12px',
-                  border: `1px solid ${colors.surfaceDark}`
+                  background: `linear-gradient(135deg, ${colors.success}, #059669)`,
+                  padding: '2rem',
+                  borderRadius: '10px',
+                  color: colors.background,
+                  boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
                 }}>
-                  <h4 style={{ color: colors.text, margin: '0 0 1rem 0', fontSize: '1rem', fontWeight: '600' }}>
-                    Service Completion Rate
+                  <h4 style={{ color: 'inherit', margin: '0 0 1rem 0', fontSize: '1.1rem', fontWeight: '600' }}>
+                    Payment Completion Rate
                   </h4>
-                  <div style={{ fontSize: '2rem', fontWeight: '800', color: colors.success }}>
-                    {((reportData.completedServices / appointments.length) * 100).toFixed(1)}%
+                  <div style={{ fontSize: '2.5rem', fontWeight: '800', marginBottom: '0.5rem' }}>
+                    {((reportData.completedPayments / payments.length) * 100).toFixed(1)}%
                   </div>
-                  <div style={{ fontSize: '0.9rem', color: colors.textSecondary }}>
-                    {reportData.completedServices} of {appointments.length} services completed
+                  <div style={{ fontSize: '0.9rem', opacity: 0.9, fontWeight: '500' }}>
+                    {reportData.completedPayments} of {payments.length} payments completed
                   </div>
                 </div>
                 
                 <div style={{
-                  backgroundColor: colors.background,
-                  padding: '1.5rem',
-                  borderRadius: '12px',
-                  border: `1px solid ${colors.surfaceDark}`
+                  background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`,
+                  padding: '2rem',
+                  borderRadius: '10px',
+                  color: colors.background,
+                  boxShadow: `0 4px 12px ${ORANGE_RGBA(0.3)}`
                 }}>
-                  <h4 style={{ color: colors.text, margin: '0 0 1rem 0', fontSize: '1rem', fontWeight: '600' }}>
-                    Revenue per Service
+                  <h4 style={{ color: 'inherit', margin: '0 0 1rem 0', fontSize: '1.1rem', fontWeight: '600' }}>
+                    Revenue per Payment
                   </h4>
-                  <div style={{ fontSize: '2rem', fontWeight: '800', color: colors.primary }}>
-                    {formatCurrency(reportData.averageServiceValue)}
+                  <div style={{ fontSize: '2.5rem', fontWeight: '800', marginBottom: '0.5rem' }}>
+                    {formatCurrency(reportData.averagePaymentValue)}
                   </div>
-                  <div style={{ fontSize: '0.9rem', color: colors.textSecondary }}>
-                    Average revenue per completed service
+                  <div style={{ fontSize: '0.9rem', opacity: 0.9, fontWeight: '500' }}>
+                    Average revenue per completed payment
                   </div>
                 </div>
               </div>
@@ -743,19 +841,23 @@ const AdminReports = () => {
           {/* Customer Insights */}
           {selectedReport === 'customer' && reportData && (
             <div style={{
-              backgroundColor: colors.surface,
+              backgroundColor: colors.background,
               padding: '2rem',
-              borderRadius: '16px',
-              border: `1px solid ${colors.surfaceDark}`,
-              marginBottom: '2rem'
+              borderRadius: '12px',
+              border: `2px solid ${colors.border}`,
+              marginBottom: '2rem',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
             }}>
               <h3 style={{ 
                 color: colors.text,
                 margin: '0 0 1.5rem 0',
-                fontSize: '1.3rem',
-                fontWeight: '700'
+                fontSize: '1.4rem',
+                fontWeight: '800',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
               }}>
-                Customer Insights
+                👥 Customer Insights
               </h3>
               
               <div style={{
@@ -764,46 +866,49 @@ const AdminReports = () => {
                 gap: '1.5rem'
               }}>
                 <div style={{
-                  backgroundColor: colors.background,
-                  padding: '1.5rem',
-                  borderRadius: '12px',
-                  border: `1px solid ${colors.surfaceDark}`,
-                  textAlign: 'center'
+                  background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`,
+                  padding: '2rem',
+                  borderRadius: '10px',
+                  color: colors.background,
+                  textAlign: 'center',
+                  boxShadow: `0 4px 12px ${ORANGE_RGBA(0.3)}`
                 }}>
-                  <div style={{ fontSize: '2rem', fontWeight: '800', color: colors.primary }}>
+                  <div style={{ fontSize: '2.5rem', fontWeight: '800', marginBottom: '0.5rem' }}>
                     {reportData.customerStats.totalCustomers}
                   </div>
-                  <div style={{ fontSize: '0.9rem', color: colors.textSecondary, fontWeight: '600' }}>
+                  <div style={{ fontSize: '1rem', fontWeight: '600', opacity: 0.9 }}>
                     Total Customers
                   </div>
                 </div>
                 
                 <div style={{
-                  backgroundColor: colors.background,
-                  padding: '1.5rem',
-                  borderRadius: '12px',
-                  border: `1px solid ${colors.surfaceDark}`,
-                  textAlign: 'center'
+                  background: `linear-gradient(135deg, ${colors.success}, #059669)`,
+                  padding: '2rem',
+                  borderRadius: '10px',
+                  color: colors.background,
+                  textAlign: 'center',
+                  boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
                 }}>
-                  <div style={{ fontSize: '2rem', fontWeight: '800', color: colors.success }}>
+                  <div style={{ fontSize: '2.5rem', fontWeight: '800', marginBottom: '0.5rem' }}>
                     {reportData.customerStats.newCustomers}
                   </div>
-                  <div style={{ fontSize: '0.9rem', color: colors.textSecondary, fontWeight: '600' }}>
+                  <div style={{ fontSize: '1rem', fontWeight: '600', opacity: 0.9 }}>
                     New Customers (30 days)
                   </div>
                 </div>
                 
                 <div style={{
-                  backgroundColor: colors.background,
-                  padding: '1.5rem',
-                  borderRadius: '12px',
-                  border: `1px solid ${colors.surfaceDark}`,
-                  textAlign: 'center'
+                  background: `linear-gradient(135deg, ${colors.info}, #1D4ED8)`,
+                  padding: '2rem',
+                  borderRadius: '10px',
+                  color: colors.background,
+                  textAlign: 'center',
+                  boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)'
                 }}>
-                  <div style={{ fontSize: '2rem', fontWeight: '800', color: colors.info }}>
+                  <div style={{ fontSize: '2.5rem', fontWeight: '800', marginBottom: '0.5rem' }}>
                     {reportData.customerStats.returningCustomers}
                   </div>
-                  <div style={{ fontSize: '0.9rem', color: colors.textSecondary, fontWeight: '600' }}>
+                  <div style={{ fontSize: '1rem', fontWeight: '600', opacity: 0.9 }}>
                     Returning Customers
                   </div>
                 </div>
@@ -813,77 +918,102 @@ const AdminReports = () => {
 
           {/* Billing and Invoices Section */}
           <div style={{
-            backgroundColor: colors.surface,
+            backgroundColor: colors.background,
             padding: '2rem',
-            borderRadius: '16px',
-            border: `1px solid ${colors.surfaceDark}`
+            borderRadius: '12px',
+            border: `2px solid ${colors.border}`,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
           }}>
             <h3 style={{ 
               color: colors.text,
               margin: '0 0 1.5rem 0',
-              fontSize: '1.3rem',
-              fontWeight: '700'
+              fontSize: '1.4rem',
+              fontWeight: '800',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
             }}>
-              Billing & Invoices
+              💳 Payments & Invoices
             </h3>
             
-            <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+            <div style={{ maxHeight: '400px', overflowY: 'auto', borderRadius: '8px', border: `1px solid ${colors.border}` }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
-                  <tr style={{ borderBottom: `2px solid ${colors.surfaceDark}` }}>
-                    <th style={{ padding: '1rem', textAlign: 'left', color: colors.text, fontWeight: '600' }}>Invoice #</th>
-                    <th style={{ padding: '1rem', textAlign: 'left', color: colors.text, fontWeight: '600' }}>Customer</th>
-                    <th style={{ padding: '1rem', textAlign: 'left', color: colors.text, fontWeight: '600' }}>Service</th>
-                    <th style={{ padding: '1rem', textAlign: 'left', color: colors.text, fontWeight: '600' }}>Date</th>
-                    <th style={{ padding: '1rem', textAlign: 'left', color: colors.text, fontWeight: '600' }}>Amount</th>
-                    <th style={{ padding: '1rem', textAlign: 'left', color: colors.text, fontWeight: '600' }}>Status</th>
-                    <th style={{ padding: '1rem', textAlign: 'left', color: colors.text, fontWeight: '600' }}>Actions</th>
+                  <tr style={{ 
+                    backgroundColor: colors.primary,
+                    color: colors.background
+                  }}>
+                    <th style={{ padding: '1.2rem', textAlign: 'left', fontWeight: '700', fontSize: '0.9rem' }}>Invoice #</th>
+                    <th style={{ padding: '1.2rem', textAlign: 'left', fontWeight: '700', fontSize: '0.9rem' }}>Customer</th>
+                    <th style={{ padding: '1.2rem', textAlign: 'left', fontWeight: '700', fontSize: '0.9rem' }}>Service</th>
+                    <th style={{ padding: '1.2rem', textAlign: 'left', fontWeight: '700', fontSize: '0.9rem' }}>Date</th>
+                    <th style={{ padding: '1.2rem', textAlign: 'left', fontWeight: '700', fontSize: '0.9rem' }}>Amount</th>
+                    <th style={{ padding: '1.2rem', textAlign: 'left', fontWeight: '700', fontSize: '0.9rem' }}>Status</th>
+                    <th style={{ padding: '1.2rem', textAlign: 'left', fontWeight: '700', fontSize: '0.9rem' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {appointments.filter(a => a.status === 'completed').map(appointment => (
-                    <tr key={appointment.id} style={{ borderBottom: `1px solid ${colors.surfaceDark}` }}>
-                      <td style={{ padding: '1rem', color: colors.text }}>{appointment.invoice_number}</td>
-                      <td style={{ padding: '1rem', color: colors.text }}>{appointment.name}</td>
-                      <td style={{ padding: '1rem', color: colors.text }}>{appointment.service_type}</td>
-                      <td style={{ padding: '1rem', color: colors.text }}>{formatDate(appointment.preferred_date)}</td>
-                      <td style={{ padding: '1rem', color: colors.text, fontWeight: '600' }}>
-                        {formatCurrency(appointment.amount || 0)}
+                  {payments.map((payment, index) => (
+                    <tr 
+                      key={payment.id} 
+                      style={{ 
+                        borderBottom: `1px solid ${colors.border}`,
+                        backgroundColor: index % 2 === 0 ? colors.background : colors.surface,
+                        transition: 'background-color 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = colors.surfaceLight;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = index % 2 === 0 ? colors.background : colors.surface;
+                      }}
+                    >
+                      <td style={{ padding: '1.2rem', color: colors.text, fontWeight: '600' }}>{payment.invoice_number}</td>
+                      <td style={{ padding: '1.2rem', color: colors.text, fontWeight: '500' }}>{payment.client_name}</td>
+                      <td style={{ padding: '1.2rem', color: colors.text, fontWeight: '500' }}>{payment.service_type}</td>
+                      <td style={{ padding: '1.2rem', color: colors.text, fontWeight: '500' }}>{formatDate(payment.created_at)}</td>
+                      <td style={{ padding: '1.2rem', color: colors.primary, fontWeight: '700', fontSize: '1rem' }}>
+                        {formatCurrency(payment.amount || 0)}
                       </td>
-                      <td style={{ padding: '1rem' }}>
+                      <td style={{ padding: '1.2rem' }}>
                         <span style={{
-                          backgroundColor: appointment.payment_status === 'paid' ? '#D1FAE5' : '#FEF3C7',
-                          color: appointment.payment_status === 'paid' ? '#065F46' : '#92400E',
-                          padding: '0.25rem 0.75rem',
+                          backgroundColor: payment.payment_status === 'paid' || payment.payment_status === 'completed' ? '#10B981' : 
+                                         payment.payment_status === 'pending' ? '#F59E0B' : '#EF4444',
+                          color: colors.background,
+                          padding: '0.4rem 1rem',
                           borderRadius: '20px',
                           fontSize: '0.75rem',
-                          fontWeight: '600'
+                          fontWeight: '800',
+                          textTransform: 'uppercase'
                         }}>
-                          {appointment.payment_status?.toUpperCase()}
+                          {payment.payment_status}
                         </span>
                       </td>
-                      <td style={{ padding: '1rem' }}>
+                      <td style={{ padding: '1.2rem' }}>
                         <button
-                          onClick={() => handleCreateInvoice(appointment)}
+                          onClick={() => handleCreateInvoice(payment)}
                           style={{
-                            backgroundColor: colors.primary,
+                            background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`,
                             color: colors.background,
                             border: 'none',
-                            padding: '0.5rem 1rem',
+                            padding: '0.6rem 1.2rem',
                             borderRadius: '6px',
                             cursor: 'pointer',
                             fontSize: '0.8rem',
-                            fontWeight: '600',
-                            transition: 'background-color 0.2s ease'
+                            fontWeight: '700',
+                            transition: 'all 0.2s ease',
+                            boxShadow: `0 2px 6px ${ORANGE_RGBA(0.3)}`
                           }}
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = colors.primaryDark;
+                            e.currentTarget.style.transform = 'translateY(-1px)';
+                            e.currentTarget.style.boxShadow = `0 4px 12px ${ORANGE_RGBA(0.4)}`;
                           }}
                           onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = colors.primary;
+                            e.currentTarget.style.transform = 'translateY(0)';
+                            e.currentTarget.style.boxShadow = `0 2px 6px ${ORANGE_RGBA(0.3)}`;
                           }}
                         >
-                          Generate Invoice
+                          View Invoice
                         </button>
                       </td>
                     </tr>
@@ -896,7 +1026,7 @@ const AdminReports = () => {
       </div>
 
       {/* Invoice Modal */}
-      {showInvoiceModal && selectedAppointment && (
+      {showInvoiceModal && selectedPayment && (
         <div style={{
           position: 'fixed',
           top: 0,
@@ -912,12 +1042,14 @@ const AdminReports = () => {
         }}>
           <div style={{
             backgroundColor: colors.background,
-            borderRadius: '16px',
-            padding: '2rem',
+            borderRadius: '12px',
+            padding: '2.5rem',
             maxWidth: '800px',
             width: '100%',
             maxHeight: '90vh',
-            overflow: 'auto'
+            overflow: 'auto',
+            border: `3px solid ${colors.primary}`,
+            boxShadow: `0 10px 30px rgba(0,0,0,0.3)`
           }}>
             {/* Invoice Header */}
             <div style={{
@@ -925,14 +1057,20 @@ const AdminReports = () => {
               justifyContent: 'space-between',
               alignItems: 'flex-start',
               marginBottom: '2rem',
-              paddingBottom: '1rem',
-              borderBottom: `2px solid ${colors.primary}`
+              paddingBottom: '1.5rem',
+              borderBottom: `3px solid ${colors.primary}`
             }}>
               <div>
-                <h2 style={{ color: colors.primary, margin: '0 0 0.5rem 0', fontSize: '1.8rem', fontWeight: '800' }}>
+                <h2 style={{ 
+                  color: colors.primary, 
+                  margin: '0 0 0.5rem 0', 
+                  fontSize: '2rem', 
+                  fontWeight: '800',
+                  textShadow: '1px 1px 2px rgba(0,0,0,0.1)'
+                }}>
                   SUNNY AUTO
                 </h2>
-                <p style={{ color: colors.textSecondary, margin: 0 }}>
+                <p style={{ color: colors.textSecondary, margin: 0, fontWeight: '500' }}>
                   123 Automotive Drive<br />
                   Service City, SC 12345<br />
                   (555) 123-4567<br />
@@ -940,70 +1078,97 @@ const AdminReports = () => {
                 </p>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <h3 style={{ color: colors.text, margin: '0 0 1rem 0', fontSize: '1.5rem', fontWeight: '700' }}>
+                <h3 style={{ 
+                  color: colors.text, 
+                  margin: '0 0 1rem 0', 
+                  fontSize: '1.8rem', 
+                  fontWeight: '800',
+                  background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`,
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent'
+                }}>
                   INVOICE
                 </h3>
-                <p style={{ color: colors.textSecondary, margin: '0 0 0.25rem 0' }}>
-                  <strong>Invoice #:</strong> {selectedAppointment.invoice_number}
+                <p style={{ color: colors.text, margin: '0 0 0.25rem 0', fontWeight: '600' }}>
+                  <strong style={{ color: colors.primary }}>Invoice #:</strong> {selectedPayment.invoice_number}
                 </p>
-                <p style={{ color: colors.textSecondary, margin: '0 0 0.25rem 0' }}>
-                  <strong>Date:</strong> {formatDate(new Date().toISOString())}
+                <p style={{ color: colors.text, margin: '0 0 0.25rem 0', fontWeight: '600' }}>
+                  <strong style={{ color: colors.primary }}>Date:</strong> {formatDate(selectedPayment.created_at)}
                 </p>
-                <p style={{ color: colors.textSecondary, margin: 0 }}>
-                  <strong>Due Date:</strong> {formatDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString())}
+                <p style={{ color: colors.text, margin: 0, fontWeight: '600' }}>
+                  <strong style={{ color: colors.primary }}>Due Date:</strong> {formatDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString())}
                 </p>
               </div>
             </div>
 
             {/* Bill To */}
             <div style={{ marginBottom: '2rem' }}>
-              <h4 style={{ color: colors.text, margin: '0 0 1rem 0', fontSize: '1.1rem', fontWeight: '600' }}>
+              <h4 style={{ 
+                color: colors.text, 
+                margin: '0 0 1rem 0', 
+                fontSize: '1.2rem', 
+                fontWeight: '700',
+                color: colors.primary
+              }}>
                 Bill To:
               </h4>
-              <div style={{ backgroundColor: colors.surface, padding: '1rem', borderRadius: '8px' }}>
-                <p style={{ color: colors.text, margin: '0 0 0.5rem 0', fontWeight: '600' }}>
-                  {selectedAppointment.name}
+              <div style={{ 
+                backgroundColor: ORANGE_RGBA(0.05), 
+                padding: '1.2rem', 
+                borderRadius: '8px',
+                border: `1px solid ${ORANGE_RGBA(0.2)}`
+              }}>
+                <p style={{ color: colors.text, margin: '0 0 0.5rem 0', fontWeight: '700', fontSize: '1.1rem' }}>
+                  {selectedPayment.client_name}
                 </p>
-                <p style={{ color: colors.textSecondary, margin: '0 0 0.25rem 0' }}>
-                  {selectedAppointment.email}
+                <p style={{ color: colors.textSecondary, margin: '0 0 0.25rem 0', fontWeight: '500' }}>
+                  {selectedPayment.client_email}
                 </p>
-                <p style={{ color: colors.textSecondary, margin: 0 }}>
-                  {selectedAppointment.phone}
+                <p style={{ color: colors.textSecondary, margin: 0, fontWeight: '500' }}>
+                  {selectedPayment.phone}
                 </p>
               </div>
             </div>
 
             {/* Service Details */}
             <div style={{ marginBottom: '2rem' }}>
-              <h4 style={{ color: colors.text, margin: '0 0 1rem 0', fontSize: '1.1rem', fontWeight: '600' }}>
+              <h4 style={{ 
+                color: colors.text, 
+                margin: '0 0 1rem 0', 
+                fontSize: '1.2rem', 
+                fontWeight: '700',
+                color: colors.primary
+              }}>
                 Service Details:
               </h4>
               <div style={{
-                backgroundColor: colors.surface,
-                padding: '1rem',
-                borderRadius: '8px'
+                backgroundColor: ORANGE_RGBA(0.05),
+                padding: '1.2rem',
+                borderRadius: '8px',
+                border: `1px solid ${ORANGE_RGBA(0.2)}`
               }}>
-                <p style={{ color: colors.text, margin: '0 0 0.5rem 0' }}>
-                  <strong>Service Type:</strong> {selectedAppointment.service_type}
+                <p style={{ color: colors.text, margin: '0 0 0.5rem 0', fontWeight: '600' }}>
+                  <strong style={{ color: colors.primary }}>Service Type:</strong> {selectedPayment.service_type}
                 </p>
-                <p style={{ color: colors.text, margin: '0 0 0.5rem 0' }}>
-                  <strong>Vehicle:</strong> {selectedAppointment.vehicle_type}
+                <p style={{ color: colors.text, margin: '0 0 0.5rem 0', fontWeight: '600' }}>
+                  <strong style={{ color: colors.primary }}>Vehicle:</strong> {selectedPayment.vehicle_type}
                 </p>
-                <p style={{ color: colors.text, margin: '0 0 0.5rem 0' }}>
-                  <strong>Service Date:</strong> {formatDate(selectedAppointment.preferred_date)}
+                <p style={{ color: colors.text, margin: '0 0 0.5rem 0', fontWeight: '600' }}>
+                  <strong style={{ color: colors.primary }}>Service Date:</strong> {formatDate(selectedPayment.preferred_date)}
                 </p>
-                <p style={{ color: colors.text, margin: 0 }}>
-                  <strong>Service Time:</strong> {selectedAppointment.preferred_time}
+                <p style={{ color: colors.text, margin: 0, fontWeight: '600' }}>
+                  <strong style={{ color: colors.primary }}>Payment Method:</strong> {selectedPayment.payment_method}
                 </p>
               </div>
             </div>
 
             {/* Payment Summary */}
             <div style={{
-              backgroundColor: colors.surface,
-              padding: '1.5rem',
+              backgroundColor: ORANGE_RGBA(0.05),
+              padding: '1.8rem',
               borderRadius: '8px',
-              marginBottom: '2rem'
+              marginBottom: '2rem',
+              border: `1px solid ${ORANGE_RGBA(0.2)}`
             }}>
               <div style={{
                 display: 'flex',
@@ -1013,7 +1178,7 @@ const AdminReports = () => {
               }}>
                 <span style={{ color: colors.text, fontWeight: '600' }}>Subtotal:</span>
                 <span style={{ color: colors.text, fontWeight: '600' }}>
-                  {formatCurrency(selectedAppointment.amount || 0)}
+                  {formatCurrency(selectedPayment.amount || 0)}
                 </span>
               </div>
               <div style={{
@@ -1022,9 +1187,9 @@ const AdminReports = () => {
                 alignItems: 'center',
                 marginBottom: '1rem'
               }}>
-                <span style={{ color: colors.text }}>Tax (8.5%):</span>
-                <span style={{ color: colors.text }}>
-                  {formatCurrency((selectedAppointment.amount || 0) * 0.085)}
+                <span style={{ color: colors.text, fontWeight: '600' }}>Tax (8.5%):</span>
+                <span style={{ color: colors.text, fontWeight: '600' }}>
+                  {formatCurrency((selectedPayment.amount || 0) * 0.085)}
                 </span>
               </div>
               <div style={{
@@ -1032,11 +1197,18 @@ const AdminReports = () => {
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 paddingTop: '1rem',
-                borderTop: `2px solid ${colors.surfaceDark}`
+                borderTop: `2px solid ${colors.primary}`
               }}>
-                <span style={{ color: colors.text, fontSize: '1.2rem', fontWeight: '700' }}>Total:</span>
-                <span style={{ color: colors.primary, fontSize: '1.2rem', fontWeight: '800' }}>
-                  {formatCurrency((selectedAppointment.amount || 0) * 1.085)}
+                <span style={{ color: colors.text, fontSize: '1.3rem', fontWeight: '800' }}>Total:</span>
+                <span style={{ 
+                  color: colors.primary, 
+                  fontSize: '1.5rem', 
+                  fontWeight: '800',
+                  background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`,
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent'
+                }}>
+                  {formatCurrency((selectedPayment.amount || 0) * 1.085)}
                 </span>
               </div>
             </div>
@@ -1045,19 +1217,29 @@ const AdminReports = () => {
             <div style={{
               display: 'flex',
               gap: '1rem',
-              justifyContent: 'flex-end'
+              justifyContent: 'flex-end',
+              flexWrap: 'wrap'
             }}>
               <button
                 onClick={() => setShowInvoiceModal(false)}
                 style={{
                   backgroundColor: 'transparent',
                   color: colors.textSecondary,
-                  padding: '0.75rem 1.5rem',
-                  border: `1px solid ${colors.textSecondary}`,
+                  padding: '0.8rem 1.6rem',
+                  border: `2px solid ${colors.textSecondary}`,
                   borderRadius: '8px',
                   cursor: 'pointer',
-                  fontWeight: '600',
-                  fontSize: '0.9rem'
+                  fontWeight: '700',
+                  fontSize: '0.9rem',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = colors.textSecondary;
+                  e.currentTarget.style.color = colors.background;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = colors.textSecondary;
                 }}
               >
                 Cancel
@@ -1065,47 +1247,77 @@ const AdminReports = () => {
               <button
                 onClick={handlePrintInvoice}
                 style={{
-                  backgroundColor: colors.primary,
+                  background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`,
                   color: colors.background,
-                  padding: '0.75rem 1.5rem',
+                  padding: '0.8rem 1.6rem',
                   border: 'none',
                   borderRadius: '8px',
                   cursor: 'pointer',
-                  fontWeight: '600',
-                  fontSize: '0.9rem'
+                  fontWeight: '700',
+                  fontSize: '0.9rem',
+                  transition: 'all 0.2s ease',
+                  boxShadow: `0 2px 6px ${ORANGE_RGBA(0.3)}`
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                  e.currentTarget.style.boxShadow = `0 4px 12px ${ORANGE_RGBA(0.4)}`;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = `0 2px 6px ${ORANGE_RGBA(0.3)}`;
                 }}
               >
-                Print Invoice
+                🖨️ Print Invoice
               </button>
               <button
                 onClick={handleDownloadPDF}
                 style={{
-                  backgroundColor: colors.success,
+                  background: `linear-gradient(135deg, ${colors.success}, #059669)`,
                   color: colors.background,
-                  padding: '0.75rem 1.5rem',
+                  padding: '0.8rem 1.6rem',
                   border: 'none',
                   borderRadius: '8px',
                   cursor: 'pointer',
-                  fontWeight: '600',
-                  fontSize: '0.9rem'
+                  fontWeight: '700',
+                  fontSize: '0.9rem',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 2px 6px rgba(16, 185, 129, 0.3)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.4)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 2px 6px rgba(16, 185, 129, 0.3)';
                 }}
               >
-                Download PDF
+                📥 Download PDF
               </button>
               <button
                 onClick={handleSendInvoice}
                 style={{
-                  backgroundColor: colors.info,
+                  background: `linear-gradient(135deg, ${colors.info}, #1D4ED8)`,
                   color: colors.background,
-                  padding: '0.75rem 1.5rem',
+                  padding: '0.8rem 1.6rem',
                   border: 'none',
                   borderRadius: '8px',
                   cursor: 'pointer',
-                  fontWeight: '600',
-                  fontSize: '0.9rem'
+                  fontWeight: '700',
+                  fontSize: '0.9rem',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 2px 6px rgba(59, 130, 246, 0.3)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.4)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 2px 6px rgba(59, 130, 246, 0.3)';
                 }}
               >
-                Send to Customer
+                ✉️ Send to Customer
               </button>
             </div>
           </div>
