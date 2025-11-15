@@ -148,6 +148,7 @@ const AdminHome = () => {
   const handleReports = () => router.push("/AdminReports");
   const handleFinance = () => router.push("/AdminServices");
   const handleNotifications = () => router.push("/AdminNotification");
+  const handleSettings = () => router.push("/AdminSettings");
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -289,6 +290,12 @@ const AdminHome = () => {
       description: "Available automotive services and pricing",
       icon: "💰",
       onClick: handleFinance,
+    },
+    {
+      title: "Settings",
+      description: "Manage admin profile, password, and security",
+      icon: "⚙️",
+      onClick: handleSettings,
     },
   ];
 
@@ -483,6 +490,35 @@ const AdminHome = () => {
               )}
             </button>
           </div>
+
+          <button
+            onClick={handleSettings}
+            style={{
+              backgroundColor: "transparent",
+              color: colors.primary,
+              width: "48px",
+              height: "48px",
+              borderRadius: "8px",
+              border: `1px solid ${colors.primary}`,
+              cursor: "pointer",
+              fontSize: "1rem",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              transition: "all 0.2s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = colors.primary;
+              e.currentTarget.style.color = colors.text;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "transparent";
+              e.currentTarget.style.color = colors.primary;
+            }}
+            title="Settings"
+          >
+            ⚙️
+          </button>
 
           <button
             onClick={handleProfile}
