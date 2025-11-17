@@ -29,7 +29,19 @@ const About = () => {
   const teamRef = useRef<HTMLDivElement | null>(null);
   const ctaRef = useRef<HTMLDivElement | null>(null);
   const geometricRef = useRef<HTMLDivElement | null>(null);
+  const navRef = useRef<HTMLElement | null>(null);
+  const logoRef = useRef<HTMLDivElement | null>(null);
+
   const router = useRouter();
+  const navLinks = [
+    { label: "HOME", path: "/UserHome" },
+    { label: "SERVICES", path: "/Services" },
+    { label: "ABOUT", path: "/About" },
+    { label: "APPOINTMENTS", path: "/Appointment" },
+    { label: "CONTACT", path: "/Contactus" },
+  ];
+  const handleNavigation = (path: string) => router.push(path);
+  const handleProfile = () => router.push("/UserProfile");
 
   const teamMembers = [
     {
@@ -167,37 +179,45 @@ const About = () => {
 
   // Mouse parallax effect (smoothed)
   useEffect(() => {
-    if (prefersReducedMotion) return;
-    const handleMouseMove = (e: MouseEvent): void => {
-      setMousePos({
-        x: (e.clientX / window.innerWidth - 0.5) * 2,
-        y: (e.clientY / window.innerHeight - 0.5) * 2,
-      });
-    };
-
-    window.addEventListener("mousemove", handleMouseMove, { passive: true });
-    return () => window.removeEventListener("mousemove", handleMouseMove);
+    if (prefersReducedMotion || !navRef.current) return;
+    const trigger = ScrollTrigger.create({
+      start: "top -50",
+      end: 99999,
+      toggleClass: { className: "nav-scrolled", targets: navRef.current },
+    });
+    return () => trigger.kill();
   }, [prefersReducedMotion]);
 
   useEffect(() => {
     if (prefersReducedMotion) return;
 
-    // Geometric shapes parallax
-    if (geometricRef.current) {
-      const shapes = geometricRef.current.querySelectorAll(".geometric-shape");
-      shapes.forEach((shape, index) => {
-        const speed = (index + 1) * 0.45;
-        const el = shape as HTMLElement;
-        el.style.willChange = "transform";
-        gsap.to(el, {
-          x: mousePos.x * 30 * speed,
-          y: mousePos.y * 30 * speed,
-          duration: 0.6,
-          ease: "power3.out",
-          force3D: true,
-        });
+    const handleMouseMove = (event: MouseEvent) => {
+      const { innerWidth, innerHeight } = window;
+      const x = (event.clientX / innerWidth - 0.5) * 2;
+      const y = (event.clientY / innerHeight - 0.5) * 2;
+      setMousePos({ x, y });
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, [prefersReducedMotion]);
+
+  useEffect(() => {
+    if (prefersReducedMotion || !geometricRef.current) return;
+
+    const shapes = geometricRef.current.querySelectorAll(".geometric-shape");
+    shapes.forEach((shape, index) => {
+      const speed = (index + 1) * 0.45;
+      const el = shape as HTMLElement;
+      el.style.willChange = "transform";
+      gsap.to(el, {
+        x: mousePos.x * 30 * speed,
+        y: mousePos.y * 30 * speed,
+        duration: 0.6,
+        ease: "power3.out",
+        force3D: true,
       });
-    }
+    });
   }, [mousePos, prefersReducedMotion]);
 
   // Mark when hero text is ready for animation
@@ -432,16 +452,6 @@ const About = () => {
       </span>
     ));
 
-  const navLinks = [
-    { label: "HOME", path: "/UserHome" },
-    { label: "SERVICES", path: "/Services" },
-    { label: "ABOUT", path: "/About" },
-    { label: "APPOINTMENTS", path: "/Appointment" },
-    { label: "CONTACT", path: "/Contactus" },
-  ];
-  const handleNavigation = (path: string) => router.push(path);
-  const handleProfile = () => router.push("/UserProfile");
-
   return (
     <div
       ref={rootRef}
@@ -529,54 +539,69 @@ const About = () => {
 
       {/* Navigation */}
       <nav
+        ref={navRef}
+        className="main-nav"
         style={{
-          background: "rgba(0, 0, 0, 0.95)",
-          padding: "1.5rem 2rem",
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          background: "transparent",
+          padding: "2rem 3rem",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          position: "sticky",
-          top: 0,
-          zIndex: 100,
-          backdropFilter: "blur(20px)",
-          borderBottom: `1px solid ${ORANGE_RGBA(0.3)}`,
-          boxShadow: `0 4px 20px ${ORANGE_RGBA(0.1)}`,
+          zIndex: 1000,
+          transition: "all 0.3s ease",
         }}
       >
-        <h1
-          style={{
-            fontSize: "2rem",
-            fontWeight: "900",
-            background: `linear-gradient(135deg, #FFFFFF, ${ORANGE})`,
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            backgroundClip: "text",
-            cursor: "pointer",
-            letterSpacing: "2px",
-            margin: 0,
-          }}
+        <div
+          ref={logoRef}
+          style={{ cursor: "pointer" }}
           onClick={() => handleNavigation("/UserHome")}
         >
-          SUNNY AUTO
-        </h1>
+          <h1
+            style={{
+              fontSize: "1.75rem",
+              fontWeight: "700",
+              margin: 0,
+            }}
+          >
+            <span style={{ color: ORANGE }}>SUNNY</span>
+            <span style={{ color: "#ffffff" }}>AUTO</span>
+          </h1>
+        </div>
 
-        <div style={{ display: "flex", gap: "2rem", alignItems: "center" }}>
-          {navLinks.map((link) => (
+        <div
+          style={{
+            display: "flex",
+            gap: "3rem",
+            alignItems: "center",
+          }}
+        >
+          {[
+            { label: "HOME", path: "/UserHome" },
+            { label: "SERVICES", path: "/Services" },
+            { label: "ABOUT", path: "/About" },
+            { label: "APPOINTMENTS", path: "/Appointment" },
+            { label: "CONTACT", path: "/Contactus" },
+          ].map((item) => (
             <button
-              key={link.label}
+              key={item.label}
               style={{
-                background: "transparent",
-                border: "none",
                 color:
-                  link.label === "SERVICES" || link.label === "APPOINTMENTS"
+                  item.label === "SERVICES" || item.label === "APPOINTMENTS"
                     ? ORANGE
-                    : "rgba(255,255,255,0.85)",
-                fontWeight: 700,
-                letterSpacing: "1px",
-                textTransform: "uppercase",
+                    : "rgba(255, 255, 255, 0.9)",
+                fontSize: "0.875rem",
+                fontWeight: "700",
+                background: "none",
+                border: "none",
                 cursor: "pointer",
+                padding: "0.5rem 0",
                 transition: "all 0.3s ease",
-                fontSize: "0.85rem",
+                letterSpacing: "0.5px",
+                textTransform: "uppercase",
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.color = ORANGE;
@@ -584,37 +609,37 @@ const About = () => {
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.color =
-                  link.label === "SERVICES" || link.label === "APPOINTMENTS"
+                  item.label === "SERVICES" || item.label === "APPOINTMENTS"
                     ? ORANGE
-                    : "rgba(255,255,255,0.85)";
+                    : "rgba(255, 255, 255, 0.9)";
                 e.currentTarget.style.transform = "translateY(0)";
               }}
-              onClick={() => handleNavigation(link.path)}
+              onClick={() => handleNavigation(item.path)}
             >
-              {link.label}
+              {item.label}
             </button>
           ))}
           <button
             style={{
               background: "transparent",
-              color: "#FFFFFF",
-              padding: "0.6rem 1.8rem",
+              color: "#ffffff",
+              padding: "0.75rem 2rem",
               borderRadius: "0",
-              fontWeight: 700,
-              border: "2px solid #FFFFFF",
+              fontWeight: "700",
+              border: "2px solid #ffffff",
               cursor: "pointer",
               transition: "all 0.3s ease",
-              fontSize: "0.85rem",
-              letterSpacing: "1px",
+              fontSize: "0.875rem",
+              letterSpacing: "0.5px",
               textTransform: "uppercase",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = "#FFFFFF";
+              e.currentTarget.style.background = "#ffffff";
               e.currentTarget.style.color = "#000000";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = "transparent";
-              e.currentTarget.style.color = "#FFFFFF";
+              e.currentTarget.style.color = "#ffffff";
             }}
             onClick={handleProfile}
           >
@@ -629,6 +654,7 @@ const About = () => {
           maxWidth: "1400px",
           margin: "0 auto",
           padding: "4rem 2rem",
+          paddingTop: "10rem",
           position: "relative",
           zIndex: 1,
         }}
@@ -1374,6 +1400,14 @@ const About = () => {
           ASE Certified • Family Owned • Serving the Community Since 2009
         </p>
       </div>
+
+      <style jsx>{`
+        .main-nav.nav-scrolled {
+          background: rgba(0, 0, 0, 0.95) !important;
+          backdrop-filter: blur(10px);
+          box-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
+        }
+      `}</style>
     </div>
   );
 };

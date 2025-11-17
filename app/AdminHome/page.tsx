@@ -148,7 +148,7 @@ const AdminHome = () => {
   const handleReports = () => router.push("/AdminReports");
   const handleFinance = () => router.push("/AdminServices");
   const handleNotifications = () => router.push("/AdminNotification");
-  const handleSettings = () => router.push("/AdminSettings");
+  const handleSettings = () => router.push("/UserProfSettings");
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -854,7 +854,7 @@ const AdminHome = () => {
                     <div>
                       {realtimeAppointments.map((appt, index) => (
                         <div
-                          key={appt.id}
+                          key={`${appt.id || "realtime"}-${appt.preferred_time}-${index}`}
                           style={{
                             padding: "1.5rem",
                             borderBottom:
@@ -993,7 +993,7 @@ const AdminHome = () => {
                   <div style={{ maxHeight: "500px", overflowY: "auto" }}>
                     {weekAppointments.map((appt, index) => (
                       <div
-                        key={appt.id}
+                        key={`${appt.id || "weekly"}-${appt.preferred_date}-${index}`}
                         style={{
                           padding: "1.5rem",
                           borderBottom:
