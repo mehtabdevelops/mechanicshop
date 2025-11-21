@@ -4,17 +4,23 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
-// Your exact color scheme
-const ORANGE = '#FF8C00';
-const ORANGE_LIGHT = '#FFA500';
-const ORANGE_DARK = '#CC5500';
-const ORANGE_DEEP = '#7F3F00';
-const ORANGE_RGBA = (alpha: number) => `rgba(255, 140, 0, ${alpha})`;
-const ORANGE_LIGHT_RGBA = (alpha: number) => `rgba(255, 165, 0, ${alpha})`;
+// Black and Yellow color scheme
+const YELLOW = '#Fbbf24';
+const YELLOW_LIGHT = '#FFA500';
+const YELLOW_DARK = '#Fbbf24';
+const YELLOW_DEEP = '#FFB700';
+const BLACK = '#000000';
+const BLACK_LIGHT = '#1A1A1A';
+const BLACK_DARK = '#0D0D0D';
+const GRAY = '#2A2A2A';
+const GRAY_LIGHT = '#3A3A3A';
+const GRAY_DARK = '#1A1A1A';
+
+const YELLOW_RGBA = (alpha: number) => `rgba(255, 215, 0, ${alpha})`;
+const YELLOW_LIGHT_RGBA = (alpha: number) => `rgba(255, 238, 50, ${alpha})`;
 
 // Combined interface for payments with appointment info
 interface PaymentWithAppointment {
-  // Payment fields
   id: string;
   created_at: string;
   profile_id: string;
@@ -53,6 +59,23 @@ interface ReportData {
   };
 }
 
+interface ManualReportForm {
+  report_name: string;
+  report_type: 'financial' | 'service' | 'customer' | 'custom';
+  date_range: {
+    start: string;
+    end: string;
+  };
+  filters: {
+    service_type: string[];
+    payment_status: string[];
+    min_amount: number;
+    max_amount: number;
+  };
+  include_charts: boolean;
+  export_format: 'pdf' | 'excel' | 'csv';
+}
+
 const AdminReports = () => {
   const router = useRouter();
   const supabase = createClientComponentClient();
@@ -68,25 +91,43 @@ const AdminReports = () => {
   const [selectedReport, setSelectedReport] = useState<'financial' | 'service' | 'customer'>('financial');
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<PaymentWithAppointment | null>(null);
+  const [showCreateReportModal, setShowCreateReportModal] = useState(false);
+  const [manualReportForm, setManualReportForm] = useState<ManualReportForm>({
+    report_name: '',
+    report_type: 'financial',
+    date_range: {
+      start: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
+      end: new Date().toISOString().split('T')[0]
+    },
+    filters: {
+      service_type: [],
+      payment_status: [],
+      min_amount: 0,
+      max_amount: 10000
+    },
+    include_charts: true,
+    export_format: 'pdf'
+  });
 
-  // Updated color scheme with your exact orange colors
+  // Black and Yellow color scheme
   const colors = {
-    primary: ORANGE,
-    primaryLight: ORANGE_LIGHT,
-    primaryDark: ORANGE_DARK,
-    primaryDeep: ORANGE_DEEP,
-    background: '#FFFFFF',
-    surface: '#F8F9FA',
-    surfaceLight: '#F1F3F5',
-    surfaceDark: '#E9ECEF',
-    text: '#000000',
-    textSecondary: '#2D3748',
-    textMuted: '#4A5568',
+    primary: YELLOW,
+    primaryLight: YELLOW_LIGHT,
+    primaryDark: YELLOW_DARK,
+    primaryDeep: YELLOW_DEEP,
+    background: BLACK,
+    surface: BLACK_LIGHT,
+    surfaceLight: GRAY,
+    surfaceDark: GRAY_DARK,
+    text: '#FFFFFF',
+    textSecondary: '#CCCCCC',
+    textMuted: '#999999',
     success: '#10B981',
     warning: '#F59E0B',
     error: '#EF4444',
     info: '#3B82F6',
-    border: '#E2E8F0'
+    border: GRAY_LIGHT,
+    accent: YELLOW
   };
 
   useEffect(() => {
@@ -97,7 +138,6 @@ const AdminReports = () => {
     try {
       setLoading(true);
       
-      // Fetch payments with appointment information
       const { data: paymentsData, error: paymentsError } = await supabase
         .from('payments')
         .select(`
@@ -121,11 +161,9 @@ const AdminReports = () => {
         return;
       }
 
-      // Transform the data to combine payments with appointment info
       const combinedData: PaymentWithAppointment[] = (paymentsData || []).map(payment => {
-        const appointment = payment.appointments?.[0] || payment.appointments; // Handle array or object
+        const appointment = payment.appointments?.[0] || payment.appointments;
         return {
-          // Payment fields
           id: payment.id,
           created_at: payment.created_at,
           profile_id: payment.profile_id,
@@ -140,7 +178,6 @@ const AdminReports = () => {
           updated_at: payment.updated_at,
           payment_status: payment.payment_status,
           
-          // Appointment fields
           appointment_id: appointment?.id,
           service_type: appointment?.service_type || 'General Service',
           vehicle_type: appointment?.vehicle_type || 'Not specified',
@@ -162,14 +199,12 @@ const AdminReports = () => {
   };
 
   const generateReportData = (paymentsData: PaymentWithAppointment[]) => {
-    // Filter completed payments
     const completedPayments = paymentsData.filter(p => 
       p.payment_status === 'completed' || p.payment_status === 'paid'
     );
     
     const totalRevenue = completedPayments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
     
-    // Monthly revenue data (last 6 months)
     const monthlyRevenue = Array.from({ length: 6 }, (_, i) => {
       const date = new Date();
       date.setMonth(date.getMonth() - i);
@@ -185,7 +220,6 @@ const AdminReports = () => {
       return { month, revenue };
     }).reverse();
 
-    // Popular services
     const serviceCounts: { [key: string]: { count: number; revenue: number } } = {};
     completedPayments.forEach(payment => {
       const service = payment.service_type;
@@ -205,7 +239,6 @@ const AdminReports = () => {
       .sort((a, b) => b.revenue - a.revenue)
       .slice(0, 5);
 
-    // Customer stats
     const customerEmails = new Set(completedPayments.map(p => p.client_email));
     const newCustomers = paymentsData.filter(p => {
       const thirtyDaysAgo = new Date();
@@ -236,6 +269,63 @@ const AdminReports = () => {
       generateReportData(payments);
       setGeneratingReport(false);
     }, 1500);
+  };
+
+  const handleCreateManualReport = async () => {
+    try {
+      setGeneratingReport(true);
+      
+      // Apply filters based on manual report form
+      let filteredPayments = payments;
+      
+      // Date range filter
+      filteredPayments = filteredPayments.filter(payment => {
+        const paymentDate = new Date(payment.created_at);
+        const startDate = new Date(manualReportForm.date_range.start);
+        const endDate = new Date(manualReportForm.date_range.end);
+        return paymentDate >= startDate && paymentDate <= endDate;
+      });
+      
+      // Service type filter
+      if (manualReportForm.filters.service_type.length > 0) {
+        filteredPayments = filteredPayments.filter(payment =>
+          manualReportForm.filters.service_type.includes(payment.service_type)
+        );
+      }
+      
+      // Payment status filter
+      if (manualReportForm.filters.payment_status.length > 0) {
+        filteredPayments = filteredPayments.filter(payment =>
+          manualReportForm.filters.payment_status.includes(payment.payment_status)
+        );
+      }
+      
+      // Amount range filter
+      filteredPayments = filteredPayments.filter(payment =>
+        payment.amount >= manualReportForm.filters.min_amount &&
+        payment.amount <= manualReportForm.filters.max_amount
+      );
+      
+      // Generate report with filtered data
+      generateReportData(filteredPayments);
+      
+      // Simulate export
+      if (manualReportForm.export_format === 'pdf') {
+        alert(`PDF report "${manualReportForm.report_name}" generated successfully!`);
+      } else if (manualReportForm.export_format === 'excel') {
+        alert(`Excel report "${manualReportForm.report_name}" generated successfully!`);
+      } else {
+        alert(`CSV report "${manualReportForm.report_name}" generated successfully!`);
+      }
+      
+      setShowCreateReportModal(false);
+      
+    } catch (error) {
+      console.error('Error creating manual report:', error);
+      alert('Error creating report. Please try again.');
+    } finally {
+      setGeneratingReport(false);
+    }
   };
 
   const handleBackToDashboard = () => {
@@ -314,38 +404,73 @@ const AdminReports = () => {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        backgroundColor: colors.background,
+        backgroundColor: colors.surface,
         borderBottom: `2px solid ${colors.primary}`,
         position: 'sticky',
         top: 0,
         zIndex: 50,
-        boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+        boxShadow: '0 2px 20px rgba(255, 215, 0, 0.1)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <h1 style={{ 
-            fontSize: '1.8rem', 
-            fontWeight: '800',
-            color: colors.primary,
-            margin: 0,
+      {/* Clickable logo */}
+        <h1
+          onClick={() => router.push('/')}
+          style={{
+            fontSize: '2.5rem',
+            fontWeight: '600',
+            marginBottom: '0.75rem',
+            letterSpacing: '1px',
             cursor: 'pointer',
-            textShadow: '1px 1px 2px rgba(0,0,0,0.1)'
-          }} onClick={handleBackToDashboard}>
-            SUNNY AUTO
-          </h1>
+          }}
+        >
+          <span style={{ color: '#ff8c00' }}>Sunny</span>
+          <span style={{ color: '#ffffff' }}>Auto</span>
+        </h1>
           <div style={{ 
-            color: colors.text, 
+            color: colors.primary, 
             fontSize: '0.9rem',
             fontWeight: '700',
             padding: '0.5rem 1rem',
-            backgroundColor: ORANGE_RGBA(0.1),
+            backgroundColor: YELLOW_RGBA(0.1),
             borderRadius: '8px',
-            border: `1px solid ${ORANGE_RGBA(0.3)}`
+            border: `1px solid ${YELLOW_RGBA(0.3)}`
           }}>
             📊 REPORTS & ANALYTICS
           </div>
         </div>
         
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <button 
+            onClick={() => setShowCreateReportModal(true)}
+            style={{
+              backgroundColor: colors.primary,
+              color: colors.background,
+              padding: '0.75rem 1.5rem',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: '700',
+              fontSize: '0.9rem',
+              transition: 'all 0.2s ease',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              boxShadow: '0 2px 10px rgba(255, 215, 0, 0.3)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = colors.primaryDark;
+              e.currentTarget.style.transform = 'translateY(-1px)';
+              e.currentTarget.style.boxShadow = '0 4px 15px rgba(255, 215, 0, 0.4)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = colors.primary;
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 2px 10px rgba(255, 215, 0, 0.3)';
+            }}
+          >
+            📝 Create Custom Report
+          </button>
+          
           <button 
             onClick={handleGenerateReport}
             disabled={generatingReport}
@@ -362,20 +487,20 @@ const AdminReports = () => {
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem',
-              boxShadow: '0 2px 4px rgba(255, 140, 0, 0.3)'
+              boxShadow: '0 2px 10px rgba(255, 215, 0, 0.3)'
             }}
             onMouseEnter={(e) => {
               if (!generatingReport) {
                 e.currentTarget.style.backgroundColor = colors.primaryDark;
                 e.currentTarget.style.transform = 'translateY(-1px)';
-                e.currentTarget.style.boxShadow = '0 4px 8px rgba(255, 140, 0, 0.4)';
+                e.currentTarget.style.boxShadow = '0 4px 15px rgba(255, 215, 0, 0.4)';
               }
             }}
             onMouseLeave={(e) => {
               if (!generatingReport) {
                 e.currentTarget.style.backgroundColor = colors.primary;
                 e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 2px 4px rgba(255, 140, 0, 0.3)';
+                e.currentTarget.style.boxShadow = '0 2px 10px rgba(255, 215, 0, 0.3)';
               }
             }}
           >
@@ -431,7 +556,7 @@ const AdminReports = () => {
       <div style={{ 
         padding: '2rem',
         minHeight: 'calc(100vh - 100px)',
-        backgroundColor: colors.surfaceLight
+        backgroundColor: colors.surface
       }}>
         <div style={{ 
           maxWidth: '1400px',
@@ -448,11 +573,9 @@ const AdminReports = () => {
               <h2 style={{ 
                 fontSize: '2.2rem', 
                 fontWeight: '800',
-                color: colors.text,
+                color: '#ffA500',
                 margin: '0 0 0.5rem 0',
-                background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`,
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent'
+                textShadow: '0 0 10px rgba(255, 215, 0, 0.3)'
               }}>
                 Business Intelligence Dashboard
               </h2>
@@ -472,7 +595,7 @@ const AdminReports = () => {
                 <label style={{ 
                   display: 'block', 
                   fontSize: '0.8rem', 
-                  color: colors.text,
+                  color: colors.primary,
                   marginBottom: '0.25rem',
                   fontWeight: '700'
                 }}>
@@ -486,7 +609,7 @@ const AdminReports = () => {
                     padding: '0.6rem',
                     borderRadius: '6px',
                     border: `2px solid ${colors.border}`,
-                    backgroundColor: colors.background,
+                    backgroundColor: colors.surfaceLight,
                     color: colors.text,
                     fontWeight: '500'
                   }}
@@ -496,7 +619,7 @@ const AdminReports = () => {
                 <label style={{ 
                   display: 'block', 
                   fontSize: '0.8rem', 
-                  color: colors.text,
+                  color: colors.primary,
                   marginBottom: '0.25rem',
                   fontWeight: '700'
                 }}>
@@ -510,7 +633,7 @@ const AdminReports = () => {
                     padding: '0.6rem',
                     borderRadius: '6px',
                     border: `2px solid ${colors.border}`,
-                    backgroundColor: colors.background,
+                    backgroundColor: colors.surfaceLight,
                     color: colors.text,
                     fontWeight: '500'
                   }}
@@ -524,12 +647,12 @@ const AdminReports = () => {
             display: 'flex',
             gap: '0.5rem',
             marginBottom: '2rem',
-            backgroundColor: colors.background,
+            backgroundColor: colors.surfaceLight,
             padding: '0.5rem',
             borderRadius: '10px',
             border: `2px solid ${colors.border}`,
             width: 'fit-content',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+            boxShadow: '0 2px 10px rgba(0,0,0,0.3)'
           }}>
             {[
               { key: 'financial', label: 'Financial Reports', icon: '💰' },
@@ -552,11 +675,11 @@ const AdminReports = () => {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.5rem',
-                  boxShadow: selectedReport === tab.key ? `0 2px 8px ${ORANGE_RGBA(0.4)}` : 'none'
+                  boxShadow: selectedReport === tab.key ? `0 2px 10px ${YELLOW_RGBA(0.4)}` : 'none'
                 }}
                 onMouseEnter={(e) => {
                   if (selectedReport !== tab.key) {
-                    e.currentTarget.style.backgroundColor = ORANGE_RGBA(0.1);
+                    e.currentTarget.style.backgroundColor = YELLOW_RGBA(0.1);
                   }
                 }}
                 onMouseLeave={(e) => {
@@ -581,14 +704,14 @@ const AdminReports = () => {
             }}>
               {/* Main Financial Metrics */}
               <div style={{
-                backgroundColor: colors.background,
+                backgroundColor: colors.surfaceLight,
                 padding: '2rem',
                 borderRadius: '12px',
                 border: `2px solid ${colors.border}`,
-                boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                boxShadow: '0 4px 20px rgba(0,0,0,0.3)'
               }}>
                 <h3 style={{ 
-                  color: colors.text,
+                  color: colors.primary,
                   margin: '0 0 1.5rem 0',
                   fontSize: '1.4rem',
                   fontWeight: '800',
@@ -611,7 +734,7 @@ const AdminReports = () => {
                     borderRadius: '10px',
                     textAlign: 'center',
                     color: colors.background,
-                    boxShadow: `0 4px 12px ${ORANGE_RGBA(0.3)}`
+                    boxShadow: `0 4px 15px ${YELLOW_RGBA(0.4)}`
                   }}>
                     <div style={{ fontSize: '2.2rem', fontWeight: '800', marginBottom: '0.5rem' }}>
                       {formatCurrency(reportData.totalRevenue)}
@@ -627,7 +750,7 @@ const AdminReports = () => {
                     borderRadius: '10px',
                     textAlign: 'center',
                     color: colors.background,
-                    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+                    boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)'
                   }}>
                     <div style={{ fontSize: '2.2rem', fontWeight: '800', marginBottom: '0.5rem' }}>
                       {reportData.completedPayments}
@@ -643,7 +766,7 @@ const AdminReports = () => {
                     borderRadius: '10px',
                     textAlign: 'center',
                     color: colors.background,
-                    boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)'
+                    boxShadow: '0 4px 15px rgba(59, 130, 246, 0.4)'
                   }}>
                     <div style={{ fontSize: '2.2rem', fontWeight: '800', marginBottom: '0.5rem' }}>
                       {formatCurrency(reportData.averagePaymentValue)}
@@ -659,7 +782,7 @@ const AdminReports = () => {
                     borderRadius: '10px',
                     textAlign: 'center',
                     color: colors.background,
-                    boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)'
+                    boxShadow: '0 4px 15px rgba(245, 158, 11, 0.4)'
                   }}>
                     <div style={{ fontSize: '2.2rem', fontWeight: '800', marginBottom: '0.5rem' }}>
                       {reportData.pendingPayments}
@@ -673,7 +796,7 @@ const AdminReports = () => {
                 {/* Revenue Chart */}
                 <div>
                   <h4 style={{ 
-                    color: colors.text,
+                    color: colors.primary,
                     margin: '0 0 1rem 0',
                     fontSize: '1.2rem',
                     fontWeight: '700'
@@ -689,7 +812,7 @@ const AdminReports = () => {
                           borderRadius: '6px',
                           marginBottom: '0.5rem',
                           position: 'relative',
-                          boxShadow: `0 2px 6px ${ORANGE_RGBA(0.3)}`
+                          boxShadow: `0 2px 8px ${YELLOW_RGBA(0.4)}`
                         }} />
                         <div style={{ fontSize: '0.8rem', color: colors.text, fontWeight: '600' }}>
                           {month.month}
@@ -705,14 +828,14 @@ const AdminReports = () => {
 
               {/* Popular Services */}
               <div style={{
-                backgroundColor: colors.background,
+                backgroundColor: colors.surfaceLight,
                 padding: '2rem',
                 borderRadius: '12px',
                 border: `2px solid ${colors.border}`,
-                boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                boxShadow: '0 4px 20px rgba(0,0,0,0.3)'
               }}>
                 <h3 style={{ 
-                  color: colors.text,
+                  color: colors.primary,
                   margin: '0 0 1.5rem 0',
                   fontSize: '1.4rem',
                   fontWeight: '800',
@@ -735,11 +858,13 @@ const AdminReports = () => {
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.transform = 'translateY(-2px)';
-                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+                      e.currentTarget.style.boxShadow = '0 4px 15px rgba(255, 215, 0, 0.2)';
+                      e.currentTarget.style.borderColor = colors.primary;
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.transform = 'translateY(0)';
                       e.currentTarget.style.boxShadow = 'none';
+                      e.currentTarget.style.borderColor = colors.border;
                     }}
                     >
                       <div style={{ 
@@ -772,160 +897,16 @@ const AdminReports = () => {
             </div>
           )}
 
-          {/* Service Analytics */}
-          {selectedReport === 'service' && reportData && (
-            <div style={{
-              backgroundColor: colors.background,
-              padding: '2rem',
-              borderRadius: '12px',
-              border: `2px solid ${colors.border}`,
-              marginBottom: '2rem',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-            }}>
-              <h3 style={{ 
-                color: colors.text,
-                margin: '0 0 1.5rem 0',
-                fontSize: '1.4rem',
-                fontWeight: '800',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem'
-              }}>
-                🔧 Service Performance Analytics
-              </h3>
-              
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                gap: '1.5rem'
-              }}>
-                <div style={{
-                  background: `linear-gradient(135deg, ${colors.success}, #059669)`,
-                  padding: '2rem',
-                  borderRadius: '10px',
-                  color: colors.background,
-                  boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
-                }}>
-                  <h4 style={{ color: 'inherit', margin: '0 0 1rem 0', fontSize: '1.1rem', fontWeight: '600' }}>
-                    Payment Completion Rate
-                  </h4>
-                  <div style={{ fontSize: '2.5rem', fontWeight: '800', marginBottom: '0.5rem' }}>
-                    {((reportData.completedPayments / payments.length) * 100).toFixed(1)}%
-                  </div>
-                  <div style={{ fontSize: '0.9rem', opacity: 0.9, fontWeight: '500' }}>
-                    {reportData.completedPayments} of {payments.length} payments completed
-                  </div>
-                </div>
-                
-                <div style={{
-                  background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`,
-                  padding: '2rem',
-                  borderRadius: '10px',
-                  color: colors.background,
-                  boxShadow: `0 4px 12px ${ORANGE_RGBA(0.3)}`
-                }}>
-                  <h4 style={{ color: 'inherit', margin: '0 0 1rem 0', fontSize: '1.1rem', fontWeight: '600' }}>
-                    Revenue per Payment
-                  </h4>
-                  <div style={{ fontSize: '2.5rem', fontWeight: '800', marginBottom: '0.5rem' }}>
-                    {formatCurrency(reportData.averagePaymentValue)}
-                  </div>
-                  <div style={{ fontSize: '0.9rem', opacity: 0.9, fontWeight: '500' }}>
-                    Average revenue per completed payment
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Customer Insights */}
-          {selectedReport === 'customer' && reportData && (
-            <div style={{
-              backgroundColor: colors.background,
-              padding: '2rem',
-              borderRadius: '12px',
-              border: `2px solid ${colors.border}`,
-              marginBottom: '2rem',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-            }}>
-              <h3 style={{ 
-                color: colors.text,
-                margin: '0 0 1.5rem 0',
-                fontSize: '1.4rem',
-                fontWeight: '800',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem'
-              }}>
-                👥 Customer Insights
-              </h3>
-              
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-                gap: '1.5rem'
-              }}>
-                <div style={{
-                  background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`,
-                  padding: '2rem',
-                  borderRadius: '10px',
-                  color: colors.background,
-                  textAlign: 'center',
-                  boxShadow: `0 4px 12px ${ORANGE_RGBA(0.3)}`
-                }}>
-                  <div style={{ fontSize: '2.5rem', fontWeight: '800', marginBottom: '0.5rem' }}>
-                    {reportData.customerStats.totalCustomers}
-                  </div>
-                  <div style={{ fontSize: '1rem', fontWeight: '600', opacity: 0.9 }}>
-                    Total Customers
-                  </div>
-                </div>
-                
-                <div style={{
-                  background: `linear-gradient(135deg, ${colors.success}, #059669)`,
-                  padding: '2rem',
-                  borderRadius: '10px',
-                  color: colors.background,
-                  textAlign: 'center',
-                  boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
-                }}>
-                  <div style={{ fontSize: '2.5rem', fontWeight: '800', marginBottom: '0.5rem' }}>
-                    {reportData.customerStats.newCustomers}
-                  </div>
-                  <div style={{ fontSize: '1rem', fontWeight: '600', opacity: 0.9 }}>
-                    New Customers (30 days)
-                  </div>
-                </div>
-                
-                <div style={{
-                  background: `linear-gradient(135deg, ${colors.info}, #1D4ED8)`,
-                  padding: '2rem',
-                  borderRadius: '10px',
-                  color: colors.background,
-                  textAlign: 'center',
-                  boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)'
-                }}>
-                  <div style={{ fontSize: '2.5rem', fontWeight: '800', marginBottom: '0.5rem' }}>
-                    {reportData.customerStats.returningCustomers}
-                  </div>
-                  <div style={{ fontSize: '1rem', fontWeight: '600', opacity: 0.9 }}>
-                    Returning Customers
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Billing and Invoices Section */}
           <div style={{
-            backgroundColor: colors.background,
+            backgroundColor: colors.surfaceLight,
             padding: '2rem',
             borderRadius: '12px',
             border: `2px solid ${colors.border}`,
-            boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+            boxShadow: '0 4px 20px rgba(0,0,0,0.3)'
           }}>
             <h3 style={{ 
-              color: colors.text,
+             color: '#ff8c00',
               margin: '0 0 1.5rem 0',
               fontSize: '1.4rem',
               fontWeight: '800',
@@ -958,14 +939,14 @@ const AdminReports = () => {
                       key={payment.id} 
                       style={{ 
                         borderBottom: `1px solid ${colors.border}`,
-                        backgroundColor: index % 2 === 0 ? colors.background : colors.surface,
+                        backgroundColor: index % 2 === 0 ? colors.surfaceLight : colors.surface,
                         transition: 'background-color 0.2s ease'
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = colors.surfaceLight;
+                        e.currentTarget.style.backgroundColor = colors.surface;
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = index % 2 === 0 ? colors.background : colors.surface;
+                        e.currentTarget.style.backgroundColor = index % 2 === 0 ? colors.surfaceLight : colors.surface;
                       }}
                     >
                       <td style={{ padding: '1.2rem', color: colors.text, fontWeight: '600' }}>{payment.invoice_number}</td>
@@ -1002,15 +983,15 @@ const AdminReports = () => {
                             fontSize: '0.8rem',
                             fontWeight: '700',
                             transition: 'all 0.2s ease',
-                            boxShadow: `0 2px 6px ${ORANGE_RGBA(0.3)}`
+                            boxShadow: `0 2px 8px ${YELLOW_RGBA(0.4)}`
                           }}
                           onMouseEnter={(e) => {
                             e.currentTarget.style.transform = 'translateY(-1px)';
-                            e.currentTarget.style.boxShadow = `0 4px 12px ${ORANGE_RGBA(0.4)}`;
+                            e.currentTarget.style.boxShadow = `0 4px 15px ${YELLOW_RGBA(0.6)}`;
                           }}
                           onMouseLeave={(e) => {
                             e.currentTarget.style.transform = 'translateY(0)';
-                            e.currentTarget.style.boxShadow = `0 2px 6px ${ORANGE_RGBA(0.3)}`;
+                            e.currentTarget.style.boxShadow = `0 2px 8px ${YELLOW_RGBA(0.4)}`;
                           }}
                         >
                           View Invoice
@@ -1024,6 +1005,264 @@ const AdminReports = () => {
           </div>
         </div>
       </div>
+
+      {/* Create Manual Report Modal */}
+      {showCreateReportModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '2rem'
+        }}>
+          <div style={{
+            backgroundColor: colors.surfaceLight,
+            borderRadius: '12px',
+            padding: '2.5rem',
+            maxWidth: '600px',
+            width: '100%',
+            maxHeight: '90vh',
+            overflow: 'auto',
+            border: `3px solid ${colors.primary}`,
+            boxShadow: `0 10px 30px rgba(255, 215, 0, 0.2)`
+          }}>
+            <h3 style={{ 
+              color: colors.primary,
+              margin: '0 0 1.5rem 0',
+              fontSize: '1.8rem',
+              fontWeight: '800',
+              textAlign: 'center'
+            }}>
+              📊 Create Custom Report
+            </h3>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              {/* Report Name */}
+              <div>
+                <label style={{ 
+                  display: 'block', 
+                  fontSize: '0.9rem', 
+                  color: colors.primary,
+                  marginBottom: '0.5rem',
+                  fontWeight: '700'
+                }}>
+                  Report Name
+                </label>
+                <input
+                  type="text"
+                  value={manualReportForm.report_name}
+                  onChange={(e) => setManualReportForm(prev => ({ ...prev, report_name: e.target.value }))}
+                  placeholder="Enter report name..."
+                  style={{
+                    width: '100%',
+                    padding: '0.8rem',
+                    borderRadius: '6px',
+                    border: `2px solid ${colors.border}`,
+                    backgroundColor: colors.surface,
+                    color: colors.text,
+                    fontWeight: '500'
+                  }}
+                />
+              </div>
+
+              {/* Report Type */}
+              <div>
+                <label style={{ 
+                  display: 'block', 
+                  fontSize: '0.9rem', 
+                  color: colors.primary,
+                  marginBottom: '0.5rem',
+                  fontWeight: '700'
+                }}>
+                  Report Type
+                </label>
+                <select
+                  value={manualReportForm.report_type}
+                  onChange={(e) => setManualReportForm(prev => ({ ...prev, report_type: e.target.value as any }))}
+                  style={{
+                    width: '100%',
+                    padding: '0.8rem',
+                    borderRadius: '6px',
+                    border: `2px solid ${colors.border}`,
+                    backgroundColor: colors.surface,
+                    color: colors.text,
+                    fontWeight: '500'
+                  }}
+                >
+                  <option value="financial">Financial Report</option>
+                  <option value="service">Service Analytics</option>
+                  <option value="customer">Customer Insights</option>
+                  <option value="custom">Custom Report</option>
+                </select>
+              </div>
+
+              {/* Date Range */}
+              <div>
+                <label style={{ 
+                  display: 'block', 
+                  fontSize: '0.9rem', 
+                  color: colors.primary,
+                  marginBottom: '0.5rem',
+                  fontWeight: '700'
+                }}>
+                  Date Range
+                </label>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <input
+                    type="date"
+                    value={manualReportForm.date_range.start}
+                    onChange={(e) => setManualReportForm(prev => ({ 
+                      ...prev, 
+                      date_range: { ...prev.date_range, start: e.target.value } 
+                    }))}
+                    style={{
+                      flex: 1,
+                      padding: '0.8rem',
+                      borderRadius: '6px',
+                      border: `2px solid ${colors.border}`,
+                      backgroundColor: colors.surface,
+                      color: colors.text,
+                      fontWeight: '500'
+                    }}
+                  />
+                  <input
+                    type="date"
+                    value={manualReportForm.date_range.end}
+                    onChange={(e) => setManualReportForm(prev => ({ 
+                      ...prev, 
+                      date_range: { ...prev.date_range, end: e.target.value } 
+                    }))}
+                    style={{
+                      flex: 1,
+                      padding: '0.8rem',
+                      borderRadius: '6px',
+                      border: `2px solid ${colors.border}`,
+                      backgroundColor: colors.surface,
+                      color: colors.text,
+                      fontWeight: '500'
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Export Format */}
+              <div>
+                <label style={{ 
+                  display: 'block', 
+                  fontSize: '0.9rem', 
+                  color: colors.primary,
+                  marginBottom: '0.5rem',
+                  fontWeight: '700'
+                }}>
+                  Export Format
+                </label>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  {['pdf', 'excel', 'csv'].map(format => (
+                    <label key={format} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                      <input
+                        type="radio"
+                        value={format}
+                        checked={manualReportForm.export_format === format}
+                        onChange={(e) => setManualReportForm(prev => ({ ...prev, export_format: e.target.value as any }))}
+                        style={{ accentColor: colors.primary }}
+                      />
+                      <span style={{ color: colors.text, fontWeight: '500', textTransform: 'uppercase' }}>
+                        {format}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Include Charts */}
+              <div>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={manualReportForm.include_charts}
+                    onChange={(e) => setManualReportForm(prev => ({ ...prev, include_charts: e.target.checked }))}
+                    style={{ accentColor: colors.primary }}
+                  />
+                  <span style={{ color: colors.primary, fontWeight: '700' }}>
+                    Include Charts and Visualizations
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{
+              display: 'flex',
+              gap: '1rem',
+              justifyContent: 'flex-end',
+              marginTop: '2rem',
+              flexWrap: 'wrap'
+            }}>
+              <button
+                onClick={() => setShowCreateReportModal(false)}
+                style={{
+                  backgroundColor: 'transparent',
+                  color: colors.textSecondary,
+                  padding: '0.8rem 1.6rem',
+                  border: `2px solid ${colors.textSecondary}`,
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: '700',
+                  fontSize: '0.9rem',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = colors.textSecondary;
+                  e.currentTarget.style.color = colors.background;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = colors.textSecondary;
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreateManualReport}
+                disabled={!manualReportForm.report_name || generatingReport}
+                style={{
+                  background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`,
+                  color: colors.background,
+                  padding: '0.8rem 1.6rem',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: !manualReportForm.report_name || generatingReport ? 'not-allowed' : 'pointer',
+                  fontWeight: '700',
+                  fontSize: '0.9rem',
+                  transition: 'all 0.2s ease',
+                  boxShadow: `0 2px 8px ${YELLOW_RGBA(0.4)}`,
+                  opacity: !manualReportForm.report_name || generatingReport ? 0.6 : 1
+                }}
+                onMouseEnter={(e) => {
+                  if (manualReportForm.report_name && !generatingReport) {
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                    e.currentTarget.style.boxShadow = `0 4px 15px ${YELLOW_RGBA(0.6)}`;
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (manualReportForm.report_name && !generatingReport) {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = `0 2px 8px ${YELLOW_RGBA(0.4)}`;
+                  }
+                }}
+              >
+                {generatingReport ? 'Creating Report...' : '📊 Create Report'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Invoice Modal */}
       {showInvoiceModal && selectedPayment && (
@@ -1041,7 +1280,7 @@ const AdminReports = () => {
           padding: '2rem'
         }}>
           <div style={{
-            backgroundColor: colors.background,
+            backgroundColor: colors.surfaceLight,
             borderRadius: '12px',
             padding: '2.5rem',
             maxWidth: '800px',
@@ -1049,7 +1288,7 @@ const AdminReports = () => {
             maxHeight: '90vh',
             overflow: 'auto',
             border: `3px solid ${colors.primary}`,
-            boxShadow: `0 10px 30px rgba(0,0,0,0.3)`
+            boxShadow: `0 10px 30px rgba(255, 215, 0, 0.2)`
           }}>
             {/* Invoice Header */}
             <div style={{
@@ -1066,7 +1305,7 @@ const AdminReports = () => {
                   margin: '0 0 0.5rem 0', 
                   fontSize: '2rem', 
                   fontWeight: '800',
-                  textShadow: '1px 1px 2px rgba(0,0,0,0.1)'
+                  textShadow: '0 0 10px rgba(255, 215, 0, 0.3)'
                 }}>
                   SUNNY AUTO
                 </h2>
@@ -1079,13 +1318,11 @@ const AdminReports = () => {
               </div>
               <div style={{ textAlign: 'right' }}>
                 <h3 style={{ 
-                  color: colors.text, 
+                  color: colors.primary, 
                   margin: '0 0 1rem 0', 
                   fontSize: '1.8rem', 
                   fontWeight: '800',
-                  background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`,
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent'
+                  textShadow: '0 0 10px rgba(255, 215, 0, 0.3)'
                 }}>
                   INVOICE
                 </h3>
@@ -1104,19 +1341,18 @@ const AdminReports = () => {
             {/* Bill To */}
             <div style={{ marginBottom: '2rem' }}>
               <h4 style={{ 
-                color: colors.text, 
+                color: colors.primary, 
                 margin: '0 0 1rem 0', 
                 fontSize: '1.2rem', 
-                fontWeight: '700',
-                color: colors.primary
+                fontWeight: '700'
               }}>
                 Bill To:
               </h4>
               <div style={{ 
-                backgroundColor: ORANGE_RGBA(0.05), 
+                backgroundColor: YELLOW_RGBA(0.05), 
                 padding: '1.2rem', 
                 borderRadius: '8px',
-                border: `1px solid ${ORANGE_RGBA(0.2)}`
+                border: `1px solid ${YELLOW_RGBA(0.2)}`
               }}>
                 <p style={{ color: colors.text, margin: '0 0 0.5rem 0', fontWeight: '700', fontSize: '1.1rem' }}>
                   {selectedPayment.client_name}
@@ -1133,19 +1369,18 @@ const AdminReports = () => {
             {/* Service Details */}
             <div style={{ marginBottom: '2rem' }}>
               <h4 style={{ 
-                color: colors.text, 
+                color: colors.primary, 
                 margin: '0 0 1rem 0', 
                 fontSize: '1.2rem', 
-                fontWeight: '700',
-                color: colors.primary
+                fontWeight: '700'
               }}>
                 Service Details:
               </h4>
               <div style={{
-                backgroundColor: ORANGE_RGBA(0.05),
+                backgroundColor: YELLOW_RGBA(0.05),
                 padding: '1.2rem',
                 borderRadius: '8px',
-                border: `1px solid ${ORANGE_RGBA(0.2)}`
+                border: `1px solid ${YELLOW_RGBA(0.2)}`
               }}>
                 <p style={{ color: colors.text, margin: '0 0 0.5rem 0', fontWeight: '600' }}>
                   <strong style={{ color: colors.primary }}>Service Type:</strong> {selectedPayment.service_type}
@@ -1164,11 +1399,11 @@ const AdminReports = () => {
 
             {/* Payment Summary */}
             <div style={{
-              backgroundColor: ORANGE_RGBA(0.05),
+              backgroundColor: YELLOW_RGBA(0.05),
               padding: '1.8rem',
               borderRadius: '8px',
               marginBottom: '2rem',
-              border: `1px solid ${ORANGE_RGBA(0.2)}`
+              border: `1px solid ${YELLOW_RGBA(0.2)}`
             }}>
               <div style={{
                 display: 'flex',
@@ -1204,9 +1439,7 @@ const AdminReports = () => {
                   color: colors.primary, 
                   fontSize: '1.5rem', 
                   fontWeight: '800',
-                  background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`,
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent'
+                  textShadow: '0 0 10px rgba(255, 215, 0, 0.3)'
                 }}>
                   {formatCurrency((selectedPayment.amount || 0) * 1.085)}
                 </span>
@@ -1256,15 +1489,15 @@ const AdminReports = () => {
                   fontWeight: '700',
                   fontSize: '0.9rem',
                   transition: 'all 0.2s ease',
-                  boxShadow: `0 2px 6px ${ORANGE_RGBA(0.3)}`
+                  boxShadow: `0 2px 8px ${YELLOW_RGBA(0.4)}`
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-1px)';
-                  e.currentTarget.style.boxShadow = `0 4px 12px ${ORANGE_RGBA(0.4)}`;
+                  e.currentTarget.style.boxShadow = `0 4px 15px ${YELLOW_RGBA(0.6)}`;
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = `0 2px 6px ${ORANGE_RGBA(0.3)}`;
+                  e.currentTarget.style.boxShadow = `0 2px 8px ${YELLOW_RGBA(0.4)}`;
                 }}
               >
                 🖨️ Print Invoice
@@ -1281,15 +1514,15 @@ const AdminReports = () => {
                   fontWeight: '700',
                   fontSize: '0.9rem',
                   transition: 'all 0.2s ease',
-                  boxShadow: '0 2px 6px rgba(16, 185, 129, 0.3)'
+                  boxShadow: '0 2px 8px rgba(16, 185, 129, 0.4)'
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-1px)';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.4)';
+                  e.currentTarget.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.6)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 2px 6px rgba(16, 185, 129, 0.3)';
+                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(16, 185, 129, 0.4)';
                 }}
               >
                 📥 Download PDF
@@ -1306,15 +1539,15 @@ const AdminReports = () => {
                   fontWeight: '700',
                   fontSize: '0.9rem',
                   transition: 'all 0.2s ease',
-                  boxShadow: '0 2px 6px rgba(59, 130, 246, 0.3)'
+                  boxShadow: '0 2px 8px rgba(59, 130, 246, 0.4)'
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-1px)';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.4)';
+                  e.currentTarget.style.boxShadow = '0 4px 15px rgba(59, 130, 246, 0.6)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 2px 6px rgba(59, 130, 246, 0.3)';
+                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(59, 130, 246, 0.4)';
                 }}
               >
                 ✉️ Send to Customer
@@ -1350,3 +1583,4 @@ const AdminReports = () => {
 };
 
 export default AdminReports;
+

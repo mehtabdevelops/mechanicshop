@@ -573,7 +573,7 @@ const AdminReports = () => {
               <h2 style={{ 
                 fontSize: '2.2rem', 
                 fontWeight: '800',
-                color: '#ff8c00',
+                color: '#ffA500',
                 margin: '0 0 0.5rem 0',
                 textShadow: '0 0 10px rgba(255, 215, 0, 0.3)'
               }}>
