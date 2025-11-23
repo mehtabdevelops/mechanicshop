@@ -30,6 +30,7 @@ const AdminHome = () => {
     Appointment[]
   >([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Color scheme - Red accent (#dc2626) with dark theme
   const colors = {
@@ -148,7 +149,7 @@ const AdminHome = () => {
   const handleReports = () => router.push("/AdminReports");
   const handleFinance = () => router.push("/AdminServices");
   const handleNotifications = () => router.push("/AdminNotification");
-  const handleSettings = () => router.push("/AdminSettings");
+  const handleSettings = () => router.push("/UserProfSettings");
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -418,6 +419,61 @@ const AdminHome = () => {
             />
           </form>
 
+          <button // Sidebar Toggle Button
+            onClick={() => setIsSidebarOpen((prev) => !prev)}
+            style={{
+              width: "44px",
+              height: "44px",
+              borderRadius: "8px",
+              border: `1px solid ${colors.primary}`,
+              backgroundColor: colors.surface,
+              color: colors.primary,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              transition: "all 0.2s ease",
+            }}
+            title="Quick menu"
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = colors.primary;
+              e.currentTarget.style.color = colors.text;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = colors.surface;
+              e.currentTarget.style.color = colors.primary;
+            }}
+          >
+            <div // Sidebar icon (three horizontal lines)
+              style={{
+                width: "18px",
+                height: "2px",
+                backgroundColor: "currentColor",
+                position: "relative",
+              }}
+            >
+              <span
+                style={{
+                  position: "absolute",
+                  width: "18px",
+                  height: "2px",
+                  backgroundColor: "currentColor",
+                  top: "-6px",
+                  left: 0,
+                }}
+              />
+              <span
+                style={{
+                  position: "absolute",
+                  width: "18px",
+                  height: "2px",
+                  backgroundColor: "currentColor",
+                  top: "6px",
+                  left: 0,
+                }}
+              />
+            </div>
+          </button>
           <div style={{ position: "relative" }}>
             <button
               onClick={handleNotifications}
@@ -490,7 +546,6 @@ const AdminHome = () => {
               )}
             </button>
           </div>
-
           <button
             onClick={handleSettings}
             style={{
@@ -519,7 +574,6 @@ const AdminHome = () => {
           >
             ⚙️
           </button>
-
           <button
             onClick={handleProfile}
             style={{
@@ -557,7 +611,6 @@ const AdminHome = () => {
               />
             </svg>
           </button>
-
           <button
             onClick={handleLogout}
             style={{
@@ -854,7 +907,7 @@ const AdminHome = () => {
                     <div>
                       {realtimeAppointments.map((appt, index) => (
                         <div
-                          key={appt.id}
+                          key={`${appt.id || "realtime"}-${appt.preferred_time}-${index}`}
                           style={{
                             padding: "1.5rem",
                             borderBottom:
@@ -993,7 +1046,7 @@ const AdminHome = () => {
                   <div style={{ maxHeight: "500px", overflowY: "auto" }}>
                     {weekAppointments.map((appt, index) => (
                       <div
-                        key={appt.id}
+                        key={`${appt.id || "weekly"}-${appt.preferred_date}-${index}`}
                         style={{
                           padding: "1.5rem",
                           borderBottom:
@@ -1213,6 +1266,189 @@ const AdminHome = () => {
           </div>
         </div>
       </div>
+
+      {isSidebarOpen && ( // Sidebar Menu
+        <div
+          style={{
+            position: "fixed",
+            top: "0",
+            right: "0",
+            height: "100vh",
+            width: "260px",
+            backgroundColor: "rgba(0,0,0,0.96)",
+            borderLeft: `1px solid ${colors.border}`,
+            boxShadow: "-10px 0 30px rgba(0,0,0,0.6)",
+            zIndex: 55,
+            display: "flex",
+            flexDirection: "column",
+            padding: "1.5rem 1rem",
+            transform: "translateX(0)",
+            transition: "transform 0.25s ease",
+          }}
+          onMouseLeave={() => setIsSidebarOpen(false)} // Auto close when mouse leaves
+        >
+          <div
+            style={{
+              color: colors.primary,
+              fontWeight: 700,
+              fontSize: "1.1rem",
+              marginBottom: "1.5rem",
+              textAlign: "center",
+            }}
+          >
+            Quick Menu
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.75rem",
+            }}
+          >
+            {/* Profile */}
+            <button
+              onClick={handleProfile}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.75rem",
+                width: "100%",
+                padding: "0.75rem 1rem",
+                borderRadius: "8px",
+                border: `1px solid ${colors.border}`,
+                backgroundColor: colors.surface,
+                color: colors.text,
+                cursor: "pointer",
+                fontSize: "0.9rem",
+                fontWeight: 500,
+                transition: "all 0.2s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = colors.surfaceLight;
+                e.currentTarget.style.borderColor = colors.primary;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = colors.surface;
+                e.currentTarget.style.borderColor = colors.border;
+              }}
+            >
+              <span style={{ fontSize: "1.2rem" }}>👤</span>
+              <span>Profile</span>
+            </button>
+
+            {/* Settings */}
+            <button
+              onClick={handleSettings}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.75rem",
+                width: "100%",
+                padding: "0.75rem 1rem",
+                borderRadius: "8px",
+                border: `1px solid ${colors.border}`,
+                backgroundColor: colors.surface,
+                color: colors.text,
+                cursor: "pointer",
+                fontSize: "0.9rem",
+                fontWeight: 500,
+                transition: "all 0.2s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = colors.surfaceLight;
+                e.currentTarget.style.borderColor = colors.primary;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = colors.surface;
+                e.currentTarget.style.borderColor = colors.border;
+              }}
+            >
+              <span style={{ fontSize: "1.2rem" }}>⚙️</span>
+              <span>Settings</span>
+            </button>
+
+            {/* Notifications */}
+            <button
+              onClick={handleNotifications}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.75rem",
+                width: "100%",
+                padding: "0.75rem 1rem",
+                borderRadius: "8px",
+                border: `1px solid ${colors.border}`,
+                backgroundColor: colors.surface,
+                color: colors.text,
+                cursor: "pointer",
+                fontSize: "0.9rem",
+                fontWeight: 500,
+                transition: "all 0.2s ease",
+                position: "relative",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = colors.surfaceLight;
+                e.currentTarget.style.borderColor = colors.primary;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = colors.surface;
+                e.currentTarget.style.borderColor = colors.border;
+              }}
+            >
+              <span style={{ fontSize: "1.2rem" }}>🔔</span>
+              <span>Notifications</span>
+              {notificationsCount > 0 && (
+                <span
+                  style={{
+                    marginLeft: "auto",
+                    backgroundColor: colors.primary,
+                    color: colors.text,
+                    borderRadius: "999px",
+                    padding: "0.1rem 0.5rem",
+                    fontSize: "0.75rem",
+                    fontWeight: 600,
+                  }}
+                >
+                  {notificationsCount}
+                </span>
+              )}
+            </button>
+
+            {/* Logout */}
+            <button
+              onClick={handleLogout}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.75rem",
+                width: "100%",
+                padding: "0.75rem 1rem",
+                borderRadius: "8px",
+                border: `1px solid ${colors.error}`,
+                backgroundColor: "rgba(239, 68, 68, 0.1)",
+                color: colors.error,
+                cursor: "pointer",
+                fontSize: "0.9rem",
+                fontWeight: 600,
+                marginTop: "1.5rem",
+                transition: "all 0.2s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor =
+                  "rgba(239, 68, 68, 0.2)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor =
+                  "rgba(239, 68, 68, 0.1)";
+              }}
+            >
+              <span style={{ fontSize: "1.2rem" }}>🚪</span>
+              <span>Logout</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       <style jsx>{`
         @keyframes spin {
