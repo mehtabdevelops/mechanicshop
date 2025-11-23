@@ -484,7 +484,8 @@ const AutoServiceShop = () => {
   const handleBookAppointment = () => router.push('/Appointment');
   const handleProfile = () => router.push('/UserProfile');
   const handleViewServices = () => router.push('/Services');
-  const handleContactUs = () => router.push('/Contactus'); // Fixed route
+  const handleContactUs = () => router.push('/Contactus');
+  const handleAIClick = () => router.push('/Ai');
 
   const handleNavigation = (path: string): void => {
     router.push(path);
@@ -503,6 +504,50 @@ const AutoServiceShop = () => {
       overflowX: 'hidden',
       position: 'relative'
     }} suppressHydrationWarning>
+
+      {/* AI Assistant Button - Fixed Bottom Left */}
+      <button
+        onClick={handleAIClick}
+        style={{
+          position: 'fixed',
+          left: '25px',
+          bottom: '40px',
+          width: '65px',
+          height: '65px',
+          borderRadius: '50%',
+          background: ORANGE,
+          border: 'none',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 4px 20px rgba(255, 140, 0, 0.4)',
+          zIndex: 1000,
+          transition: 'all 0.3s ease',
+          overflow: 'hidden'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = ORANGE_LIGHT;
+          e.currentTarget.style.transform = 'scale(1.1)';
+          e.currentTarget.style.boxShadow = '0 6px 25px rgba(255, 140, 0, 0.6)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = ORANGE;
+          e.currentTarget.style.transform = 'scale(1)';
+          e.currentTarget.style.boxShadow = '0 4px 20px rgba(255, 140, 0, 0.4)';
+        }}
+      >
+        <img 
+          src="/images/11.png" 
+          alt="AI Assistant"
+          style={{
+            width: '35px',
+            height: '35px',
+            objectFit: 'contain'
+            // Removed the filter to keep original image colors
+          }}
+        />
+      </button>
 
       {/* Welcome Animation */}
       {showWelcome && (
@@ -581,7 +626,7 @@ const AutoServiceShop = () => {
             { label: 'SERVICES', path: '/Services' },
             { label: 'ABOUT', path: '/About' },
             { label: 'APPOINTMENTS', path: '/Appointment' },
-            { label: 'CONTACT', path: '/Contactus' } // Fixed route
+            { label: 'CONTACT', path: '/Contactus' }
           ].map((item) => (
             <button
               key={item.label}
@@ -1662,7 +1707,7 @@ const AutoServiceShop = () => {
         .main-nav.nav-scrolled {
           background: rgba(0, 0, 0, 0.95) !important;
           backdrop-filter: blur(10px);
-          box-shadow: 0 2px 20px rgba(0,0,0,0.5);
+          boxShadow: 0 2px 20px rgba(0,0,0,0.5);
         }
         
         .hover-glow:hover {
@@ -1676,6 +1721,21 @@ const AutoServiceShop = () => {
         
         .testimonial-card {
           transform-style: preserve-3d;
+        }
+
+        /* Responsive design for AI button */
+        @media (max-width: 768px) {
+          button[style*="position: fixed"][style*="left: 25px"][style*="bottom: 40px"] {
+            left: 20px !important;
+            bottom: 30px !important;
+            width: 55px !important;
+            height: 55px !important;
+          }
+          
+          button[style*="position: fixed"][style*="left: 25px"][style*="bottom: 40px"] img {
+            width: 30px !important;
+            height: 30px !important;
+          }
         }
       `}</style>
     </div>
