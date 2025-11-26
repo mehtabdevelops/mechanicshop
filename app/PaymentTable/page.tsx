@@ -1178,7 +1178,48 @@ const AdminReports = () => {
                     </label>
                   ))}
                 </div>
+                </div>
+
+          {/* Export Actual File */}
+        {/*}
+               const handleExport = (format:"pdf" | "excel" | "csv") => {
+
+                const handleExport = async (format: "pdf" | "excel" | "csv") => {
+                  try {
+                    const response =await fetch('api/export?format=$format=$(format)', {
+                      method: 'GET'
+                    }); 
+                    if (!response.ok) {
+                      throw new Error('Export failed');    
+                    }
+                     const blob = await response.blob();
+                     const url = window.URL.createObjectURL(blob);
+                    
+                     //Download Link
+                     const link = document, createElement("a");
+                     link.href = urls; 
+
+                     const fileName = 
+                     format ==== "pdf"
+                     ? "Report.pdf"
+                     : format === "EXCEL" 
+                     ? "Report.xlsx"
+                     : "Report.csv";
+
+                     link.download =fileName; 
+                     document.body.appendChild(link);
+                     link.click();
+                     link.remove();
+                  } catch (error) {
+                    console.error(error); 
+                    alert("Error downloading report"); 
+                  }
+               }
               </div>
+
+             
+
+        */}
 
               {/* Include Charts */}
               <div>
