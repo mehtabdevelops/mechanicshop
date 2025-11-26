@@ -34,7 +34,7 @@ interface PaymentWithAppointment {
   receipt_url: string;
   updated_at: string;
   payment_status: string;
-  
+ 
   // Appointment fields (joined data)
   appointment_id?: string;
   service_type: string;
@@ -79,7 +79,7 @@ interface ManualReportForm {
 const AdminReports = () => {
   const router = useRouter();
   const supabase = createClientComponentClient();
-  
+ 
   const [payments, setPayments] = useState<PaymentWithAppointment[]>([]);
   const [reportData, setReportData] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -137,7 +137,7 @@ const AdminReports = () => {
   const fetchCombinedData = async () => {
     try {
       setLoading(true);
-      
+     
       const { data: paymentsData, error: paymentsError } = await supabase
         .from('payments')
         .select(`
@@ -177,7 +177,7 @@ const AdminReports = () => {
           receipt_url: payment.receipt_url,
           updated_at: payment.updated_at,
           payment_status: payment.payment_status,
-          
+         
           appointment_id: appointment?.id,
           service_type: appointment?.service_type || 'General Service',
           vehicle_type: appointment?.vehicle_type || 'Not specified',
@@ -190,7 +190,7 @@ const AdminReports = () => {
 
       setPayments(combinedData);
       generateReportData(combinedData);
-      
+     
     } catch (error) {
       console.error('Error fetching combined data:', error);
     } finally {
@@ -199,24 +199,24 @@ const AdminReports = () => {
   };
 
   const generateReportData = (paymentsData: PaymentWithAppointment[]) => {
-    const completedPayments = paymentsData.filter(p => 
+    const completedPayments = paymentsData.filter(p =>
       p.payment_status === 'completed' || p.payment_status === 'paid'
     );
-    
+   
     const totalRevenue = completedPayments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
-    
+   
     const monthlyRevenue = Array.from({ length: 6 }, (_, i) => {
       const date = new Date();
       date.setMonth(date.getMonth() - i);
       const month = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-      
+     
       const monthPayments = completedPayments.filter(payment => {
         const paymentDate = new Date(payment.created_at);
         return paymentDate.getMonth() === date.getMonth() && paymentDate.getFullYear() === date.getFullYear();
       });
-      
+     
       const revenue = monthPayments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
-      
+     
       return { month, revenue };
     }).reverse();
 
@@ -274,10 +274,10 @@ const AdminReports = () => {
   const handleCreateManualReport = async () => {
     try {
       setGeneratingReport(true);
-      
+     
       // Apply filters based on manual report form
       let filteredPayments = payments;
-      
+     
       // Date range filter
       filteredPayments = filteredPayments.filter(payment => {
         const paymentDate = new Date(payment.created_at);
@@ -285,30 +285,30 @@ const AdminReports = () => {
         const endDate = new Date(manualReportForm.date_range.end);
         return paymentDate >= startDate && paymentDate <= endDate;
       });
-      
+     
       // Service type filter
       if (manualReportForm.filters.service_type.length > 0) {
         filteredPayments = filteredPayments.filter(payment =>
           manualReportForm.filters.service_type.includes(payment.service_type)
         );
       }
-      
+     
       // Payment status filter
       if (manualReportForm.filters.payment_status.length > 0) {
         filteredPayments = filteredPayments.filter(payment =>
           manualReportForm.filters.payment_status.includes(payment.payment_status)
         );
       }
-      
+     
       // Amount range filter
       filteredPayments = filteredPayments.filter(payment =>
         payment.amount >= manualReportForm.filters.min_amount &&
         payment.amount <= manualReportForm.filters.max_amount
       );
-      
+     
       // Generate report with filtered data
       generateReportData(filteredPayments);
-      
+     
       // Simulate export
       if (manualReportForm.export_format === 'pdf') {
         alert(`PDF report "${manualReportForm.report_name}" generated successfully!`);
@@ -317,9 +317,9 @@ const AdminReports = () => {
       } else {
         alert(`CSV report "${manualReportForm.report_name}" generated successfully!`);
       }
-      
+     
       setShowCreateReportModal(false);
-      
+     
     } catch (error) {
       console.error('Error creating manual report:', error);
       alert('Error creating report. Please try again.');
@@ -335,6 +335,47 @@ const AdminReports = () => {
   const handleCreateInvoice = (payment: PaymentWithAppointment) => {
     setSelectedPayment(payment);
     setShowInvoiceModal(true);
+  };
+ 
+  const handleExport = async (format: 'pdf' | 'excel' | 'csv') => {
+    try {
+      const params = new URLSearchParams({
+        format,
+        start: manualReportForm.date_range.start,
+        end: manualReportForm.date_range.end,
+        reportType: manualReportForm.report_type,
+      });
+
+      const response = await fetch(`/api/export?${params.toString()}`, {
+        method: 'GET',
+      });
+
+      if (!response.ok) {
+        throw new Error('Export failed');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = url;
+
+      const fileName =
+        format === 'pdf'
+          ? 'Report.pdf'
+          : format === 'excel'
+          ? 'Report.xlsx'
+          : 'Report.csv';
+
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error(error);
+      alert('Error downloading report');
+    }
   };
 
   const handlePrintInvoice = () => {
@@ -366,9 +407,9 @@ const AdminReports = () => {
 
   if (loading) {
     return (
-      <div style={{ 
+      <div style={{
         background: colors.background,
-        minHeight: '100vh', 
+        minHeight: '100vh',
         color: colors.text,
         fontFamily: 'Inter, sans-serif',
         display: 'flex',
@@ -392,9 +433,9 @@ const AdminReports = () => {
   }
 
   return (
-    <div style={{ 
+    <div style={{
       background: colors.background,
-      minHeight: '100vh', 
+      minHeight: '100vh',
       color: colors.text,
       fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     }}>
@@ -426,8 +467,8 @@ const AdminReports = () => {
           <span style={{ color: '#ff8c00' }}>Sunny</span>
           <span style={{ color: '#ffffff' }}>Auto</span>
         </h1>
-          <div style={{ 
-            color: colors.primary, 
+          <div style={{
+            color: colors.primary,
             fontSize: '0.9rem',
             fontWeight: '700',
             padding: '0.5rem 1rem',
@@ -438,9 +479,9 @@ const AdminReports = () => {
             📊 REPORTS & ANALYTICS
           </div>
         </div>
-        
+       
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          <button 
+          <button
             onClick={() => setShowCreateReportModal(true)}
             style={{
               backgroundColor: colors.primary,
@@ -470,8 +511,8 @@ const AdminReports = () => {
           >
             📝 Create Custom Report
           </button>
-          
-          <button 
+         
+          <button
             onClick={handleGenerateReport}
             disabled={generatingReport}
             style={{
@@ -522,8 +563,8 @@ const AdminReports = () => {
               </>
             )}
           </button>
-          
-          <button 
+         
+          <button
             onClick={handleBackToDashboard}
             style={{
               backgroundColor: 'transparent',
@@ -553,25 +594,25 @@ const AdminReports = () => {
       </header>
 
       {/* Main Content */}
-      <div style={{ 
+      <div style={{
         padding: '2rem',
         minHeight: 'calc(100vh - 100px)',
         backgroundColor: colors.surface
       }}>
-        <div style={{ 
+        <div style={{
           maxWidth: '1400px',
           margin: '0 auto'
         }}>
           {/* Header Section */}
-          <div style={{ 
+          <div style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'flex-end',
             marginBottom: '2rem'
           }}>
             <div>
-              <h2 style={{ 
-                fontSize: '2.2rem', 
+              <h2 style={{
+                fontSize: '2.2rem',
                 fontWeight: '800',
                 color: '#ffA500',
                 margin: '0 0 0.5rem 0',
@@ -579,7 +620,7 @@ const AdminReports = () => {
               }}>
                 Business Intelligence Dashboard
               </h2>
-              <p style={{ 
+              <p style={{
                 color: colors.textSecondary,
                 margin: 0,
                 fontSize: '1.1rem',
@@ -588,13 +629,13 @@ const AdminReports = () => {
                 Comprehensive analytics and financial reporting
               </p>
             </div>
-            
+           
             {/* Date Range Selector */}
             <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
               <div>
-                <label style={{ 
-                  display: 'block', 
-                  fontSize: '0.8rem', 
+                <label style={{
+                  display: 'block',
+                  fontSize: '0.8rem',
                   color: colors.primary,
                   marginBottom: '0.25rem',
                   fontWeight: '700'
@@ -616,9 +657,9 @@ const AdminReports = () => {
                 />
               </div>
               <div>
-                <label style={{ 
-                  display: 'block', 
-                  fontSize: '0.8rem', 
+                <label style={{
+                  display: 'block',
+                  fontSize: '0.8rem',
                   color: colors.primary,
                   marginBottom: '0.25rem',
                   fontWeight: '700'
@@ -710,7 +751,7 @@ const AdminReports = () => {
                 border: `2px solid ${colors.border}`,
                 boxShadow: '0 4px 20px rgba(0,0,0,0.3)'
               }}>
-                <h3 style={{ 
+                <h3 style={{
                   color: colors.primary,
                   margin: '0 0 1.5rem 0',
                   fontSize: '1.4rem',
@@ -721,7 +762,7 @@ const AdminReports = () => {
                 }}>
                   💰 Financial Overview
                 </h3>
-                
+               
                 <div style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(2, 1fr)',
@@ -743,7 +784,7 @@ const AdminReports = () => {
                       Total Revenue
                     </div>
                   </div>
-                  
+                 
                   <div style={{
                     backgroundColor: colors.success,
                     padding: '1.8rem',
@@ -759,7 +800,7 @@ const AdminReports = () => {
                       Completed Payments
                     </div>
                   </div>
-                  
+                 
                   <div style={{
                     backgroundColor: colors.info,
                     padding: '1.8rem',
@@ -775,7 +816,7 @@ const AdminReports = () => {
                       Average Payment Value
                     </div>
                   </div>
-                  
+                 
                   <div style={{
                     backgroundColor: colors.warning,
                     padding: '1.8rem',
@@ -795,7 +836,7 @@ const AdminReports = () => {
 
                 {/* Revenue Chart */}
                 <div>
-                  <h4 style={{ 
+                  <h4 style={{
                     color: colors.primary,
                     margin: '0 0 1rem 0',
                     fontSize: '1.2rem',
@@ -806,7 +847,7 @@ const AdminReports = () => {
                   <div style={{ display: 'flex', alignItems: 'end', gap: '1rem', height: '200px', padding: '1rem', backgroundColor: colors.surface, borderRadius: '8px' }}>
                     {reportData.monthlyRevenue.map((month, index) => (
                       <div key={month.month} style={{ flex: 1, textAlign: 'center' }}>
-                        <div style={{ 
+                        <div style={{
                           height: `${(month.revenue / Math.max(...reportData.monthlyRevenue.map(m => m.revenue))) * 150}px`,
                           background: `linear-gradient(to top, ${colors.primary}, ${colors.primaryLight})`,
                           borderRadius: '6px',
@@ -834,7 +875,7 @@ const AdminReports = () => {
                 border: `2px solid ${colors.border}`,
                 boxShadow: '0 4px 20px rgba(0,0,0,0.3)'
               }}>
-                <h3 style={{ 
+                <h3 style={{
                   color: colors.primary,
                   margin: '0 0 1.5rem 0',
                   fontSize: '1.4rem',
@@ -845,7 +886,7 @@ const AdminReports = () => {
                 }}>
                   🏆 Top Services
                 </h3>
-                
+               
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   {reportData.popularServices.map((service, index) => (
                     <div key={service.service} style={{
@@ -867,7 +908,7 @@ const AdminReports = () => {
                       e.currentTarget.style.borderColor = colors.border;
                     }}
                     >
-                      <div style={{ 
+                      <div style={{
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
@@ -876,7 +917,7 @@ const AdminReports = () => {
                         <span style={{ fontWeight: '700', color: colors.text, fontSize: '0.95rem' }}>
                           {service.service}
                         </span>
-                        <span style={{ 
+                        <span style={{
                           backgroundColor: colors.primary,
                           color: colors.background,
                           padding: '0.3rem 0.7rem',
@@ -905,7 +946,7 @@ const AdminReports = () => {
             border: `2px solid ${colors.border}`,
             boxShadow: '0 4px 20px rgba(0,0,0,0.3)'
           }}>
-            <h3 style={{ 
+            <h3 style={{
              color: '#ff8c00',
               margin: '0 0 1.5rem 0',
               fontSize: '1.4rem',
@@ -916,11 +957,11 @@ const AdminReports = () => {
             }}>
               💳 Payments & Invoices
             </h3>
-            
+           
             <div style={{ maxHeight: '400px', overflowY: 'auto', borderRadius: '8px', border: `1px solid ${colors.border}` }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
-                  <tr style={{ 
+                  <tr style={{
                     backgroundColor: colors.primary,
                     color: colors.background
                   }}>
@@ -935,9 +976,9 @@ const AdminReports = () => {
                 </thead>
                 <tbody>
                   {payments.map((payment, index) => (
-                    <tr 
-                      key={payment.id} 
-                      style={{ 
+                    <tr
+                      key={payment.id}
+                      style={{
                         borderBottom: `1px solid ${colors.border}`,
                         backgroundColor: index % 2 === 0 ? colors.surfaceLight : colors.surface,
                         transition: 'background-color 0.2s ease'
@@ -958,7 +999,7 @@ const AdminReports = () => {
                       </td>
                       <td style={{ padding: '1.2rem' }}>
                         <span style={{
-                          backgroundColor: payment.payment_status === 'paid' || payment.payment_status === 'completed' ? '#10B981' : 
+                          backgroundColor: payment.payment_status === 'paid' || payment.payment_status === 'completed' ? '#10B981' :
                                          payment.payment_status === 'pending' ? '#F59E0B' : '#EF4444',
                           color: colors.background,
                           padding: '0.4rem 1rem',
@@ -1032,7 +1073,7 @@ const AdminReports = () => {
             border: `3px solid ${colors.primary}`,
             boxShadow: `0 10px 30px rgba(255, 215, 0, 0.2)`
           }}>
-            <h3 style={{ 
+            <h3 style={{
               color: colors.primary,
               margin: '0 0 1.5rem 0',
               fontSize: '1.8rem',
@@ -1045,9 +1086,9 @@ const AdminReports = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               {/* Report Name */}
               <div>
-                <label style={{ 
-                  display: 'block', 
-                  fontSize: '0.9rem', 
+                <label style={{
+                  display: 'block',
+                  fontSize: '0.9rem',
                   color: colors.primary,
                   marginBottom: '0.5rem',
                   fontWeight: '700'
@@ -1073,9 +1114,9 @@ const AdminReports = () => {
 
               {/* Report Type */}
               <div>
-                <label style={{ 
-                  display: 'block', 
-                  fontSize: '0.9rem', 
+                <label style={{
+                  display: 'block',
+                  fontSize: '0.9rem',
                   color: colors.primary,
                   marginBottom: '0.5rem',
                   fontWeight: '700'
@@ -1104,9 +1145,9 @@ const AdminReports = () => {
 
               {/* Date Range */}
               <div>
-                <label style={{ 
-                  display: 'block', 
-                  fontSize: '0.9rem', 
+                <label style={{
+                  display: 'block',
+                  fontSize: '0.9rem',
                   color: colors.primary,
                   marginBottom: '0.5rem',
                   fontWeight: '700'
@@ -1117,9 +1158,9 @@ const AdminReports = () => {
                   <input
                     type="date"
                     value={manualReportForm.date_range.start}
-                    onChange={(e) => setManualReportForm(prev => ({ 
-                      ...prev, 
-                      date_range: { ...prev.date_range, start: e.target.value } 
+                    onChange={(e) => setManualReportForm(prev => ({
+                      ...prev,
+                      date_range: { ...prev.date_range, start: e.target.value }
                     }))}
                     style={{
                       flex: 1,
@@ -1134,9 +1175,9 @@ const AdminReports = () => {
                   <input
                     type="date"
                     value={manualReportForm.date_range.end}
-                    onChange={(e) => setManualReportForm(prev => ({ 
-                      ...prev, 
-                      date_range: { ...prev.date_range, end: e.target.value } 
+                    onChange={(e) => setManualReportForm(prev => ({
+                      ...prev,
+                      date_range: { ...prev.date_range, end: e.target.value }
                     }))}
                     style={{
                       flex: 1,
@@ -1153,9 +1194,9 @@ const AdminReports = () => {
 
               {/* Export Format */}
               <div>
-                <label style={{ 
-                  display: 'block', 
-                  fontSize: '0.9rem', 
+                <label style={{
+                  display: 'block',
+                  fontSize: '0.9rem',
                   color: colors.primary,
                   marginBottom: '0.5rem',
                   fontWeight: '700'
@@ -1180,46 +1221,50 @@ const AdminReports = () => {
                 </div>
                 </div>
 
-          {/* Export Actual File */}
-        {/*}
-               const handleExport = (format:"pdf" | "excel" | "csv") => {
+                        {/* Export File Actions */}
+              <div style={{ marginTop: '1.5rem' }}>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: '0.9rem',
+                    color: colors.primary,
+                    marginBottom: '0.5rem',
+                    fontWeight: '700',
+                  }}
+                >
+                  Export this report
+                </label>
 
-                const handleExport = async (format: "pdf" | "excel" | "csv") => {
-                  try {
-                    const response =await fetch('api/export?format=$format=$(format)', {
-                      method: 'GET'
-                    }); 
-                    if (!response.ok) {
-                      throw new Error('Export failed');    
-                    }
-                     const blob = await response.blob();
-                     const url = window.URL.createObjectURL(blob);
-                    
-                     //Download Link
-                     const link = document, createElement("a");
-                     link.href = urls; 
-
-                     const fileName = 
-                     format ==== "pdf"
-                     ? "Report.pdf"
-                     : format === "EXCEL" 
-                     ? "Report.xlsx"
-                     : "Report.csv";
-
-                     link.download =fileName; 
-                     document.body.appendChild(link);
-                     link.click();
-                     link.remove();
-                  } catch (error) {
-                    console.error(error); 
-                    alert("Error downloading report"); 
-                  }
-               }
+                <button
+                  type="button"
+                  onClick={() => handleExport(manualReportForm.export_format)}
+                  style={{
+                    background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`,
+                    color: colors.background,
+                    padding: '0.8rem 1.6rem',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor:
+                      !manualReportForm.report_name || generatingReport
+                        ? 'not-allowed'
+                        : 'pointer',
+                    fontWeight: '700',
+                    fontSize: '0.9rem',
+                    transition: 'all 0.2s ease',
+                    boxShadow: `0 2px 8px ${YELLOW_RGBA(0.4)}`,
+                    opacity:
+                      !manualReportForm.report_name || generatingReport ? 0.6 : 1,
+                  }}
+                  disabled={!manualReportForm.report_name || generatingReport}
+                >
+                  Download {manualReportForm.export_format.toUpperCase()} file
+                </button>
               </div>
+
 
              
 
-        */}
+       
 
               {/* Include Charts */}
               <div>
@@ -1307,7 +1352,9 @@ const AdminReports = () => {
 
       {/* Invoice Modal */}
       {showInvoiceModal && selectedPayment && (
-        <div style={{
+       
+        <div className="invoice-modal"
+         style={{
           position: 'fixed',
           top: 0,
           left: 0,
@@ -1341,10 +1388,10 @@ const AdminReports = () => {
               borderBottom: `3px solid ${colors.primary}`
             }}>
               <div>
-                <h2 style={{ 
-                  color: colors.primary, 
-                  margin: '0 0 0.5rem 0', 
-                  fontSize: '2rem', 
+                <h2 style={{
+                  color: colors.primary,
+                  margin: '0 0 0.5rem 0',
+                  fontSize: '2rem',
                   fontWeight: '800',
                   textShadow: '0 0 10px rgba(255, 215, 0, 0.3)'
                 }}>
@@ -1358,10 +1405,10 @@ const AdminReports = () => {
                 </p>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <h3 style={{ 
-                  color: colors.primary, 
-                  margin: '0 0 1rem 0', 
-                  fontSize: '1.8rem', 
+                <h3 style={{
+                  color: colors.primary,
+                  margin: '0 0 1rem 0',
+                  fontSize: '1.8rem',
                   fontWeight: '800',
                   textShadow: '0 0 10px rgba(255, 215, 0, 0.3)'
                 }}>
@@ -1381,17 +1428,17 @@ const AdminReports = () => {
 
             {/* Bill To */}
             <div style={{ marginBottom: '2rem' }}>
-              <h4 style={{ 
-                color: colors.primary, 
-                margin: '0 0 1rem 0', 
-                fontSize: '1.2rem', 
+              <h4 style={{
+                color: colors.primary,
+                margin: '0 0 1rem 0',
+                fontSize: '1.2rem',
                 fontWeight: '700'
               }}>
                 Bill To:
               </h4>
-              <div style={{ 
-                backgroundColor: YELLOW_RGBA(0.05), 
-                padding: '1.2rem', 
+              <div style={{
+                backgroundColor: YELLOW_RGBA(0.05),
+                padding: '1.2rem',
                 borderRadius: '8px',
                 border: `1px solid ${YELLOW_RGBA(0.2)}`
               }}>
@@ -1409,10 +1456,10 @@ const AdminReports = () => {
 
             {/* Service Details */}
             <div style={{ marginBottom: '2rem' }}>
-              <h4 style={{ 
-                color: colors.primary, 
-                margin: '0 0 1rem 0', 
-                fontSize: '1.2rem', 
+              <h4 style={{
+                color: colors.primary,
+                margin: '0 0 1rem 0',
+                fontSize: '1.2rem',
                 fontWeight: '700'
               }}>
                 Service Details:
@@ -1476,9 +1523,9 @@ const AdminReports = () => {
                 borderTop: `2px solid ${colors.primary}`
               }}>
                 <span style={{ color: colors.text, fontSize: '1.3rem', fontWeight: '800' }}>Total:</span>
-                <span style={{ 
-                  color: colors.primary, 
-                  fontSize: '1.5rem', 
+                <span style={{
+                  color: colors.primary,
+                  fontSize: '1.5rem',
                   fontWeight: '800',
                   textShadow: '0 0 10px rgba(255, 215, 0, 0.3)'
                 }}>
@@ -1603,7 +1650,7 @@ const AdminReports = () => {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
         }
-        
+       
         @media print {
           body * {
             visibility: hidden;
@@ -1622,6 +1669,3 @@ const AdminReports = () => {
     </div>
   );
 };
-
-export default AdminReports;
-
