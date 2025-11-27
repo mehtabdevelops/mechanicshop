@@ -419,61 +419,6 @@ const AdminHome = () => {
             />
           </form>
 
-          <button // Sidebar Toggle Button
-            onClick={() => setIsSidebarOpen((prev) => !prev)}
-            style={{
-              width: "44px",
-              height: "44px",
-              borderRadius: "8px",
-              border: `1px solid ${colors.primary}`,
-              backgroundColor: colors.surface,
-              color: colors.primary,
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              transition: "all 0.2s ease",
-            }}
-            title="Quick menu"
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = colors.primary;
-              e.currentTarget.style.color = colors.text;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = colors.surface;
-              e.currentTarget.style.color = colors.primary;
-            }}
-          >
-            <div // Sidebar icon (three horizontal lines)
-              style={{
-                width: "18px",
-                height: "2px",
-                backgroundColor: "currentColor",
-                position: "relative",
-              }}
-            >
-              <span
-                style={{
-                  position: "absolute",
-                  width: "18px",
-                  height: "2px",
-                  backgroundColor: "currentColor",
-                  top: "-6px",
-                  left: 0,
-                }}
-              />
-              <span
-                style={{
-                  position: "absolute",
-                  width: "18px",
-                  height: "2px",
-                  backgroundColor: "currentColor",
-                  top: "6px",
-                  left: 0,
-                }}
-              />
-            </div>
-          </button>
           <div style={{ position: "relative" }}>
             <button
               onClick={handleNotifications}
@@ -483,21 +428,13 @@ const AdminHome = () => {
                 width: "48px",
                 height: "48px",
                 borderRadius: "8px",
-                border: `1px solid ${colors.primary}`,
+                border: "none",
                 cursor: "pointer",
                 fontSize: "1.2rem",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                transition: "all 0.2s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = colors.primary;
-                e.currentTarget.style.color = colors.text;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "transparent";
-                e.currentTarget.style.color = colors.primary;
+                transition: "background-color 0.2s ease",
               }}
               title="Notifications"
             >
@@ -546,39 +483,12 @@ const AdminHome = () => {
               )}
             </button>
           </div>
-          <button
-            onClick={handleSettings}
+
+          <button // Sidebar Toggle Button
+            onClick={() => setIsSidebarOpen((prev) => !prev)}
             style={{
               backgroundColor: "transparent",
               color: colors.primary,
-              width: "48px",
-              height: "48px",
-              borderRadius: "8px",
-              border: `1px solid ${colors.primary}`,
-              cursor: "pointer",
-              fontSize: "1rem",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              transition: "all 0.2s ease",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = colors.primary;
-              e.currentTarget.style.color = colors.text;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "transparent";
-              e.currentTarget.style.color = colors.primary;
-            }}
-            title="Settings"
-          >
-            ⚙️
-          </button>
-          <button
-            onClick={handleProfile}
-            style={{
-              backgroundColor: colors.primary,
-              color: colors.text,
               width: "48px",
               height: "48px",
               borderRadius: "8px",
@@ -590,50 +500,37 @@ const AdminHome = () => {
               justifyContent: "center",
               transition: "background-color 0.2s ease",
             }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = colors.primaryDark;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = colors.primary;
-            }}
-            title="Admin Profile"
+            title="Quick menu"
           >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
+            <div // Sidebar icon (three horizontal lines)
+              style={{
+                width: "18px",
+                height: "2px",
+                backgroundColor: "currentColor",
+                position: "relative",
+              }}
             >
-              <path
-                d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"
-                fill="currentColor"
+              <span
+                style={{
+                  position: "absolute",
+                  width: "18px",
+                  height: "2px",
+                  backgroundColor: "currentColor",
+                  top: "-6px",
+                  left: 0,
+                }}
               />
-            </svg>
-          </button>
-          <button
-            onClick={handleLogout}
-            style={{
-              backgroundColor: "transparent",
-              color: colors.primary,
-              padding: "0.75rem 1.5rem",
-              border: `1px solid ${colors.primary}`,
-              borderRadius: "8px",
-              cursor: "pointer",
-              fontWeight: "600",
-              fontSize: "0.9rem",
-              transition: "all 0.2s ease",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = colors.primary;
-              e.currentTarget.style.color = colors.text;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "transparent";
-              e.currentTarget.style.color = colors.primary;
-            }}
-          >
-            Logout
+              <span
+                style={{
+                  position: "absolute",
+                  width: "18px",
+                  height: "2px",
+                  backgroundColor: "currentColor",
+                  top: "6px",
+                  left: 0,
+                }}
+              />
+            </div>
           </button>
         </div>
       </header>
@@ -1306,8 +1203,7 @@ const AdminHome = () => {
               gap: "0.75rem",
             }}
           >
-            {/* Profile */}
-            <button
+            <button // Profile button
               onClick={handleProfile}
               style={{
                 display: "flex",
@@ -1317,8 +1213,8 @@ const AdminHome = () => {
                 padding: "0.75rem 1rem",
                 borderRadius: "8px",
                 border: `1px solid ${colors.border}`,
-                backgroundColor: colors.surface,
-                color: colors.text,
+                backgroundColor: "transparent",
+                color: "white",
                 cursor: "pointer",
                 fontSize: "0.9rem",
                 fontWeight: 500,
@@ -1326,19 +1222,28 @@ const AdminHome = () => {
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = colors.surfaceLight;
-                e.currentTarget.style.borderColor = colors.primary;
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = colors.surface;
-                e.currentTarget.style.borderColor = colors.border;
               }}
+              title="Admin Profile"
             >
-              <span style={{ fontSize: "1.2rem" }}>👤</span>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"
+                  fill="currentColor"
+                />
+              </svg>
               <span>Profile</span>
             </button>
 
-            {/* Settings */}
-            <button
+            <button // Settings button
               onClick={handleSettings}
               style={{
                 display: "flex",
@@ -1348,8 +1253,8 @@ const AdminHome = () => {
                 padding: "0.75rem 1rem",
                 borderRadius: "8px",
                 border: `1px solid ${colors.border}`,
-                backgroundColor: colors.surface,
-                color: colors.text,
+                backgroundColor: "transparent",
+                color: "white",
                 cursor: "pointer",
                 fontSize: "0.9rem",
                 fontWeight: 500,
@@ -1357,94 +1262,36 @@ const AdminHome = () => {
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = colors.surfaceLight;
-                e.currentTarget.style.borderColor = colors.primary;
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = colors.surface;
-                e.currentTarget.style.borderColor = colors.border;
               }}
             >
               <span style={{ fontSize: "1.2rem" }}>⚙️</span>
               <span>Settings</span>
             </button>
 
-            {/* Notifications */}
-            <button
-              onClick={handleNotifications}
+            <button // Logout button
+              onClick={handleLogout}
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.75rem",
-                width: "100%",
-                padding: "0.75rem 1rem",
+                backgroundColor: "transparent",
+                color: "white",
+                padding: "0.75rem 1.5rem",
+                border: `1px solid ${colors.primary}`,
                 borderRadius: "8px",
-                border: `1px solid ${colors.border}`,
-                backgroundColor: colors.surface,
-                color: colors.text,
                 cursor: "pointer",
+                fontWeight: "600",
                 fontSize: "0.9rem",
-                fontWeight: 500,
                 transition: "all 0.2s ease",
-                position: "relative",
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = colors.surfaceLight;
-                e.currentTarget.style.borderColor = colors.primary;
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = colors.surface;
-                e.currentTarget.style.borderColor = colors.border;
               }}
             >
-              <span style={{ fontSize: "1.2rem" }}>🔔</span>
-              <span>Notifications</span>
-              {notificationsCount > 0 && (
-                <span
-                  style={{
-                    marginLeft: "auto",
-                    backgroundColor: colors.primary,
-                    color: colors.text,
-                    borderRadius: "999px",
-                    padding: "0.1rem 0.5rem",
-                    fontSize: "0.75rem",
-                    fontWeight: 600,
-                  }}
-                >
-                  {notificationsCount}
-                </span>
-              )}
-            </button>
-
-            {/* Logout */}
-            <button
-              onClick={handleLogout}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.75rem",
-                width: "100%",
-                padding: "0.75rem 1rem",
-                borderRadius: "8px",
-                border: `1px solid ${colors.error}`,
-                backgroundColor: "rgba(239, 68, 68, 0.1)",
-                color: colors.error,
-                cursor: "pointer",
-                fontSize: "0.9rem",
-                fontWeight: 600,
-                marginTop: "1.5rem",
-                transition: "all 0.2s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor =
-                  "rgba(239, 68, 68, 0.2)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor =
-                  "rgba(239, 68, 68, 0.1)";
-              }}
-            >
-              <span style={{ fontSize: "1.2rem" }}>🚪</span>
-              <span>Logout</span>
+              Logout
             </button>
           </div>
         </div>
