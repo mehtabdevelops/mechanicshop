@@ -23,8 +23,11 @@ const UserProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState<UserProfile | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const router = useRouter();
   const supabase = createClientComponentClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Refs for animations
   const profileCardRef = useRef<HTMLDivElement>(null);
@@ -175,6 +178,7 @@ const UserProfile = () => {
       if (profileData) {
         setProfile(profileData);
         setEditedProfile(profileData);
+        setAvatarPreview(profileData.avatar_url);
       } else {
         throw new Error('Could not load user profile');
       }
@@ -185,24 +189,108 @@ const UserProfile = () => {
     }
   };
 
-  const handleSave = async () => {
-    if (!editedProfile) return;
-    
+  // FILE UPLOAD FUNCTIONALITY - ADDED THIS
+  const handleFileUpload = async (file: File) => {
     try {
-      setSaving(true);
+      setUploading(true);
       setError(null);
 
+      const user = await getCurrentUser();
+      if (!user) throw new Error('No authenticated user found');
+
+      // Validate file type and size
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      const maxSize = 5 * 1024 * 1024; // 5MB
+
+      if (!validTypes.includes(file.type)) {
+        throw new Error('Please select a valid image file (JPEG, PNG, GIF, WebP)');
+      }
+
+      if (file.size > maxSize) {
+        throw new Error('File size must be less than 5MB');
+      }
+
+      // Create preview URL for immediate display
+      const previewUrl = URL.createObjectURL(file);
+      setAvatarPreview(previewUrl);
+
+      // Upload to Supabase Storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+
+      // Update profile with new avatar URL
+      if (editedProfile) {
+        const updatedProfile = {
+          ...editedProfile,
+          avatar_url: publicUrl
+        };
+        setEditedProfile(updatedProfile);
+        
+        // Auto-save the avatar URL
+        await saveProfile(updatedProfile);
+      }
+
+      // Animate success
+      if (avatarRef.current) {
+        gsap.fromTo(avatarRef.current,
+          { scale: 0.8 },
+          { scale: 1, duration: 0.5, ease: "elastic.out(1, 0.5)" }
+        );
+      }
+
+    } catch (err: any) {
+      console.error('Upload error:', err);
+      setError(err.message || 'Error uploading image');
+      // Revert to previous avatar on error
+      setAvatarPreview(editedProfile?.avatar_url || null);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // Handle file selection - ADDED THIS
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      handleFileUpload(file);
+    }
+    // Reset input
+    if (event.target) {
+      event.target.value = '';
+    }
+  };
+
+  // Trigger file input click - ADDED THIS
+  const handleAvatarClick = () => {
+    if (isEditing && fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  // Separate save function for profile updates
+  const saveProfile = async (profileData: UserProfile) => {
+    try {
       const user = await getCurrentUser();
       if (!user) {
         throw new Error('No authenticated user found');
       }
 
-      if (editedProfile.id !== user.id) {
-        throw new Error('Unauthorized: This profile does not belong to you');
-      }
-
       const updatedProfile = {
-        ...editedProfile,
+        ...profileData,
         updated_at: new Date().toISOString()
       };
 
@@ -213,6 +301,22 @@ const UserProfile = () => {
 
       if (error) throw error;
 
+      setProfile(updatedProfile);
+      return updatedProfile;
+    } catch (err: any) {
+      throw err;
+    }
+  };
+
+  const handleSave = async () => {
+    if (!editedProfile) return;
+    
+    try {
+      setSaving(true);
+      setError(null);
+
+      const updatedProfile = await saveProfile(editedProfile);
+      
       setProfile(updatedProfile);
       setEditedProfile(updatedProfile);
       setIsEditing(false);
@@ -232,6 +336,7 @@ const UserProfile = () => {
 
   const handleCancel = () => {
     setEditedProfile(profile);
+    setAvatarPreview(profile?.avatar_url || null);
     setIsEditing(false);
     setError(null);
   };
@@ -437,6 +542,15 @@ const UserProfile = () => {
       position: 'relative',
       overflow: 'hidden'
     }}>
+      {/* Hidden file input - ADDED THIS */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileSelect}
+        accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+        style={{ display: 'none' }}
+      />
+
       {/* Animated background elements */}
       <div style={{
         position: 'fixed',
@@ -572,37 +686,108 @@ const UserProfile = () => {
                   position: 'relative'
                 }}
               >
-                {editedProfile?.avatar_url ? (
-                  <img 
-                    src={editedProfile.avatar_url} 
-                    alt="Profile" 
-                    style={{
+                <div
+                  style={{
+                    position: 'relative',
+                    cursor: isEditing ? 'pointer' : 'default',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onClick={handleAvatarClick} // ADDED THIS
+                  onMouseEnter={(e) => {
+                    if (isEditing) {
+                      e.currentTarget.style.transform = 'scale(1.05)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (isEditing) {
+                      e.currentTarget.style.transform = 'scale(1)';
+                    }
+                  }}
+                >
+                  {avatarPreview ? (
+                    <img 
+                      src={avatarPreview} 
+                      alt="Profile" 
+                      style={{
+                        width: '140px',
+                        height: '140px',
+                        borderRadius: '50%',
+                        border: `4px solid ${colors.primary}`,
+                        objectFit: 'cover',
+                        boxShadow: `0 10px 30px ${colors.primary}30`
+                      }} 
+                    />
+                  ) : (
+                    <div style={{
                       width: '140px',
                       height: '140px',
                       borderRadius: '50%',
+                      backgroundColor: colors.surfaceLight,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
                       border: `4px solid ${colors.primary}`,
-                      objectFit: 'cover',
                       boxShadow: `0 10px 30px ${colors.primary}30`
-                    }} 
-                  />
-                ) : (
+                    }}>
+                      <svg width="50" height="50" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path 
+                          d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" 
+                          fill={colors.primary}
+                        />
+                      </svg>
+                    </div>
+                  )}
+                  
+                  {/* Upload overlay - ADDED THIS */}
+                  {isEditing && (
+                    <div style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      borderRadius: '50%',
+                      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      opacity: 0,
+                      transition: 'opacity 0.3s ease',
+                      color: colors.text,
+                      fontSize: '0.8rem',
+                      fontWeight: '600',
+                      textAlign: 'center'
+                    }}
+                    className="upload-overlay">
+                      {uploading ? 'Uploading...' : 'Click to upload\nprofile picture'}
+                    </div>
+                  )}
+                </div>
+
+                {/* Uploading indicator - ADDED THIS */}
+                {uploading && (
                   <div style={{
-                    width: '140px',
-                    height: '140px',
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    width: '160px',
+                    height: '160px',
                     borderRadius: '50%',
-                    backgroundColor: colors.surfaceLight,
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    border: `4px solid ${colors.primary}`,
-                    boxShadow: `0 10px 30px ${colors.primary}30`
+                    zIndex: 10
                   }}>
-                    <svg width="50" height="50" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path 
-                        d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" 
-                        fill={colors.primary}
-                      />
-                    </svg>
+                    <div style={{
+                      width: '40px',
+                      height: '40px',
+                      border: `3px solid ${colors.border}`,
+                      borderTop: `3px solid ${colors.primary}`,
+                      borderRadius: '50%',
+                      animation: 'spin 1s linear infinite'
+                    }} />
                   </div>
                 )}
               </div>
@@ -626,6 +811,17 @@ const UserProfile = () => {
               }}>
                 Welcome back, {editedProfile?.full_name || 'Valued Customer'}
               </p>
+
+              {/* Upload instructions - ADDED THIS */}
+              {isEditing && (
+                <p style={{ 
+                  color: colors.textMuted, 
+                  fontSize: '0.9rem',
+                  marginTop: '0.5rem'
+                }}>
+                  Click on avatar to upload profile picture
+                </p>
+              )}
             </div>
 
             {/* Error Message */}
@@ -758,21 +954,31 @@ const UserProfile = () => {
               <div className="detail-row" style={detailRow}>
                 <label style={detailLabel}>Avatar URL</label>
                 {isEditing ? (
-                  <input
-                    type="url"
-                    value={editedProfile?.avatar_url || ''}
-                    onChange={(e) => handleInputChange('avatar_url', e.target.value)}
-                    style={inputField}
-                    placeholder="https://example.com/avatar.jpg"
-                    onFocus={(e) => {
-                      e.target.style.borderColor = colors.primary;
-                      e.target.style.boxShadow = `0 0 0 3px ${colors.primary}20`;
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = colors.border;
-                      e.target.style.boxShadow = 'none';
-                    }}
-                  />
+                  <div style={{ flexGrow: 1 }}>
+                    <input
+                      type="url"
+                      value={editedProfile?.avatar_url || ''}
+                      onChange={(e) => handleInputChange('avatar_url', e.target.value)}
+                      style={inputField}
+                      placeholder="https://example.com/avatar.jpg or upload above"
+                      onFocus={(e) => {
+                        e.target.style.borderColor = colors.primary;
+                        e.target.style.boxShadow = `0 0 0 3px ${colors.primary}20`;
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = colors.border;
+                        e.target.style.boxShadow = 'none';
+                      }}
+                    />
+                    <p style={{ 
+                      color: colors.textMuted, 
+                      fontSize: '0.8rem', 
+                      marginTop: '0.5rem',
+                      lineHeight: '1.4'
+                    }}>
+                      Enter a direct image URL or click the avatar above to upload a file
+                    </p>
+                  </div>
                 ) : (
                   <p style={detailValue}>{editedProfile?.avatar_url || 'No avatar URL provided'}</p>
                 )}
@@ -825,18 +1031,18 @@ const UserProfile = () => {
                       border: 'none',
                       padding: '1rem 2rem',
                       borderRadius: '12px',
-                      cursor: saving ? 'not-allowed' : 'pointer',
+                      cursor: (saving || uploading) ? 'not-allowed' : 'pointer',
                       fontWeight: '700',
                       fontSize: '1rem',
                       transition: 'all 0.3s ease',
-                      opacity: saving ? 0.7 : 1,
+                      opacity: (saving || uploading) ? 0.7 : 1,
                       textTransform: 'uppercase',
                       letterSpacing: '0.5px',
                       minWidth: '140px'
                     }}
-                    disabled={saving}
-                    onMouseEnter={(e) => !saving && (e.currentTarget.style.transform = 'translateY(-3px)')}
-                    onMouseLeave={(e) => !saving && (e.currentTarget.style.transform = 'translateY(0)')}
+                    disabled={saving || uploading}
+                    onMouseEnter={(e) => !saving && !uploading && (e.currentTarget.style.transform = 'translateY(-3px)')}
+                    onMouseLeave={(e) => !saving && !uploading && (e.currentTarget.style.transform = 'translateY(0)')}
                   >
                     {saving ? 'Saving...' : 'Save Changes'}
                   </button>
@@ -915,6 +1121,10 @@ const UserProfile = () => {
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
+        }
+
+        .upload-overlay:hover {
+          opacity: 1 !important;
         }
       `}</style>
     </div>

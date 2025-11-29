@@ -1,11 +1,24 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+
+interface Service {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+  price: number;
+  duration_minutes: number;
+  image_url: string;
+  is_available: boolean;
+  created_at: string;
+}
 
 const Appointment = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClientComponentClient();
   const [formData, setFormData] = useState({
     name: '',
@@ -19,8 +32,9 @@ const Appointment = () => {
   });
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [loading, setLoading] = useState(false);
+  const [services, setServices] = useState<Service[]>([]);
 
-  // Orange color scheme matching About page
+  // Orange color scheme matching Services page
   const colors = {
     primary: '#FF8C00',
     primaryLight: '#FFA500',
@@ -32,6 +46,33 @@ const Appointment = () => {
     textSecondary: 'rgba(255, 255, 255, 0.7)',
     textMuted: 'rgba(255, 255, 255, 0.5)',
     border: 'rgba(255, 255, 255, 0.1)',
+  };
+
+  // Fetch services and pre-fill service type from URL
+  useEffect(() => {
+    fetchServices();
+    const serviceFromUrl = searchParams?.get('service');
+    if (serviceFromUrl) {
+      setFormData(prev => ({
+        ...prev,
+        serviceType: decodeURIComponent(serviceFromUrl)
+      }));
+    }
+  }, [searchParams]);
+
+  const fetchServices = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('services')
+        .select('*')
+        .eq('is_available', true)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setServices(data || []);
+    } catch (error) {
+      console.error('Error fetching services:', error);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -88,61 +129,53 @@ const Appointment = () => {
       const { data, error } = await supabase
         .from('appointments')
         .insert([
-          {
-            user_id: session?.user?.id || null,
-            name: formData.name,
-            email: formData.email,
-            phone: formData.phone,
-            vehicle_type: formData.vehicleType,
-            service_type: formData.serviceType,
-            preferred_date: formData.preferredDate,
-            preferred_time: formData.preferredTime,
-            message: formData.message,
-            status: 'pending',
-            created_at: new Date().toISOString(),
-          }
-        ])
+        {
+          user_id: session?.user?.id || null,
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          vehicle_type: formData.vehicleType,
+          service_type: formData.serviceType,
+          preferred_date: formData.preferredDate, // Fixed: was preferred_da
+          preferred_time: formData.preferredTime, // Fixed: was preferred_tin
+          message: formData.message,
+          status: 'pending',
+          created_at: new Date().toISOString(),
+        }
+      ])
         .select();
 
       if (error) throw error;
 
-      if (data) {
-        alert('Appointment booked successfully! We will contact you to confirm.');
-        // Reset form
-        setFormData({
-          name: '',
-          email: '',
-          phone: '',
-          vehicleType: '',
-          serviceType: '',
-          preferredDate: '',
-          preferredTime: '',
-          message: ''
-        });
-        router.push('/UserHome');
-      }
+ if (data) {
+      alert('Appointment booked successfully! We will contact you to confirm.');
+      // Reset form
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        vehicleType: '',
+        serviceType: '',
+        preferredDate: '',
+        preferredTime: '',
+        message: ''
+      });
+      router.push('/UserHome');
+    }
     } catch (error: unknown) {
       console.error('Appointment booking error:', error);
-      if (error instanceof Error) {
-        alert(error.message || 'An error occurred while booking the appointment');
-      } else {
-        alert('An unexpected error occurred while booking the appointment');
-      }
-    } finally {
-      setLoading(false);
+    if (error instanceof Error) {
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+      alert(`Error: ${error.message}`);
+    } else {
+      console.error('Unknown error type:', error);
+      alert('An unexpected error occurred while booking the appointment');
     }
-  };
-
-  const serviceOptions = [
-    'Oil Change',
-    'Brake Service',
-    'Tire Rotation',
-    'Basic Service',
-    'Full Service',
-    'AC Repair',
-    'Battery Replacement',
-    'General Maintenance'
-  ];
+  } finally {
+    setLoading(false);
+  }
+};
 
   const vehicleTypes = [
     'Sedan',
@@ -155,6 +188,9 @@ const Appointment = () => {
     'Electric'
   ];
 
+  // Get service names from fetched services
+  const serviceOptions = services.map(service => service.name);
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -164,7 +200,7 @@ const Appointment = () => {
       position: 'relative',
       overflow: 'hidden'
     }}>
-      {/* Animated background elements */}
+      {/* Animated background elements - matching Services page */}
       <div style={{
         position: 'fixed',
         top: 0,
@@ -175,39 +211,24 @@ const Appointment = () => {
         zIndex: 0,
         opacity: 0.1
       }}>
-        {[...Array(5)].map((_, i) => (
+        {[...Array(3)].map((_, i) => (
           <div
             key={i}
             style={{
               position: 'absolute',
-              width: `${100 + i * 40}px`,
-              height: `${100 + i * 40}px`,
+              width: `${100 + i * 50}px`,
+              height: `${100 + i * 50}px`,
               borderRadius: '50%',
               border: `2px solid ${colors.primary}`,
-              top: `${15 + i * 15}%`,
-              right: `${5 + i * 10}%`,
-              animation: `float ${8 + i * 2}s ease-in-out infinite`
-            }}
-          />
-        ))}
-        {[...Array(3)].map((_, i) => (
-          <div
-            key={i + 5}
-            style={{
-              position: 'absolute',
-              width: `${60 + i * 30}px`,
-              height: `${60 + i * 30}px`,
-              borderRadius: '50%',
-              border: `1px solid ${colors.primaryLight}`,
-              bottom: `${20 + i * 10}%`,
-              left: `${10 + i * 8}%`,
-              animation: `float ${6 + i * 1.5}s ease-in-out infinite ${i * 0.5}s`
+              top: `${20 + i * 20}%`,
+              right: `${10 + i * 15}%`,
+              animation: `float ${6 + i * 2}s ease-in-out infinite`
             }}
           />
         ))}
       </div>
 
-      {/* Navigation */}
+      {/* Navigation - matching Services page */}
       <nav style={{
         background: 'rgba(0, 0, 0, 0.95)',
         padding: '1.5rem 3rem',
@@ -218,7 +239,7 @@ const Appointment = () => {
         top: 0,
         zIndex: 100,
         backdropFilter: 'blur(20px)',
-        marginBottom: '2rem',
+        marginBottom: '3rem',
         borderBottom: `1px solid ${colors.primary}20`
       }}>
         <div>
@@ -240,62 +261,44 @@ const Appointment = () => {
         <button style={{
           background: 'transparent',
           color: colors.primary,
-          padding: '0.75rem 1.5rem',
+          padding: '0.75rem 2rem',
           borderRadius: '8px',
           fontWeight: '600',
+          border: `1px solid ${colors.primary}50`,
           cursor: 'pointer',
           transition: 'all 0.3s ease',
           fontSize: '0.9rem',
-          border: `1px solid ${colors.primary}50`,
-          textTransform: 'uppercase',
-          letterSpacing: '0.5px'
+          letterSpacing: '0.5px',
+          textTransform: 'uppercase'
         }} 
         onMouseOver={(e) => {
-          e.currentTarget.style.backgroundColor = colors.primary;
+          e.currentTarget.style.background = colors.primary;
           e.currentTarget.style.color = colors.background;
           e.currentTarget.style.transform = 'translateY(-2px)';
         }}
         onMouseOut={(e) => {
-          e.currentTarget.style.backgroundColor = 'transparent';
+          e.currentTarget.style.background = 'transparent';
           e.currentTarget.style.color = colors.primary;
           e.currentTarget.style.transform = 'translateY(0)';
         }}
-        onClick={() => router.push('/UserHome')}>
-          Back to Home
+        onClick={() => router.push('/services')}>
+          View Services
         </button>
       </nav>
 
       {/* Main Content */}
       <div style={{
-        maxWidth: '1000px',
+        maxWidth: '1200px',
         margin: '0 auto',
-        padding: '0 2rem 3rem',
+        padding: '0 2rem',
         position: 'relative',
         zIndex: 1
       }}>
-        {/* Header */}
+        {/* Header - matching Services page style */}
         <div style={{
           textAlign: 'center',
-          marginBottom: '3rem',
-          padding: '4rem 2rem',
-          background: colors.surface,
-          borderRadius: '20px',
-          border: `1px solid ${colors.primary}30`,
-          backdropFilter: 'blur(20px)',
-          position: 'relative',
-          overflow: 'hidden'
+          marginBottom: '4rem'
         }}>
-          <div style={{
-            position: 'absolute',
-            top: '-50%',
-            right: '-10%',
-            width: '300px',
-            height: '300px',
-            borderRadius: '50%',
-            background: `radial-gradient(circle, ${colors.primary}15, transparent)`,
-            filter: 'blur(40px)'
-          }} />
-          
           <h1 style={{
             fontSize: 'clamp(2.5rem, 5vw, 4rem)',
             fontWeight: '900',
@@ -304,21 +307,17 @@ const Appointment = () => {
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
-            letterSpacing: '-1px',
-            position: 'relative',
-            zIndex: 1
+            letterSpacing: '-1px'
           }}>
-            Book Your Appointment
+            Book Your <span style={{ color: colors.primary }}>Appointment</span>
           </h1>
           <p style={{
             fontSize: '1.2rem',
             color: colors.textSecondary,
-            maxWidth: '600px',
+            maxWidth: '800px',
             margin: '0 auto',
             lineHeight: '1.6',
-            fontWeight: '300',
-            position: 'relative',
-            zIndex: 1
+            fontWeight: '300'
           }}>
             Schedule your vehicle service with our expert technicians. We'll get you back on the road quickly and safely.
           </p>
@@ -330,8 +329,8 @@ const Appointment = () => {
           padding: '3.5rem',
           borderRadius: '20px',
           border: `1px solid ${colors.primary}30`,
-          marginBottom: '3rem',
-          backdropFilter: 'blur(20px)',
+          marginBottom: '4rem',
+          backdropFilter: 'blur(10px)',
           position: 'relative',
           overflow: 'hidden'
         }}>
@@ -379,7 +378,7 @@ const Appointment = () => {
                     padding: '1.25rem 1.5rem',
                     borderRadius: '12px',
                     border: `1px solid ${errors.name ? colors.primaryLight : `${colors.primary}30`}`,
-                    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                    backgroundColor: colors.surfaceLight,
                     color: colors.text,
                     fontSize: '1rem',
                     transition: 'all 0.3s ease',
@@ -389,12 +388,10 @@ const Appointment = () => {
                   }}
                   onFocus={(e) => {
                     e.target.style.borderColor = colors.primary;
-                    e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
                     e.target.style.boxShadow = `0 0 0 3px ${colors.primary}20`;
                   }}
                   onBlur={(e) => {
                     e.target.style.borderColor = errors.name ? colors.primaryLight : `${colors.primary}30`;
-                    e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.3)';
                     e.target.style.boxShadow = 'none';
                   }}
                   placeholder="Enter your full name"
@@ -432,7 +429,7 @@ const Appointment = () => {
                     padding: '1.25rem 1.5rem',
                     borderRadius: '12px',
                     border: `1px solid ${errors.email ? colors.primaryLight : `${colors.primary}30`}`,
-                    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                    backgroundColor: colors.surfaceLight,
                     color: colors.text,
                     fontSize: '1rem',
                     transition: 'all 0.3s ease',
@@ -442,12 +439,10 @@ const Appointment = () => {
                   }}
                   onFocus={(e) => {
                     e.target.style.borderColor = colors.primary;
-                    e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
                     e.target.style.boxShadow = `0 0 0 3px ${colors.primary}20`;
                   }}
                   onBlur={(e) => {
                     e.target.style.borderColor = errors.email ? colors.primaryLight : `${colors.primary}30`;
-                    e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.3)';
                     e.target.style.boxShadow = 'none';
                   }}
                   placeholder="your.email@example.com"
@@ -491,7 +486,7 @@ const Appointment = () => {
                     padding: '1.25rem 1.5rem',
                     borderRadius: '12px',
                     border: `1px solid ${errors.phone ? colors.primaryLight : `${colors.primary}30`}`,
-                    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                    backgroundColor: colors.surfaceLight,
                     color: colors.text,
                     fontSize: '1rem',
                     transition: 'all 0.3s ease',
@@ -501,12 +496,10 @@ const Appointment = () => {
                   }}
                   onFocus={(e) => {
                     e.target.style.borderColor = colors.primary;
-                    e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
                     e.target.style.boxShadow = `0 0 0 3px ${colors.primary}20`;
                   }}
                   onBlur={(e) => {
                     e.target.style.borderColor = errors.phone ? colors.primaryLight : `${colors.primary}30`;
-                    e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.3)';
                     e.target.style.boxShadow = 'none';
                   }}
                   placeholder="(555) 123-4567"
@@ -543,7 +536,7 @@ const Appointment = () => {
                     padding: '1.25rem 1.5rem',
                     borderRadius: '12px',
                     border: `1px solid ${errors.vehicleType ? colors.primaryLight : `${colors.primary}30`}`,
-                    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                    backgroundColor: colors.surfaceLight,
                     color: colors.text,
                     fontSize: '1rem',
                     transition: 'all 0.3s ease',
@@ -558,12 +551,10 @@ const Appointment = () => {
                   }}
                   onFocus={(e) => {
                     e.target.style.borderColor = colors.primary;
-                    e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
                     e.target.style.boxShadow = `0 0 0 3px ${colors.primary}20`;
                   }}
                   onBlur={(e) => {
                     e.target.style.borderColor = errors.vehicleType ? colors.primaryLight : `${colors.primary}30`;
-                    e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.3)';
                     e.target.style.boxShadow = 'none';
                   }}
                 >
@@ -611,7 +602,7 @@ const Appointment = () => {
                     padding: '1.25rem 1.5rem',
                     borderRadius: '12px',
                     border: `1px solid ${errors.serviceType ? colors.primaryLight : `${colors.primary}30`}`,
-                    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                    backgroundColor: colors.surfaceLight,
                     color: colors.text,
                     fontSize: '1rem',
                     transition: 'all 0.3s ease',
@@ -626,12 +617,10 @@ const Appointment = () => {
                   }}
                   onFocus={(e) => {
                     e.target.style.borderColor = colors.primary;
-                    e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
                     e.target.style.boxShadow = `0 0 0 3px ${colors.primary}20`;
                   }}
                   onBlur={(e) => {
                     e.target.style.borderColor = errors.serviceType ? colors.primaryLight : `${colors.primary}30`;
-                    e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.3)';
                     e.target.style.boxShadow = 'none';
                   }}
                 >
@@ -676,7 +665,7 @@ const Appointment = () => {
                     padding: '1.25rem 1.5rem',
                     borderRadius: '12px',
                     border: `1px solid ${errors.preferredDate ? colors.primaryLight : `${colors.primary}30`}`,
-                    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                    backgroundColor: colors.surfaceLight,
                     color: colors.text,
                     fontSize: '1rem',
                     transition: 'all 0.3s ease',
@@ -686,12 +675,10 @@ const Appointment = () => {
                   }}
                   onFocus={(e) => {
                     e.target.style.borderColor = colors.primary;
-                    e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
                     e.target.style.boxShadow = `0 0 0 3px ${colors.primary}20`;
                   }}
                   onBlur={(e) => {
                     e.target.style.borderColor = errors.preferredDate ? colors.primaryLight : `${colors.primary}30`;
-                    e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.3)';
                     e.target.style.boxShadow = 'none';
                   }}
                 />
@@ -729,7 +716,7 @@ const Appointment = () => {
                   padding: '1.25rem 1.5rem',
                   borderRadius: '12px',
                   border: `1px solid ${errors.preferredTime ? colors.primaryLight : `${colors.primary}30`}`,
-                  backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                  backgroundColor: colors.surfaceLight,
                   color: colors.text,
                   fontSize: '1rem',
                   transition: 'all 0.3s ease',
@@ -739,12 +726,10 @@ const Appointment = () => {
                 }}
                 onFocus={(e) => {
                   e.target.style.borderColor = colors.primary;
-                  e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
                   e.target.style.boxShadow = `0 0 0 3px ${colors.primary}20`;
                 }}
                 onBlur={(e) => {
                   e.target.style.borderColor = errors.preferredTime ? colors.primaryLight : `${colors.primary}30`;
-                  e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.3)';
                   e.target.style.boxShadow = 'none';
                 }}
               />
@@ -780,7 +765,7 @@ const Appointment = () => {
                   padding: '1.25rem 1.5rem',
                   borderRadius: '12px',
                   border: `1px solid ${colors.primary}30`,
-                  backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                  backgroundColor: colors.surfaceLight,
                   color: colors.text,
                   fontSize: '1rem',
                   resize: 'vertical',
@@ -791,12 +776,10 @@ const Appointment = () => {
                 }}
                 onFocus={(e) => {
                   e.target.style.borderColor = colors.primary;
-                  e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
                   e.target.style.boxShadow = `0 0 0 3px ${colors.primary}20`;
                 }}
                 onBlur={(e) => {
                   e.target.style.borderColor = `${colors.primary}30`;
-                  e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.3)';
                   e.target.style.boxShadow = 'none';
                 }}
                 placeholder="Tell us about any specific issues or concerns..."
@@ -808,7 +791,7 @@ const Appointment = () => {
               disabled={loading}
               style={{
                 background: loading 
-                  ? 'rgba(75, 85, 99, 0.4)' 
+                  ? colors.surfaceLight
                   : `linear-gradient(135deg, ${colors.primary}, ${colors.primaryLight})`,
                 color: loading ? colors.textMuted : colors.background,
                 padding: '1.5rem 3rem',
@@ -819,9 +802,6 @@ const Appointment = () => {
                 fontSize: '1.1rem',
                 transition: 'all 0.3s ease',
                 marginTop: '1rem',
-                boxShadow: loading 
-                  ? 'none' 
-                  : `0 8px 30px ${colors.primary}30`,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -838,7 +818,7 @@ const Appointment = () => {
               onMouseOut={(e) => {
                 if (!loading) {
                   e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = `0 8px 30px ${colors.primary}30`;
+                  e.currentTarget.style.boxShadow = 'none';
                 }
               }}
             >
@@ -857,119 +837,51 @@ const Appointment = () => {
           </form>
         </div>
 
-        {/* Contact Info */}
+        {/* Contact Info - matching Services page style */}
         <div style={{
           textAlign: 'center',
-          padding: '4rem 2rem',
+          padding: '3rem 2rem',
           background: colors.surface,
-          borderRadius: '20px',
-          border: `1px solid ${colors.primary}30`,
-          backdropFilter: 'blur(20px)',
-          position: 'relative',
-          overflow: 'hidden'
+          borderRadius: '16px',
+          border: `1px solid ${colors.primary}20`,
+          backdropFilter: 'blur(10px)',
+          marginBottom: '3rem'
         }}>
-          <div style={{
-            position: 'absolute',
-            bottom: '-30%',
-            right: '-10%',
-            width: '200px',
-            height: '200px',
-            borderRadius: '50%',
-            background: `radial-gradient(circle, ${colors.primary}10, transparent)`,
-            filter: 'blur(30px)'
-          }} />
-          
           <h3 style={{
-            background: `linear-gradient(135deg, #FFFFFF, ${colors.primary})`,
+            color: colors.primary,
+            fontSize: '1.4rem',
+            marginBottom: '1.5rem',
+            fontWeight: '700',
+            background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryLight})`,
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            fontSize: 'clamp(1.5rem, 3vw, 2.5rem)',
-            marginBottom: '2rem',
-            fontWeight: '900',
-            letterSpacing: '-0.5px',
-            position: 'relative',
-            zIndex: 1
+            backgroundClip: 'text'
           }}>
-            Need Immediate Assistance?
+            Questions About Your Appointment?
           </h3>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-            gap: '2rem',
-            maxWidth: '800px',
-            margin: '0 auto',
-            position: 'relative',
-            zIndex: 1
+          <p style={{ 
+            color: colors.textSecondary, 
+            marginBottom: '1rem', 
+            fontSize: '1.1rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.5rem'
           }}>
-            <div style={{
-              padding: '2rem',
-              background: 'rgba(0, 0, 0, 0.3)',
-              borderRadius: '15px',
-              border: `1px solid ${colors.primary}30`,
-              transition: 'all 0.3s ease',
-              backdropFilter: 'blur(10px)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-8px)';
-              e.currentTarget.style.borderColor = colors.primary;
-              e.currentTarget.style.boxShadow = `0 15px 30px ${colors.primary}20`;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.borderColor = `${colors.primary}30`;
-              e.currentTarget.style.boxShadow = 'none';
-            }}>
-              <div style={{ fontSize: '3rem', marginBottom: '1rem', color: colors.primary }}>📞</div>
-              <p style={{ color: colors.primary, margin: '0.5rem 0', fontWeight: '600', fontSize: '1.1rem' }}>Call Us</p>
-              <p style={{ color: colors.text, margin: 0, fontWeight: '700', fontSize: '1.2rem' }}>(555) 123-4567</p>
-            </div>
-            <div style={{
-              padding: '2rem',
-              background: 'rgba(0, 0, 0, 0.3)',
-              borderRadius: '15px',
-              border: `1px solid ${colors.primary}30`,
-              transition: 'all 0.3s ease',
-              backdropFilter: 'blur(10px)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-8px)';
-              e.currentTarget.style.borderColor = colors.primary;
-              e.currentTarget.style.boxShadow = `0 15px 30px ${colors.primary}20`;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.borderColor = `${colors.primary}30`;
-              e.currentTarget.style.boxShadow = 'none';
-            }}>
-              <div style={{ fontSize: '3rem', marginBottom: '1rem', color: colors.primary }}>✉️</div>
-              <p style={{ color: colors.primary, margin: '0.5rem 0', fontWeight: '600', fontSize: '1.1rem' }}>Email</p>
-              <p style={{ color: colors.text, margin: 0, fontWeight: '700', fontSize: '1.2rem' }}>service@sunnyauto.com</p>
-            </div>
-            <div style={{
-              padding: '2rem',
-              background: 'rgba(0, 0, 0, 0.3)',
-              borderRadius: '15px',
-              border: `1px solid ${colors.primary}30`,
-              transition: 'all 0.3s ease',
-              backdropFilter: 'blur(10px)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-8px)';
-              e.currentTarget.style.borderColor = colors.primary;
-              e.currentTarget.style.boxShadow = `0 15px 30px ${colors.primary}20`;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.borderColor = `${colors.primary}30`;
-              e.currentTarget.style.boxShadow = 'none';
-            }}>
-              <div style={{ fontSize: '3rem', marginBottom: '1rem', color: colors.primary }}>🕒</div>
-              <p style={{ color: colors.primary, margin: '0.5rem 0', fontWeight: '600', fontSize: '1.1rem' }}>Business Hours</p>
-              <p style={{ color: colors.text, margin: '0.25rem 0', fontWeight: '700', fontSize: '1.1rem' }}>Mon-Fri 8AM-6PM</p>
-              <p style={{ color: colors.text, margin: 0, fontWeight: '700', fontSize: '1.1rem' }}>Sat 9AM-4PM</p>
-            </div>
-          </div>
+            <span style={{ color: colors.primary }}>📞</span>
+            Call us: <strong style={{ color: colors.text, marginLeft: '0.25rem' }}>(555) 123-4567</strong>
+          </p>
+          <p style={{ 
+            color: colors.textSecondary, 
+            fontSize: '1.1rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.5rem'
+          }}>
+            <span style={{ color: colors.primary }}>✉</span>
+            Email: <strong style={{ color: colors.text, marginLeft: '0.25rem' }}>service@sunnyauto.com</strong>
+          </p>
         </div>
       </div>
 
