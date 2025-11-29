@@ -246,6 +246,11 @@ const AIChatbot = () => {
     setIsSpeechEnabled(!isSpeechEnabled);
   };
 
+  // Back to Home function
+  const handleBackToHome = () => {
+    router.push('/UserHome');
+  };
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -671,7 +676,7 @@ const AIChatbot = () => {
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
       padding: '2rem'
     }}>
-      {/* Header with Speech Toggle */}
+      {/* Header with Back Button and Speech Toggle */}
       <div style={{
         textAlign: 'center',
         marginBottom: '2rem',
@@ -679,6 +684,49 @@ const AIChatbot = () => {
         paddingBottom: '1rem',
         position: 'relative'
       }}>
+        {/* Back Button - Left Side */}
+        <div style={{
+          position: 'absolute',
+          top: '10px',
+          left: '10px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem'
+        }}>
+          <button
+            onClick={handleBackToHome}
+            style={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '8px',
+              padding: '0.5rem 1rem',
+              color: 'white',
+              cursor: 'pointer',
+              fontSize: '0.9rem',
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              transition: 'all 0.3s ease',
+              boxShadow: '0 4px 15px rgba(255, 140, 0, 0.2)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+              e.currentTarget.style.borderColor = ORANGE;
+              e.currentTarget.style.transform = 'translateY(-2px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
+          >
+            <span style={{ fontSize: '1.1rem' }}>←</span>
+            Back to Home
+          </button>
+        </div>
+
         <h1 style={{
           fontSize: '2.5rem',
           fontWeight: '700',
@@ -698,7 +746,7 @@ const AIChatbot = () => {
           Intelligent automotive service assistant • Powered by real-time data
         </p>
         
-        {/* Glass Effect Speech Toggle Button */}
+        {/* Glass Effect Speech Toggle Button - Right Side */}
         <div style={{
           position: 'absolute',
           top: '10px',
