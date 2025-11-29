@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
@@ -18,6 +18,19 @@ interface Appointment {
   created_at: string;
 }
 
+// Admin profile type
+interface AdminProfile {
+  id: string;
+  email: string;
+  full_name: string | null;
+  bio: string | null;
+  avatar_url: string | null;
+  phone: string | null;
+  role?: string;
+  updated_at?: string;
+  created_at?: string;
+}
+
 const AdminHome = () => {
   const router = useRouter();
   const supabase = createClientComponentClient();
@@ -31,6 +44,10 @@ const AdminHome = () => {
   >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Admin profile / avatar
+  const [adminProfile, setAdminProfile] = useState<AdminProfile | null>(null);
+  const [adminAvatarUrl, setAdminAvatarUrl] = useState<string | null>(null);
 
   // Color scheme - Red accent (#dc2626) with dark theme
   const colors = {
@@ -112,6 +129,34 @@ const AdminHome = () => {
       clearInterval(timer);
       subscription.unsubscribe();
     };
+  }, [supabase]);
+
+  // Load admin profile for avatar
+  useEffect(() => {
+    const loadAdminProfile = async () => {
+      try {
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
+        if (userError || !user) return;
+
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single();
+
+        if (profileError || !profileData) return;
+
+        setAdminProfile(profileData as AdminProfile);
+        setAdminAvatarUrl(profileData.avatar_url);
+      } catch (err) {
+        console.error("Error loading admin profile in AdminHome:", err);
+      }
+    };
+
+    loadAdminProfile();
   }, [supabase]);
 
   // Filter appointments based on search query
@@ -1186,14 +1231,51 @@ const AdminHome = () => {
         >
           <div
             style={{
-              color: colors.primary,
-              fontWeight: 700,
-              fontSize: "1.1rem",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "0.5rem",
               marginBottom: "1.5rem",
-              textAlign: "center",
             }}
           >
-            Quick Menu
+            <div
+              style={{
+                width: "80px",
+                height: "80px",
+                borderRadius: "50%",
+                backgroundColor: "#ff6b35",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "2rem",
+                color: "black",
+                border: `3px solid ${colors.primary}`,
+                boxShadow: "0 8px 20px rgba(0,0,0,0.5)",
+                overflow: "hidden",
+              }}
+              onClick={handleProfile}
+              title="View admin profile"
+            >
+              {adminAvatarUrl ? (
+                <img
+                  src={adminAvatarUrl}
+                  alt="Admin avatar"
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              ) : (
+                <span>👤</span>
+              )}
+            </div>
+            <div
+              style={{
+                color: colors.primary,
+                fontWeight: 600,
+                fontSize: "0.95rem",
+                textAlign: "center",
+              }}
+            >
+              {adminProfile?.full_name || "Admin"}
+            </div>
           </div>
 
           <div
