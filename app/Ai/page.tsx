@@ -83,9 +83,12 @@ const AIChatbot = () => {
     vehicle_model: '',
     additional_notes: ''
   });
+  const [isSpeechEnabled, setIsSpeechEnabled] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
   const router = useRouter();
   const supabase = createClientComponentClient();
 
@@ -186,12 +189,78 @@ const AIChatbot = () => {
     ]
   };
 
+  // Text-to-Speech functionality
+  const speakText = (text: string) => {
+    if (!isSpeechEnabled || !text) return;
+
+    // Clean the text for speech (remove markdown, special characters)
+    const cleanText = text
+      .replace(/[•\-\*]/g, '')
+      .replace(/\n/g, '. ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    if ('speechSynthesis' in window) {
+      // Stop any ongoing speech
+      window.speechSynthesis.cancel();
+
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      speechSynthRef.current = utterance;
+
+      // Configure voice settings
+      utterance.rate = 0.9;
+      utterance.pitch = 1;
+      utterance.volume = 1;
+
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend = () => setIsSpeaking(false);
+      utterance.onerror = () => setIsSpeaking(false);
+
+      // Try to get a pleasant voice
+      const voices = window.speechSynthesis.getVoices();
+      const preferredVoice = voices.find(voice => 
+        voice.name.includes('Google') || 
+        voice.name.includes('Samantha') || 
+        voice.name.includes('Microsoft David')
+      );
+      
+      if (preferredVoice) {
+        utterance.voice = preferredVoice;
+      }
+
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  const stopSpeech = () => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+    }
+  };
+
+  const toggleSpeech = () => {
+    if (isSpeaking) {
+      stopSpeech();
+    }
+    setIsSpeechEnabled(!isSpeechEnabled);
+  };
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   useEffect(() => {
     initializeData();
+  }, []);
+
+  // Clean up speech synthesis on unmount
+  useEffect(() => {
+    return () => {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
   }, []);
 
   const initializeData = async () => {
@@ -279,7 +348,6 @@ const AIChatbot = () => {
           metadata
         };
 
-        // Store in Supabase (you might want to create a conversations table)
         const { error } = await supabase
           .from('conversations')
           .insert([log]);
@@ -302,6 +370,11 @@ const AIChatbot = () => {
       intent
     };
     setMessages(prev => [...prev, newMessage]);
+
+    // Speak AI messages if speech is enabled
+    if (sender === 'ai' && isSpeechEnabled) {
+      speakText(text);
+    }
   };
 
   const detectIntent = (message: string): string => {
@@ -499,7 +572,6 @@ const AIChatbot = () => {
         break;
 
       default:
-        // Advanced response for unrecognized queries
         if (message.toLowerCase().includes('oil')) {
           response = "We offer comprehensive oil change services using premium synthetic oils. Prices start from $39.99. Would you like to schedule an oil change?";
         } else if (message.toLowerCase().includes('brake')) {
@@ -554,10 +626,8 @@ const AIChatbot = () => {
       const successMessage = `Great! Your appointment for ${appointmentData.service_type} has been booked for ${appointmentData.preferred_date}. We'll contact you to confirm the timing. Thank you for choosing SunnyAuto!`;
       addMessage(successMessage, 'ai', 'appointment_confirmation');
       
-      // Reload appointments
       await loadUserAppointments(user.id);
       
-      // Reset form
       setAppointmentData({
         service_type: '',
         preferred_date: '',
@@ -601,12 +671,13 @@ const AIChatbot = () => {
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
       padding: '2rem'
     }}>
-      {/* Header */}
+      {/* Header with Speech Toggle */}
       <div style={{
         textAlign: 'center',
         marginBottom: '2rem',
         borderBottom: `2px solid ${ORANGE}`,
-        paddingBottom: '1rem'
+        paddingBottom: '1rem',
+        position: 'relative'
       }}>
         <h1 style={{
           fontSize: '2.5rem',
@@ -626,6 +697,63 @@ const AIChatbot = () => {
         }}>
           Intelligent automotive service assistant • Powered by real-time data
         </p>
+        
+        {/* Glass Effect Speech Toggle Button */}
+        <div style={{
+          position: 'absolute',
+          top: '10px',
+          right: '10px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem'
+        }}>
+          <span style={{
+            color: '#9ca3af',
+            fontSize: '0.8rem',
+            fontWeight: '500'
+          }}>
+            {isSpeechEnabled ? 'Voice ON' : 'Voice OFF'}
+          </span>
+          <button
+            onClick={toggleSpeech}
+            style={{
+              position: 'relative',
+              width: '60px',
+              height: '30px',
+              borderRadius: '25px',
+              border: 'none',
+              cursor: 'pointer',
+              background: isSpeechEnabled 
+                ? `linear-gradient(135deg, ${ORANGE}, ${ORANGE_LIGHT})`
+                : 'rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(10px)',
+              boxShadow: isSpeechEnabled 
+                ? `0 0 20px ${ORANGE}40, inset 0 1px 1px rgba(255,255,255,0.2)`
+                : 'inset 0 1px 1px rgba(255,255,255,0.1), 0 2px 4px rgba(0,0,0,0.2)',
+              transition: 'all 0.3s ease',
+              display: 'flex',
+              alignItems: 'center',
+              padding: '2px'
+            }}
+          >
+            <div style={{
+              width: '26px',
+              height: '26px',
+              borderRadius: '50%',
+              background: 'rgba(255, 255, 255, 0.9)',
+              transform: isSpeechEnabled ? 'translateX(30px)' : 'translateX(0)',
+              transition: 'all 0.3s ease',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '12px',
+              color: isSpeechEnabled ? ORANGE : '#9ca3af'
+            }}>
+              {isSpeaking ? '🔊' : isSpeechEnabled ? '🔈' : '🔇'}
+            </div>
+          </button>
+        </div>
       </div>
 
       <div style={{
@@ -643,7 +771,8 @@ const AIChatbot = () => {
           border: '1px solid rgba(255, 255, 255, 0.1)',
           display: 'flex',
           flexDirection: 'column',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          backdropFilter: 'blur(10px)'
         }}>
           {/* Messages Area */}
           <div style={{
@@ -676,7 +805,8 @@ const AIChatbot = () => {
                     : '1px solid rgba(255, 255, 255, 0.1)',
                   fontSize: '0.95rem',
                   lineHeight: '1.4',
-                  whiteSpace: 'pre-line'
+                  whiteSpace: 'pre-line',
+                  backdropFilter: 'blur(5px)'
                 }}>
                   {message.text}
                   <div style={{
@@ -702,7 +832,8 @@ const AIChatbot = () => {
                   padding: '0.75rem 1rem',
                   borderRadius: '12px',
                   border: '1px solid rgba(255, 255, 255, 0.1)',
-                  fontSize: '0.95rem'
+                  fontSize: '0.95rem',
+                  backdropFilter: 'blur(5px)'
                 }}>
                   <div style={{ display: 'flex', gap: '0.25rem' }}>
                     <div style={{
@@ -739,7 +870,8 @@ const AIChatbot = () => {
           <div style={{
             padding: '1.5rem',
             borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-            background: 'rgba(0, 0, 0, 0.3)'
+            background: 'rgba(0, 0, 0, 0.3)',
+            backdropFilter: 'blur(10px)'
           }}>
             <div style={{
               display: 'flex',
@@ -761,7 +893,8 @@ const AIChatbot = () => {
                   padding: '0.75rem 1rem',
                   color: 'white',
                   fontSize: '0.95rem',
-                  outline: 'none'
+                  outline: 'none',
+                  backdropFilter: 'blur(5px)'
                 }}
                 disabled={isLoading}
               />
@@ -777,7 +910,9 @@ const AIChatbot = () => {
                   cursor: inputText.trim() ? 'pointer' : 'not-allowed',
                   fontSize: '0.95rem',
                   fontWeight: '600',
-                  opacity: inputText.trim() ? 1 : 0.5
+                  opacity: inputText.trim() ? 1 : 0.5,
+                  backdropFilter: 'blur(5px)',
+                  boxShadow: inputText.trim() ? `0 4px 15px ${ORANGE}40` : 'none'
                 }}
               >
                 Send
@@ -802,7 +937,15 @@ const AIChatbot = () => {
                     borderRadius: '20px',
                     padding: '0.4rem 0.8rem',
                     fontSize: '0.8rem',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    backdropFilter: 'blur(5px)',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = `${ORANGE}20`;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent';
                   }}
                 >
                   {action.label}
@@ -821,7 +964,8 @@ const AIChatbot = () => {
           display: 'flex',
           flexDirection: 'column',
           gap: '1.5rem',
-          overflowY: 'auto'
+          overflowY: 'auto',
+          backdropFilter: 'blur(10px)'
         }}>
           {/* User Info */}
           <div>
@@ -838,7 +982,8 @@ const AIChatbot = () => {
                 background: 'rgba(255, 255, 255, 0.03)',
                 padding: '1rem',
                 borderRadius: '8px',
-                border: '1px solid rgba(255, 255, 255, 0.1)'
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                backdropFilter: 'blur(5px)'
               }}>
                 <p style={{ margin: '0.25rem 0', fontSize: '0.9rem' }}>
                   <strong>Name:</strong> {userProfile.name}
@@ -885,7 +1030,8 @@ const AIChatbot = () => {
               borderRadius: '8px',
               border: '1px solid rgba(255, 255, 255, 0.1)',
               maxHeight: '200px',
-              overflowY: 'auto'
+              overflowY: 'auto',
+              backdropFilter: 'blur(5px)'
             }}>
               {services.slice(0, 5).map((service, index) => (
                 <div key={service.id} style={{
@@ -940,7 +1086,17 @@ const AIChatbot = () => {
                     padding: '0.6rem 1rem',
                     textAlign: 'left',
                     cursor: 'pointer',
-                    fontSize: '0.9rem'
+                    fontSize: '0.9rem',
+                    backdropFilter: 'blur(5px)',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                    e.currentTarget.style.borderColor = ORANGE;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
                   }}
                 >
                   {item.label}
@@ -964,7 +1120,8 @@ const AIChatbot = () => {
                 background: 'rgba(255, 255, 255, 0.03)',
                 padding: '1rem',
                 borderRadius: '8px',
-                border: '1px solid rgba(255, 255, 255, 0.1)'
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                backdropFilter: 'blur(5px)'
               }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                   <select
@@ -979,7 +1136,8 @@ const AIChatbot = () => {
                       borderRadius: '6px',
                       padding: '0.5rem',
                       color: 'white',
-                      fontSize: '0.9rem'
+                      fontSize: '0.9rem',
+                      backdropFilter: 'blur(5px)'
                     }}
                   >
                     <option value="">Select Service Type</option>
@@ -1002,7 +1160,8 @@ const AIChatbot = () => {
                       borderRadius: '6px',
                       padding: '0.5rem',
                       color: 'white',
-                      fontSize: '0.9rem'
+                      fontSize: '0.9rem',
+                      backdropFilter: 'blur(5px)'
                     }}
                   />
                   <input
@@ -1018,7 +1177,8 @@ const AIChatbot = () => {
                       borderRadius: '6px',
                       padding: '0.5rem',
                       color: 'white',
-                      fontSize: '0.9rem'
+                      fontSize: '0.9rem',
+                      backdropFilter: 'blur(5px)'
                     }}
                   />
                   <input
@@ -1035,7 +1195,8 @@ const AIChatbot = () => {
                       borderRadius: '6px',
                       padding: '0.5rem',
                       color: 'white',
-                      fontSize: '0.9rem'
+                      fontSize: '0.9rem',
+                      backdropFilter: 'blur(5px)'
                     }}
                   />
                   <textarea
@@ -1053,7 +1214,8 @@ const AIChatbot = () => {
                       padding: '0.5rem',
                       color: 'white',
                       fontSize: '0.9rem',
-                      resize: 'vertical'
+                      resize: 'vertical',
+                      backdropFilter: 'blur(5px)'
                     }}
                   />
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -1067,7 +1229,9 @@ const AIChatbot = () => {
                         padding: '0.6rem 1rem',
                         cursor: 'pointer',
                         fontSize: '0.9rem',
-                        flex: 1
+                        flex: 1,
+                        backdropFilter: 'blur(5px)',
+                        boxShadow: `0 4px 15px ${ORANGE}40`
                       }}
                     >
                       Book Appointment
@@ -1081,7 +1245,8 @@ const AIChatbot = () => {
                         borderRadius: '6px',
                         padding: '0.6rem 1rem',
                         cursor: 'pointer',
-                        fontSize: '0.9rem'
+                        fontSize: '0.9rem',
+                        backdropFilter: 'blur(5px)'
                       }}
                     >
                       Cancel
@@ -1134,6 +1299,13 @@ const AIChatbot = () => {
 
         div::-webkit-scrollbar-thumb:hover {
           background: ${ORANGE_LIGHT};
+        }
+
+        /* Glass morphism effects */
+        .glass-effect {
+          background: rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
         }
       `}</style>
     </div>
