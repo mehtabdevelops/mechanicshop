@@ -84,7 +84,7 @@ const HomePage = () => {
 
     // Enhanced entrance sequence with staggered effects
     tl.to(backgroundPatternRef.current, {
-      opacity: 0.7,
+      opacity: 0.8,
       scale: 1,
       duration: 2,
       ease: "power2.out"
@@ -237,7 +237,8 @@ const HomePage = () => {
 
   return (
     <div style={{
-      background: 'linear-gradient(135deg, #050505 0%, #0f0f0f 50%, #181818 100%)',
+      // Brighter background gradient
+      background: 'linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 50%, #333333 100%)',
       height: '100vh',
       display: 'flex',
       flexDirection: 'column',
@@ -248,23 +249,25 @@ const HomePage = () => {
       overflow: 'hidden',
       position: 'relative'
     }}>
-      {/* Enhanced Animated Pattern Background */}
+      {/* Enhanced Animated Pattern Background - Brighter */}
       <div 
         ref={backgroundPatternRef}
         style={{
           position: 'absolute',
           inset: 0,
           backgroundImage: `
-            radial-gradient(circle at 25% 25%, ${ORANGE_LIGHT_RGBA(0.08)} 2px, transparent 0),
-            radial-gradient(circle at 75% 75%, ${ORANGE_LIGHT_RGBA(0.05)} 1px, transparent 0)
+            radial-gradient(circle at 25% 25%, ${ORANGE_LIGHT_RGBA(0.15)} 2px, transparent 0),
+            radial-gradient(circle at 75% 75%, ${ORANGE_LIGHT_RGBA(0.1)} 1px, transparent 0),
+            linear-gradient(45deg, rgba(255,165,0,0.05) 0%, transparent 50%),
+            linear-gradient(135deg, rgba(255,140,0,0.03) 0%, transparent 50%)
           `,
-          backgroundSize: '60px 60px, 40px 40px',
+          backgroundSize: '60px 60px, 40px 40px, 100% 100%, 100% 100%',
           zIndex: 1,
           opacity: 0
         }} 
       />
 
-      {/* Hero Image with Enhanced Filters */}
+      {/* Hero Image with Brighter Filters */}
       <div
         ref={heroImageRef}
         style={{
@@ -275,43 +278,45 @@ const HomePage = () => {
           backgroundPosition: 'center',
           zIndex: 2,
           opacity: 0,
-          filter: 'brightness(0.55) contrast(1.15) saturate(1.05)',
+          // Increased brightness and reduced darkening
+          filter: 'brightness(0.75) contrast(1.15) saturate(1.1)',
           transition: 'background-image 0.8s ease'
         }}
       />
 
-      {/* Enhanced Gradient Overlay */}
+      {/* Brighter Gradient Overlay */}
       <div
         ref={overlayRef}
         style={{
           position: 'absolute',
           inset: 0,
           background: `
-            linear-gradient(135deg, rgba(12, 12, 12, 0.92) 0%, rgba(18, 18, 18, 0.9) 50%, rgba(0, 0, 0, 0.96) 100%),
-            linear-gradient(45deg, ${ORANGE_RGBA(0.18)} 0%, transparent 65%),
-            radial-gradient(ellipse at 30% 50%, transparent 0%, rgba(10, 10, 10, 0.7) 50%, rgba(0, 0, 0, 0.96) 100%)
+            linear-gradient(135deg, rgba(25, 25, 25, 0.75) 0%, rgba(35, 35, 35, 0.7) 50%, rgba(20, 20, 20, 0.85) 100%),
+            linear-gradient(45deg, ${ORANGE_RGBA(0.25)} 0%, transparent 65%),
+            radial-gradient(ellipse at 30% 50%, transparent 0%, rgba(30, 30, 30, 0.5) 50%, rgba(15, 15, 15, 0.8) 100%)
           `,
           zIndex: 4,
           opacity: 0
         }}
       />
 
-      {/* Enhanced Content Card */}
+      {/* Enhanced Content Card with Brighter Background */}
       <div
         ref={contentCardRef}
         style={{
           position: 'relative',
           zIndex: 10,
-          background: 'rgba(17, 17, 17, 0.78)',
+          // Brighter card background
+          background: 'rgba(30, 30, 30, 0.85)',
           backdropFilter: 'blur(25px) saturate(180%)',
           WebkitBackdropFilter: 'blur(25px) saturate(180%)',
           padding: '4rem 3.5rem',
           borderRadius: '20px',
           boxShadow: `
-            0 8px 32px rgba(0, 0, 0, 0.6),
-            inset 0 1px 0 rgba(255, 255, 255, 0.08)
+            0 8px 32px rgba(0, 0, 0, 0.4),
+            inset 0 1px 0 rgba(255, 255, 255, 0.12)
           `,
-          border: `1px solid ${ORANGE_RGBA(0.35)}`,
+          border: `1px solid ${ORANGE_RGBA(0.45)}`,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -365,7 +370,8 @@ const HomePage = () => {
             fontSize: '1.15rem',
             marginBottom: '45px',
             fontWeight: '300',
-            color: 'rgba(229, 231, 235, 0.85)',
+            // Brighter text color
+            color: 'rgba(245, 247, 250, 0.9)',
             width: '100%',
             opacity: 0,
             letterSpacing: '1.5px',
@@ -394,10 +400,10 @@ const HomePage = () => {
                   ? (hoveredButton === button.text 
               ? `linear-gradient(135deg, ${ORANGE_LIGHT} 0%, ${ORANGE} 55%, ${ORANGE_DARK} 100%)` 
                 : `linear-gradient(135deg, ${ORANGE} 0%, ${ORANGE_DARK} 50%, ${ORANGE_DEEP} 100%)`)
-                  : 'rgba(255, 255, 255, 0.08)',
+                  : 'rgba(255, 255, 255, 0.12)',
                 color: button.isPrimary ? '#ffffff' : ORANGE_LIGHT,
                 padding: '18px 36px',
-                border: button.isPrimary ? 'none' : `1px solid ${ORANGE_LIGHT_RGBA(0.5)}`,
+                border: button.isPrimary ? 'none' : `1px solid ${ORANGE_LIGHT_RGBA(0.6)}`,
                 borderRadius: '12px',
                 cursor: 'pointer',
                 fontSize: '1.05rem',
@@ -453,14 +459,15 @@ const HomePage = () => {
           marginTop: '35px',
           width: '60%',
           height: '2px',
-          background: `linear-gradient(90deg, transparent, ${ORANGE_RGBA(0.35)}, ${ORANGE_RGBA(0.55)}, ${ORANGE_RGBA(0.35)}, transparent)`,
+          background: `linear-gradient(90deg, transparent, ${ORANGE_RGBA(0.45)}, ${ORANGE_RGBA(0.65)}, ${ORANGE_RGBA(0.45)}, transparent)`,
           borderRadius: '2px'
         }} />
 
         <p style={{
           marginTop: '24px',
           fontSize: '0.9rem',
-          color: 'rgba(229, 231, 235, 0.6)',
+          // Brighter footer text
+          color: 'rgba(245, 247, 250, 0.7)',
           letterSpacing: '1.5px',
           fontWeight: '300',
           fontStyle: 'italic'
