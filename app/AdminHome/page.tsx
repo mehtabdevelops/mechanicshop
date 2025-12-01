@@ -140,7 +140,7 @@ const AdminHome = () => {
     }
   };
 
-  const handleProfile = () => router.push("/Adminprofile");
+  const handleProfile = () => router.push("/");
   const handleInventory = () => router.push("/AdminInventory");
   const handleAdminAppointments = () => router.push("/AdminAppointment");
   const handleEmployees = () => router.push("/AdminEmployees");
