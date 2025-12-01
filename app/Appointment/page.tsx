@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
@@ -16,7 +16,8 @@ interface Service {
   created_at: string;
 }
 
-const Appointment = () => {
+// Separate component that uses useSearchParams
+function AppointmentForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClientComponentClient();
@@ -136,8 +137,8 @@ const Appointment = () => {
           phone: formData.phone,
           vehicle_type: formData.vehicleType,
           service_type: formData.serviceType,
-          preferred_date: formData.preferredDate, // Fixed: was preferred_da
-          preferred_time: formData.preferredTime, // Fixed: was preferred_tin
+          preferred_date: formData.preferredDate,
+          preferred_time: formData.preferredTime,
           message: formData.message,
           status: 'pending',
           created_at: new Date().toISOString(),
@@ -319,7 +320,7 @@ const Appointment = () => {
             lineHeight: '1.6',
             fontWeight: '300'
           }}>
-            Schedule your vehicle service with our expert technicians. We'll get you back on the road quickly and safely.
+            Schedule your vehicle service with our expert technicians. We&apos;ll get you back on the road quickly and safely.
           </p>
         </div>
 
@@ -897,6 +898,39 @@ const Appointment = () => {
         }
       `}</style>
     </div>
+  );
+}
+
+// Main component with Suspense boundary
+const Appointment = () => {
+  return (
+    <Suspense fallback={
+      <div style={{
+        minHeight: '100vh',
+        background: '#000000',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: '#FF8C00'
+      }}>
+        <div style={{
+          textAlign: 'center'
+        }}>
+          <div style={{
+            width: '50px',
+            height: '50px',
+            border: '3px solid rgba(255, 140, 0, 0.3)',
+            borderTop: '3px solid #FF8C00',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 1rem'
+          }} />
+          <p style={{ fontSize: '1.2rem' }}>Loading...</p>
+        </div>
+      </div>
+    }>
+      <AppointmentForm />
+    </Suspense>
   );
 };
 

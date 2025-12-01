@@ -637,7 +637,7 @@ const Services = () => {
               fontSize: '1.1rem', 
               color: colors.textSecondary,
               maxWidth: '400px',
-              margin: '0 auto'
+              
             }}>
               Try adjusting your search or filter criteria
             </p>

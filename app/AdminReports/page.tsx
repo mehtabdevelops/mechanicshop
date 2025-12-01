@@ -1104,11 +1104,10 @@ const AdminReports = () => {
             {/* Bill To */}
             <div style={{ marginBottom: '2rem' }}>
               <h4 style={{ 
-                color: colors.text, 
-                margin: '0 0 1rem 0', 
-                fontSize: '1.2rem', 
-                fontWeight: '700',
-                color: colors.primary
+                   fontSize: '1.2rem',
+                   fontWeight: '700',
+                   color: colors.primary,
+                   marginBottom: '1rem' 
               }}>
                 Bill To:
               </h4>
@@ -1133,7 +1132,6 @@ const AdminReports = () => {
             {/* Service Details */}
             <div style={{ marginBottom: '2rem' }}>
               <h4 style={{ 
-                color: colors.text, 
                 margin: '0 0 1rem 0', 
                 fontSize: '1.2rem', 
                 fontWeight: '700',
