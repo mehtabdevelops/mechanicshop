@@ -76,11 +76,15 @@ const UserProfile = () => {
       "-=0.4"
     );
 
-    tl.fromTo(detailsRef.current?.querySelectorAll('.detail-row'),
-      { opacity: 0, x: -30 },
-      { opacity: 1, x: 0, duration: 0.4, stagger: 0.1, ease: "power3.out" },
-      "-=0.3"
-    );
+const rows = detailsRef.current?.querySelectorAll(".detail-row") || [];
+
+tl.fromTo(
+  rows,
+  { opacity: 0, x: -30 },
+  { opacity: 1, x: 0, duration: 0.4, stagger: 0.1, ease: "power3.out" },
+  "-=0.3"
+);
+
 
     tl.fromTo(buttonsRef.current,
       { opacity: 0, y: 20 },
@@ -350,30 +354,31 @@ const UserProfile = () => {
     }
   };
 
-  const handleLogout = async () => {
-    if (confirm('Are you sure you want to logout?')) {
-      try {
-        // Animate logout
-        gsap.to(profileCardRef.current, {
-          opacity: 0,
-          y: 50,
-          scale: 0.9,
-          duration: 0.5,
-          ease: "power2.in",
-          onComplete: async () => {
+const handleLogout = async () => {
+  if (confirm('Are you sure you want to logout?')) {
+    try {
+      gsap.to(profileCardRef.current, {
+        opacity: 0,
+        y: 50,
+        scale: 0.9,
+        duration: 0.5,
+        ease: "power2.in",
+        onComplete: () => {
+          (async () => {
             const { error } = await supabase.auth.signOut();
             if (error) throw error;
-            
+
             localStorage.removeItem('currentUser');
             sessionStorage.removeItem('currentUser');
             router.push('/');
-          }
-        });
-      } catch (err: any) {
-        alert('Error during logout: ' + err.message);
-      }
+          })(); // <-- THIS was missing
+        }
+      }); // <-- close gsap.to
+    } catch (err: any) {
+      alert('Error during logout: ' + err.message);
     }
-  };
+  }
+};
 
   const handleGoToHome = () => {
     router.push('/UserHome');
