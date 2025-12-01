@@ -482,7 +482,7 @@ const AutoServiceShop = () => {
   }, [showWelcome, isClient]);
 
   const handleBookAppointment = () => router.push('/Appointment');
-  const handleProfile = () => router.push('/');
+  const handleProfile = () => router.push('/UserProfile');
   const handleViewServices = () => router.push('/Services');
   const handleContactUs = () => router.push('/Contactus');
   const handleAIClick = () => router.push('/Ai');
