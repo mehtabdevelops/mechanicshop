@@ -416,26 +416,31 @@ const AdminHome = () => {
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
           <h1
             style={{
-              fontSize: "1.8rem",
-              fontWeight: "700",
-              color: colors.primary,
-              margin: 0,
+              fontSize: "2rem",
+              fontWeight: "900",
+              background: `linear-gradient(135deg, #FFFFFF, ${colors.primary})`,
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
               cursor: "pointer",
+              letterSpacing: "1px",
+              margin: 0,
             }}
             onClick={() => router.push("/AdminHome")}
           >
-            <span style={{ color: "#FF8C00" }}>Sunny</span>
-            <span style={{ color: "#ffffff" }}>Auto</span>
+            SUNNY AUTO
           </h1>
           <div
             style={{
               color: colors.primary,
-              fontSize: "0.9rem",
-              fontWeight: "500",
-              padding: "0.25rem 0.75rem",
-              backgroundColor: "rgba(220, 38, 38, 0.2)",
+              fontSize: "0.8rem",
+              fontWeight: "700",
+              padding: "0.4rem 1rem",
+              backgroundColor: `${colors.primary}15`,
               borderRadius: "20px",
-              border: `1px solid ${colors.primary}`,
+              border: `1px solid ${colors.primary}30`,
+              textTransform: "uppercase",
+              letterSpacing: "1px",
             }}
           >
             ADMIN PANEL

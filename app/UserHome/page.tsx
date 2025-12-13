@@ -476,14 +476,18 @@ const AutoServiceShop = () => {
               <div style={{ animation: "fadeIn 1s ease-in-out" }}>
                 <h1
                   style={{
-                    fontSize: "2.5rem",
-                    fontWeight: "600",
-                    marginBottom: "0.75rem",
+                    fontSize: "2rem",
+                    fontWeight: "900",
+                    background: `linear-gradient(135deg, #FFFFFF, ${ORANGE})`,
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    backgroundClip: "text",
+                    cursor: "pointer",
                     letterSpacing: "1px",
+                    margin: 0,
                   }}
                 >
-                  <span style={{ color: ORANGE }}>Sunny</span>
-                  <span style={{ color: "#ffffff" }}>Auto</span>
+                  SUNNY AUTO
                 </h1>
                 <div
                   style={{
@@ -534,13 +538,18 @@ const AutoServiceShop = () => {
           >
             <h1
               style={{
-                fontSize: "1.75rem",
-                fontWeight: "700",
+                fontSize: "2rem",
+                fontWeight: "900",
+                background: `linear-gradient(135deg, #FFFFFF, ${ORANGE})`,
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+                cursor: "pointer",
+                letterSpacing: "1px",
                 margin: 0,
               }}
             >
-              <span style={{ color: ORANGE }}>SUNNY</span>
-              <span style={{ color: "#ffffff" }}>AUTO</span>
+              SUNNY AUTO
             </h1>
           </div>
 

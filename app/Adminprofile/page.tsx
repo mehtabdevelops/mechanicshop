@@ -24,10 +24,11 @@ const AdminProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState<AdminProfile | null>(null);
   const [saving, setSaving] = useState(false);
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const router = useRouter();
   const supabase = createClientComponentClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Refs for animations
   const profileCardRef = useRef<HTMLDivElement>(null);
@@ -39,7 +40,7 @@ const AdminProfile = () => {
   const colors = {
     primary: "#FF8C00",
     primaryLight: "#FFA500",
-    primaryDark: "#cc7000",
+    primaryDark: "#FF7F00",
     background: "#000000",
     surface: "rgba(255, 255, 255, 0.05)",
     surfaceLight: "rgba(255, 255, 255, 0.08)",
@@ -193,6 +194,7 @@ const AdminProfile = () => {
       if (profileData) {
         setProfile(profileData);
         setEditedProfile(profileData);
+        setAvatarPreview(profileData.avatar_url);
       } else {
         throw new Error("Could not load admin profile");
       }
@@ -278,29 +280,56 @@ const AdminProfile = () => {
     }
   };
 
-  const uploadAvatar = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  // FILE UPLOAD FUNCTIONALITY - ADDED THIS
+  const handleFileUpload = async (file: File) => {
     try {
       setUploading(true);
+      setError(null);
 
-      if (!event.target.files || event.target.files.length === 0) {
-        throw new Error("You must select an image to upload.");
+      const user = await getCurrentUser();
+      if (!user) throw new Error("No authenticated user found");
+
+      // Validate file type and size
+      const validTypes = [
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/gif",
+        "image/webp",
+      ];
+      const maxSize = 5 * 1024 * 1024; // 5MB
+
+      if (!validTypes.includes(file.type)) {
+        throw new Error(
+          "Please select a valid image file (JPEG, PNG, GIF, WebP)"
+        );
       }
 
-      const file = event.target.files[0];
+      if (file.size > maxSize) {
+        throw new Error("File size must be less than 5MB");
+      }
+
+      // Create preview URL for immediate display
+      const previewUrl = URL.createObjectURL(file);
+      setAvatarPreview(previewUrl);
+
+      // Upload to Supabase Storage
       const fileExt = file.name.split(".").pop();
-      const filePath = `${profile?.id}-${Math.random()}.${fileExt}`;
+      const fileName = `${user.id}/${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from("avatars")
-        .upload(filePath, file);
+        .upload(fileName, file, {
+          cacheControl: "3600",
+          upsert: false,
+        });
 
-      if (uploadError) {
-        throw uploadError;
-      }
+      if (uploadError) throw uploadError;
 
+      // Get public URL
       const {
         data: { publicUrl },
-      } = supabase.storage.from("avatars").getPublicUrl(filePath);
+      } = supabase.storage.from("avatars").getPublicUrl(fileName);
 
       // Update profile with new avatar URL
       if (editedProfile) {
@@ -309,11 +338,33 @@ const AdminProfile = () => {
           avatar_url: publicUrl,
         };
         setEditedProfile(updatedProfile);
-        setImageUrl(publicUrl);
-        await handleSave();
+        setProfile(updatedProfile);
+
+        // Auto-save the avatar URL to database
+        const { error: updateError } = await supabase
+          .from("profiles")
+          .update({
+            avatar_url: publicUrl,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", user.id);
+
+        if (updateError) throw updateError;
       }
-    } catch (error: any) {
-      setError(error.message);
+
+      // Animate success
+      if (avatarRef.current) {
+        gsap.fromTo(
+          avatarRef.current,
+          { scale: 0.8 },
+          { scale: 1, duration: 0.5, ease: "elastic.out(1, 0.5)" }
+        );
+      }
+    } catch (err: any) {
+      console.error("Upload error:", err);
+      setError(err.message || "Error uploading image");
+      // Revert to previous avatar on error
+      setAvatarPreview(editedProfile?.avatar_url || null);
     } finally {
       setUploading(false);
     }
@@ -509,6 +560,22 @@ const AdminProfile = () => {
     );
   }
 
+  const uploadAvatar = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      handleFileUpload(file);
+    }
+    if (event.target) {
+      event.target.value = "";
+    }
+  };
+
+  const handleAvatarClick = () => {
+    if (isEditing && fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
   return (
     <div
       style={{
@@ -521,6 +588,14 @@ const AdminProfile = () => {
         position: "relative",
       }}
     >
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={uploadAvatar}
+        accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+        style={{ display: "none" }}
+      />
+
       <div
         style={{
           position: "absolute",
@@ -532,33 +607,89 @@ const AdminProfile = () => {
         }}
       ></div>
 
+      {/* Animated background elements */}
+      <div
+        style={{
+          position: "unset",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          pointerEvents: "none",
+          zIndex: 0,
+          opacity: 0.1,
+        }}
+      >
+        {[...Array(3)].map((_, i) => (
+          <div
+            key={i}
+            style={{
+              position: "absolute",
+              width: `${100 + i * 50}px`,
+              height: `${100 + i * 50}px`,
+              borderRadius: "50%",
+              border: `2px solid ${colors.primary}`,
+              top: `${20 + i * 20}%`,
+              right: `${10 + i * 15}%`,
+              animation: `float ${6 + i * 2}s ease-in-out infinite`,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Header */}
       <header
         style={{
-          position: "relative",
-          zIndex: 2,
-          padding: "20px",
+          padding: "1.5rem 2rem",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          backgroundColor: "rgba(0, 0, 0, 0.9)",
+          backgroundColor: "rgba(0, 0, 0, 0.95)",
+          borderBottom: `1px solid ${colors.primary}20`,
+          position: "sticky",
+          top: 0,
+          zIndex: 100,
+          backdropFilter: "blur(20px)",
         }}
       >
-        <h1
-          style={{
-            fontSize: "2.5rem",
-            fontWeight: "600",
-            marginBottom: "0.75rem",
-            letterSpacing: "1px",
-          }}
-        >
-          <span style={{ color: "#ff6b35" }}>Sunny</span>
-          <span style={{ color: "#ffffff" }}>Auto</span>
-        </h1>
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+          <h1
+            style={{
+              fontSize: "2rem",
+              fontWeight: "900",
+              background: `linear-gradient(135deg, #FFFFFF, ${colors.primary})`,
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+              cursor: "pointer",
+              letterSpacing: "1px",
+              margin: 0,
+            }}
+            onClick={handleBackToDashboard}
+          >
+            SUNNY AUTO
+          </h1>
+          <div
+            style={{
+              color: colors.primary,
+              fontSize: "0.8rem",
+              fontWeight: "700",
+              padding: "0.4rem 1rem",
+              backgroundColor: `${colors.primary}15`,
+              borderRadius: "20px",
+              border: `1px solid ${colors.primary}30`,
+              textTransform: "uppercase",
+              letterSpacing: "1px",
+            }}
+          >
+            PROFILE
+          </div>
+        </div>
 
         <button
           onClick={handleBackToDashboard}
           style={{
-            backgroundColor: "#e55a2b",
+            backgroundColor: "#FF8C00",
             color: "#ffffff",
             padding: "10px 20px",
             borderRadius: "8px",
@@ -629,8 +760,9 @@ const AdminProfile = () => {
               >
                 <div
                   style={{
-                    width: "120px",
-                    height: "120px",
+                    position: "relative",
+                    width: "140px",
+                    height: "140px",
                     borderRadius: "50%",
                     backgroundColor: "#ff6b35",
                     margin: "0 auto",
@@ -642,17 +774,21 @@ const AdminProfile = () => {
                     border: `4px solid ${colors.primary}`,
                     boxShadow: `0 10px 30px ${colors.primary}30`,
                     overflow: "hidden",
-                    position: "relative",
                     cursor: isEditing ? "pointer" : "default",
+                    transition: "all 0.3s ease",
                   }}
-                  onClick={() =>
-                    isEditing &&
-                    document.getElementById("avatar-upload")?.click()
-                  }
+                  onClick={handleAvatarClick}
+                  onMouseEnter={(e) => {
+                    if (isEditing)
+                      e.currentTarget.style.transform = "scale(1.05)";
+                  }}
+                  onMouseLeave={(e) => {
+                    if (isEditing) e.currentTarget.style.transform = "scale(1)";
+                  }}
                 >
-                  {imageUrl || editedProfile?.avatar_url ? (
+                  {avatarPreview || editedProfile?.avatar_url ? (
                     <img
-                      src={imageUrl || editedProfile?.avatar_url || ""}
+                      src={avatarPreview || editedProfile?.avatar_url || ""}
                       alt="Profile"
                       style={{
                         width: "100%",
@@ -663,47 +799,77 @@ const AdminProfile = () => {
                   ) : (
                     <span>👤</span>
                   )}
-                  {uploading && (
+
+                  {isEditing && (
                     <div
+                      className="upload-overlay"
                       style={{
                         position: "absolute",
                         top: 0,
                         left: 0,
                         right: 0,
                         bottom: 0,
-                        backgroundColor: "rgba(0,0,0,0.5)",
+                        borderRadius: "50%",
+                        backgroundColor: "rgba(0, 0, 0, 0.7)",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
+                        opacity: 0,
+                        transition: "opacity 0.3s ease",
                         color: colors.text,
+                        fontSize: "0.8rem",
+                        fontWeight: "600",
+                        textAlign: "center",
+                        whiteSpace: "pre-line",
                       }}
                     >
-                      Uploading...
+                      {uploading
+                        ? "Uploading..."
+                        : "Click to upload\nprofile picture"}
                     </div>
                   )}
                 </div>
-                <input
-                  type="file"
-                  id="avatar-upload"
-                  accept="image/*"
-                  onChange={uploadAvatar}
-                  style={{ display: "none" }}
-                  disabled={!isEditing}
-                />
+
+                {uploading && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "50%",
+                      left: "50%",
+                      transform: "translate(-50%, -50%)",
+                      width: "160px",
+                      height: "160px",
+                      borderRadius: "50%",
+                      backgroundColor: "rgba(0, 0, 0, 0.8)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      zIndex: 10,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "40px",
+                        height: "40px",
+                        border: `3px solid ${colors.border}`,
+                        borderTop: `3px solid ${colors.primary}`,
+                        borderRadius: "50%",
+                        animation: "spin 1s linear infinite",
+                      }}
+                    />
+                  </div>
+                )}
+
                 {isEditing && (
                   <p
                     style={{
                       color: colors.textSecondary,
                       fontSize: "0.9rem",
-                      cursor: "pointer",
                     }}
-                    onClick={() =>
-                      document.getElementById("avatar-upload")?.click()
-                    }
                   >
                     {uploading
-                      ? "Uploading..."
-                      : "Click to change profile picture"}
+                      ? "Uploading new profile picture..."
+                      : "Click on avatar to upload profile picture"}
                   </p>
                 )}
               </div>
@@ -893,9 +1059,16 @@ const AdminProfile = () => {
                     }}
                   />
                 ) : (
-                  <p style={detailValue}>
-                    {editedProfile?.avatar_url ||
-                      "No profile picture URL provided"}
+                  <p
+                    style={{
+                      color: colors.textMuted,
+                      fontSize: "0.8rem",
+                      marginTop: "0.5rem",
+                      lineHeight: "1.4",
+                    }}
+                  >
+                    Enter a direct image URL or click the avatar above to upload
+                    a file
                   </p>
                 )}
               </div>
@@ -1064,6 +1237,10 @@ const AdminProfile = () => {
           100% {
             transform: rotate(360deg);
           }
+        }
+
+        .upload-overlay:hover {
+          opacity: 1 !important;
         }
       `}</style>
     </div>
