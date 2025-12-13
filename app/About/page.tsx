@@ -562,13 +562,18 @@ const About = () => {
         >
           <h1
             style={{
-              fontSize: "1.75rem",
-              fontWeight: "700",
+              fontSize: "2rem",
+              fontWeight: "900",
+              background: `linear-gradient(135deg, #FFFFFF, ${ORANGE})`,
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+              cursor: "pointer",
+              letterSpacing: "1px",
               margin: 0,
             }}
           >
-            <span style={{ color: ORANGE }}>SUNNY</span>
-            <span style={{ color: "#ffffff" }}>AUTO</span>
+            SUNNY AUTO
           </h1>
         </div>
 

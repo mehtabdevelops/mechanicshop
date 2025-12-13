@@ -588,12 +588,13 @@ const UserProfile = () => {
   return (
     <div
       style={{
-        background: colors.background,
+        backgroundImage:
+          'url("https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1974&q=80")',
+        backgroundSize: "cover",
+        backgroundPosition: "center",
         minHeight: "100vh",
-        color: colors.text,
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
+        color: "white",
         position: "relative",
-        overflow: "hidden",
       }}
     >
       {/* Hidden file input - ADDED THIS */}
@@ -605,10 +606,20 @@ const UserProfile = () => {
         style={{ display: "none" }}
       />
 
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          backgroundColor: "rgba(0, 0, 0, 0.7)",
+        }}
+      ></div>
       {/* Animated background elements */}
       <div
         style={{
-          position: "fixed",
+          position: "unset",
           top: 0,
           left: 0,
           width: "100%",
@@ -776,8 +787,8 @@ const UserProfile = () => {
                       src={avatarPreview}
                       alt="Profile"
                       style={{
-                        width: "140px",
-                        height: "140px",
+                        width: "120px",
+                        height: "120px",
                         borderRadius: "50%",
                         border: `4px solid ${colors.primary}`,
                         objectFit: "cover",
@@ -954,14 +965,19 @@ const UserProfile = () => {
                   <input
                     type="email"
                     value={editedProfile?.email || ""}
-                    disabled
-                    style={{
-                      ...inputField,
-                      backgroundColor: "#374151",
-                      color: colors.textMuted,
-                      cursor: "not-allowed",
+                    onChange={(e) =>
+                      handleInputChange("full_name", e.target.value)
+                    }
+                    style={inputField}
+                    placeholder="Enter your email address"
+                    onFocus={(e) => {
+                      e.target.style.borderColor = colors.primary;
+                      e.target.style.boxShadow = `0 0 0 3px ${colors.primary}20`;
                     }}
-                    title="Email cannot be changed"
+                    onBlur={(e) => {
+                      e.target.style.borderColor = colors.border;
+                      e.target.style.boxShadow = "none";
+                    }}
                   />
                 ) : (
                   <p style={detailValue}>{editedProfile?.email}</p>
@@ -1051,7 +1067,7 @@ const UserProfile = () => {
               </div>
 
               <div className="detail-row" style={detailRow}>
-                <label style={detailLabel}>Avatar URL</label>
+                <label style={detailLabel}>Profile Picture URL</label>
                 {isEditing ? (
                   <div style={{ flexGrow: 1 }}>
                     <input
