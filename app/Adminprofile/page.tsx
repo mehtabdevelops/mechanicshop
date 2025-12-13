@@ -84,12 +84,14 @@ const AdminProfile = () => {
       "-=0.4"
     );
 
-    tl.fromTo(
-      detailsRef.current?.querySelectorAll(".detail-row"),
-      { opacity: 0, x: -30 },
-      { opacity: 1, x: 0, duration: 0.4, stagger: 0.1, ease: "power3.out" },
-      "-=0.3"
-    );
+    if (detailsRef.current) {
+      tl.fromTo(
+        detailsRef.current.querySelectorAll(".detail-row"),
+        { opacity: 0, x: -30 },
+        { opacity: 1, x: 0, duration: 0.4, stagger: 0.1, ease: "power3.out" },
+        "-=0.3"
+      );
+    }
 
     tl.fromTo(
       buttonsRef.current,
@@ -318,28 +320,19 @@ const AdminProfile = () => {
   };
 
   const handleLogout = async () => {
-    if (confirm("Are you sure you want to logout?")) {
-      try {
-        // Animate logout
-        gsap.to(profileCardRef.current, {
-          opacity: 0,
-          y: 50,
-          scale: 0.9,
-          duration: 0.5,
-          ease: "power2.in",
-          onComplete: async () => {
-            const { error } = await supabase.auth.signOut();
-            if (error) throw error;
+    if (!window.confirm("Are you sure you want to logout?")) return;
 
-            localStorage.removeItem("currentUser");
-            sessionStorage.removeItem("currentUser");
-            router.push("/");
-          },
-        });
-      } catch (err: any) {
-        alert("Error during logout: " + err.message);
-      }
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      alert("Logout failed: " + error.message);
+      return;
     }
+
+    sessionStorage.removeItem("userData");
+    localStorage.removeItem("currentUser");
+    sessionStorage.removeItem("currentUser");
+
+    router.push("/");
   };
 
   const handleBackToDashboard = () => {

@@ -90,10 +90,20 @@ const AdminInventory = () => {
     router.push("/AdminHome");
   };
 
-  const handleLogout = () => {
-    if (window.confirm("Are you sure you want to logout?")) {
-      router.push("/");
+  const handleLogout = async () => {
+    if (!window.confirm("Are you sure you want to logout?")) return;
+
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      alert("Logout failed: " + error.message);
+      return;
     }
+
+    sessionStorage.removeItem("userData");
+    localStorage.removeItem("currentUser");
+    sessionStorage.removeItem("currentUser");
+
+    router.push("/");
   };
 
   const openEditModal = (item: InventoryItem) => {

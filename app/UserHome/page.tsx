@@ -591,32 +591,34 @@ const AutoServiceShop = () => {
                 {item.label}
               </button>
             ))}
-            <button
-              style={{
-                background: "transparent",
-                color: ORANGE,
-                padding: "0.75rem 2rem",
-                borderRadius: "0",
-                fontWeight: "700",
-                border: `2px solid ${ORANGE}`,
-                cursor: "pointer",
-                transition: "all 0.3s ease",
-                fontSize: "0.875rem",
-                letterSpacing: "0.5px",
-                textTransform: "uppercase",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = ORANGE;
-                e.currentTarget.style.color = "#000000";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "transparent";
-                e.currentTarget.style.color = ORANGE;
-              }}
-              onClick={handleSignInUp}
-            >
-              SIGN IN / SIGN UP
-            </button>
+            {!isSignedIn && (
+              <button
+                style={{
+                  background: "transparent",
+                  color: ORANGE,
+                  padding: "0.75rem 2rem",
+                  borderRadius: "0",
+                  fontWeight: "700",
+                  border: `2px solid ${ORANGE}`,
+                  cursor: "pointer",
+                  transition: "all 0.3s ease",
+                  fontSize: "0.875rem",
+                  letterSpacing: "0.5px",
+                  textTransform: "uppercase",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = ORANGE;
+                  e.currentTarget.style.color = "#000000";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "transparent";
+                  e.currentTarget.style.color = ORANGE;
+                }}
+                onClick={handleSignInUp}
+              >
+                SIGN IN / SIGN UP
+              </button>
+            )}
             {isSignedIn && (
               <button
                 style={{
