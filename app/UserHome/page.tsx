@@ -560,46 +560,48 @@ const AutoServiceShop = () => {
               alignItems: "center",
             }}
           >
-            {[
-              { label: "HOME", path: "/UserHome" },
-              { label: "SERVICES", path: "/Services" },
-              { label: "ABOUT", path: "/About" },
-              { label: "APPOINTMENTS", path: "/Appointment" },
-              { label: "CONTACT", path: "/Contactus" },
-            ].map((item) => (
-              <button
-                key={item.label}
-                style={{
-                  color:
-                    item.label === "SERVICES" || item.label === "APPOINTMENTS"
-                      ? ORANGE
-                      : "rgba(255, 255, 255, 0.9)",
-                  fontSize: "0.875rem",
-                  fontWeight: "700",
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  padding: "0.5rem 0",
-                  transition: "all 0.3s ease",
-                  letterSpacing: "0.5px",
-                  textTransform: "uppercase",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = ORANGE;
-                  e.currentTarget.style.transform = "translateY(-2px)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color =
-                    item.label === "SERVICES" || item.label === "APPOINTMENTS"
-                      ? ORANGE
-                      : "rgba(255, 255, 255, 0.9)";
-                  e.currentTarget.style.transform = "translateY(0)";
-                }}
-                onClick={() => handleNavigation(item.path)}
-              >
-                {item.label}
-              </button>
-            ))}
+            {isSignedIn &&
+              [
+                { label: "HOME", path: "/UserHome" },
+                { label: "SERVICES", path: "/Services" },
+                { label: "ABOUT", path: "/About" },
+                { label: "APPOINTMENTS", path: "/Appointment" },
+                { label: "CONTACT", path: "/Contactus" },
+              ].map((item) => (
+                <button
+                  key={item.label}
+                  style={{
+                    color:
+                      item.label === "SERVICES" || item.label === "APPOINTMENTS"
+                        ? ORANGE
+                        : "rgba(255, 255, 255, 0.9)",
+                    fontSize: "0.875rem",
+                    fontWeight: "700",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    padding: "0.5rem 0",
+                    transition: "all 0.3s ease",
+                    letterSpacing: "0.5px",
+                    textTransform: "uppercase",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = ORANGE;
+                    e.currentTarget.style.transform = "translateY(-2px)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color =
+                      item.label === "SERVICES" || item.label === "APPOINTMENTS"
+                        ? ORANGE
+                        : "rgba(255, 255, 255, 0.9)";
+                    e.currentTarget.style.transform = "translateY(0)";
+                  }}
+                  onClick={() => handleNavigation(item.path)}
+                >
+                  {item.label}
+                </button>
+              ))}
+
             {!isSignedIn && (
               <button
                 style={{
@@ -628,6 +630,7 @@ const AutoServiceShop = () => {
                 SIGN IN / SIGN UP
               </button>
             )}
+
             {isSignedIn && (
               <button
                 style={{
