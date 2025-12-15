@@ -1,8 +1,12 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { Canvas, useFrame, useLoader } from '@react-three/fiber';
+import { Environment, Html } from '@react-three/drei';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import * as THREE from 'three';
 
 interface Service {
   id: string;
@@ -15,6 +19,31 @@ interface Service {
   is_available: boolean;
   created_at: string;
 }
+
+// 3D Car Model Component
+const CarModel = () => {
+  const gltf = useLoader(GLTFLoader, '/ap.glb');
+  const meshRef = useRef<THREE.Group>(null);
+  
+  // Continuous slow rotation
+  useFrame(() => {
+    if (meshRef.current) {
+      meshRef.current.rotation.y += 0.003; // Slow, steady rotation
+    }
+  });
+
+  // Traverse and keep natural colors
+  React.useEffect(() => {
+    gltf.scene.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+      }
+    });
+  }, [gltf]);
+
+  return <primitive ref={meshRef} object={gltf.scene} scale={1.6} position={[0, -0.5, 0]} />;
+};
 
 // Separate component that uses useSearchParams
 function AppointmentForm() {
@@ -34,6 +63,7 @@ function AppointmentForm() {
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [loading, setLoading] = useState(false);
   const [services, setServices] = useState<Service[]>([]);
+  const [is3DLoading, setIs3DLoading] = useState(true);
 
   // Orange color scheme matching Services page
   const colors = {
@@ -148,35 +178,35 @@ function AppointmentForm() {
 
       if (error) throw error;
 
- if (data) {
-      alert('Appointment booked successfully! We will contact you to confirm.');
-      // Reset form
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        vehicleType: '',
-        serviceType: '',
-        preferredDate: '',
-        preferredTime: '',
-        message: ''
-      });
-      router.push('/UserHome');
-    }
+      if (data) {
+        alert('Appointment booked successfully! We will contact you to confirm.');
+        // Reset form
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          vehicleType: '',
+          serviceType: '',
+          preferredDate: '',
+          preferredTime: '',
+          message: ''
+        });
+        router.push('/UserHome');
+      }
     } catch (error: unknown) {
       console.error('Appointment booking error:', error);
-    if (error instanceof Error) {
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
-      alert(`Error: ${error.message}`);
-    } else {
-      console.error('Unknown error type:', error);
-      alert('An unexpected error occurred while booking the appointment');
+      if (error instanceof Error) {
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+        alert(`Error: ${error.message}`);
+      } else {
+        console.error('Unknown error type:', error);
+        alert('An unexpected error occurred while booking the appointment');
+      }
+    } finally {
+      setLoading(false);
     }
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const vehicleTypes = [
     'Sedan',
@@ -201,6 +231,58 @@ function AppointmentForm() {
       position: 'relative',
       overflow: 'hidden'
     }}>
+      {/* 3D Car Model Background - Fixed Position */}
+      <div style={{
+        position: 'fixed',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: '100vw',
+        height: '100vh',
+        zIndex: 0,
+        opacity: 0.3,
+        pointerEvents: 'none'
+      }}>
+        <Canvas
+          shadows
+          camera={{ position: [5, 2, 5], fov: 50 }}
+          style={{ width: '100%', height: '100%' }}
+          onCreated={() => setIs3DLoading(false)}
+        >
+          <ambientLight intensity={0.5} />
+          <spotLight
+            position={[10, 10, 10]}
+            angle={0.3}
+            penumbra={1}
+            intensity={1}
+            castShadow
+          />
+          <pointLight position={[-10, 5, -10]} intensity={0.5} color={colors.primary} />
+          <pointLight position={[10, 5, 10]} intensity={0.5} color="#ffffff" />
+          
+          <CarModel />
+          
+          <Environment preset="city" />
+          
+          {/* Loading indicator */}
+          {is3DLoading && (
+            <Html center>
+              <div style={{
+                color: colors.primary,
+                fontSize: '1.2rem',
+                fontWeight: '600',
+                background: 'rgba(0, 0, 0, 0.7)',
+                padding: '1rem 2rem',
+                borderRadius: '12px',
+                border: `1px solid ${colors.primary}30`
+              }}>
+                Loading 3D Model...
+              </div>
+            </Html>
+          )}
+        </Canvas>
+      </div>
+
       {/* Animated background elements - matching Services page */}
       <div style={{
         position: 'fixed',
