@@ -47,9 +47,9 @@ const AdminEmployees = () => {
 
   // Color scheme - Red accent (#dc2626) with dark theme
   const colors = {
-    primary: '#dc2626',
-    primaryLight: '#ef4444',
-    primaryDark: '#b91c1c',
+    primary: "#FF8C00",
+    primaryLight: "#FFA500",
+    primaryDark: "#FF7F00",
     background: '#0a0a0a',
     surface: 'rgba(255, 255, 255, 0.05)',
     surfaceLight: 'rgba(255, 255, 255, 0.08)',
@@ -59,6 +59,7 @@ const AdminEmployees = () => {
     textMuted: 'rgba(255, 255, 255, 0.5)',
     success: '#10b981',
     warning: '#f59e0b',
+    
     error: '#ef4444',
     info: '#3b82f6',
     border: 'rgba(255, 255, 255, 0.1)',
