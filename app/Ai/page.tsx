@@ -55,9 +55,16 @@ interface ConversationLog {
   user_message: string;
   ai_response: string;
   intent: string;
-  timestamp: Date;
+  timestamp: string;
   metadata: any;
 }
+
+const generateMessageId = () => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+};
 
 const AIChatbot = () => {
   const [messages, setMessages] = useState<Message[]>([
@@ -89,6 +96,7 @@ const AIChatbot = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const loggingDisabledRef = useRef(false);
   const router = useRouter();
   const supabase = createClientComponentClient();
 
@@ -340,17 +348,44 @@ const AIChatbot = () => {
     }
   };
 
+  const serializeMetadata = (data: any) => {
+    if (data == null) {
+      return {};
+    }
+
+    try {
+      return JSON.parse(JSON.stringify(data, (_, value) => {
+        if (value instanceof Error) {
+          return {
+            name: value.name,
+            message: value.message,
+            stack: value.stack
+          };
+        }
+        return value;
+      }));
+    } catch (serializationError) {
+      console.error('Error serializing conversation metadata:', serializationError);
+      return { note: 'metadata serialization failed' };
+    }
+  };
+
   const logConversation = async (userMessage: string, aiResponse: string, intent: string, metadata: any = {}) => {
+    if (loggingDisabledRef.current) {
+      return;
+    }
+
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
+        const safeMetadata = serializeMetadata(metadata);
         const log: ConversationLog = {
           user_id: user.id,
           user_message: userMessage,
           ai_response: aiResponse,
           intent,
-          timestamp: new Date(),
-          metadata
+          timestamp: new Date().toISOString(),
+          metadata: safeMetadata
         };
 
         const { error } = await supabase
@@ -358,17 +393,31 @@ const AIChatbot = () => {
           .insert([log]);
 
         if (error) {
-          console.error('Error logging conversation:', error);
+          const message = typeof error.message === 'string' ? error.message : '';
+          const missingTable = message.includes("Could not find the table 'public.conversations'");
+          if (missingTable) {
+            loggingDisabledRef.current = true;
+            console.warn('Conversation logging disabled: create "public.conversations" table to enable.');
+          } else {
+            console.error('Error logging conversation:', error.message || error);
+          }
         }
       }
     } catch (error) {
-      console.error('Error logging conversation:', error);
+      const message = error instanceof Error ? error.message : '';
+      const missingTable = message.includes("Could not find the table 'public.conversations'");
+      if (missingTable) {
+        loggingDisabledRef.current = true;
+        console.warn('Conversation logging disabled: create "public.conversations" table to enable.');
+      } else {
+        console.error('Error logging conversation:', error);
+      }
     }
   };
 
   const addMessage = (text: string, sender: 'user' | 'ai', intent?: string) => {
     const newMessage: Message = {
-      id: Date.now().toString(),
+      id: generateMessageId(),
       text,
       sender,
       timestamp: new Date(),

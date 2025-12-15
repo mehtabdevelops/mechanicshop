@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
@@ -18,6 +18,19 @@ interface Appointment {
   created_at: string;
 }
 
+// Admin profile type
+interface AdminProfile {
+  id: string;
+  email: string;
+  full_name: string | null;
+  bio: string | null;
+  avatar_url: string | null;
+  phone: string | null;
+  role?: string;
+  updated_at?: string;
+  created_at?: string;
+}
+
 const AdminHome = () => {
   const router = useRouter();
   const supabase = createClientComponentClient();
@@ -30,6 +43,11 @@ const AdminHome = () => {
     Appointment[]
   >([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Admin profile / avatar
+  const [adminProfile, setAdminProfile] = useState<AdminProfile | null>(null);
+  const [adminAvatarUrl, setAdminAvatarUrl] = useState<string | null>(null);
 
   // Color scheme - Red accent (#dc2626) with dark theme
   const colors = {
@@ -113,6 +131,34 @@ const AdminHome = () => {
     };
   }, [supabase]);
 
+  // Load admin profile for avatar
+  useEffect(() => {
+    const loadAdminProfile = async () => {
+      try {
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
+        if (userError || !user) return;
+
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single();
+
+        if (profileError || !profileData) return;
+
+        setAdminProfile(profileData as AdminProfile);
+        setAdminAvatarUrl(profileData.avatar_url);
+      } catch (err) {
+        console.error("Error loading admin profile in AdminHome:", err);
+      }
+    };
+
+    loadAdminProfile();
+  }, [supabase]);
+
   // Filter appointments based on search query
   useEffect(() => {
     if (!searchQuery.trim()) {
@@ -134,10 +180,20 @@ const AdminHome = () => {
   }, [searchQuery, appointments]);
 
   // Navigation handlers
-  const handleLogout = () => {
-    if (window.confirm("Are you sure you want to logout?")) {
-      router.push("/");
+  const handleLogout = async () => {
+    if (!window.confirm("Are you sure you want to logout?")) return;
+
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      alert("Logout failed: " + error.message);
+      return;
     }
+
+    sessionStorage.removeItem("userData");
+    localStorage.removeItem("currentUser");
+    sessionStorage.removeItem("currentUser");
+
+    router.push("/");
   };
 
   const handleProfile = () => router.push("/Adminprofile");
@@ -148,6 +204,7 @@ const AdminHome = () => {
   const handleReports = () => router.push("/AdminReports");
   const handleFinance = () => router.push("/AdminServices");
   const handleNotifications = () => router.push("/AdminNotification");
+  const handleSettings = () => router.push("/UserProfSettings");
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -290,6 +347,12 @@ const AdminHome = () => {
       icon: "💰",
       onClick: handleFinance,
     },
+    {
+      title: "Settings",
+      description: "Manage admin profile, password, and security",
+      icon: "⚙️",
+      onClick: handleSettings,
+    },
   ];
 
   if (isLoading) {
@@ -353,26 +416,31 @@ const AdminHome = () => {
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
           <h1
             style={{
-              fontSize: "1.8rem",
-              fontWeight: "700",
-              color: colors.primary,
-              margin: 0,
+              fontSize: "2rem",
+              fontWeight: "900",
+              background: `linear-gradient(135deg, #FFFFFF, ${colors.primary})`,
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
               cursor: "pointer",
+              letterSpacing: "1px",
+              margin: 0,
             }}
             onClick={() => router.push("/AdminHome")}
           >
-            <span style={{ color: "#FF8C00" }}>Sunny</span>
-            <span style={{ color: "#ffffff" }}>Auto</span>
+            SUNNY AUTO
           </h1>
           <div
             style={{
               color: colors.primary,
-              fontSize: "0.9rem",
-              fontWeight: "500",
-              padding: "0.25rem 0.75rem",
-              backgroundColor: "rgba(220, 38, 38, 0.2)",
+              fontSize: "0.8rem",
+              fontWeight: "700",
+              padding: "0.4rem 1rem",
+              backgroundColor: `${colors.primary}15`,
               borderRadius: "20px",
-              border: `1px solid ${colors.primary}`,
+              border: `1px solid ${colors.primary}30`,
+              textTransform: "uppercase",
+              letterSpacing: "1px",
             }}
           >
             ADMIN PANEL
@@ -420,21 +488,13 @@ const AdminHome = () => {
                 width: "48px",
                 height: "48px",
                 borderRadius: "8px",
-                border: `1px solid ${colors.primary}`,
+                border: "none",
                 cursor: "pointer",
                 fontSize: "1.2rem",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                transition: "all 0.2s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = colors.primary;
-                e.currentTarget.style.color = colors.text;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "transparent";
-                e.currentTarget.style.color = colors.primary;
+                transition: "background-color 0.2s ease",
               }}
               title="Notifications"
             >
@@ -484,11 +544,11 @@ const AdminHome = () => {
             </button>
           </div>
 
-          <button
-            onClick={handleProfile}
+          <button // Sidebar Toggle Button
+            onClick={() => setIsSidebarOpen((prev) => !prev)}
             style={{
-              backgroundColor: colors.primary,
-              color: colors.text,
+              backgroundColor: "transparent",
+              color: colors.primary,
               width: "48px",
               height: "48px",
               borderRadius: "8px",
@@ -500,51 +560,37 @@ const AdminHome = () => {
               justifyContent: "center",
               transition: "background-color 0.2s ease",
             }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = colors.primaryDark;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = colors.primary;
-            }}
-            title="Admin Profile"
+            title="Quick menu"
           >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
+            <div // Sidebar icon (three horizontal lines)
+              style={{
+                width: "18px",
+                height: "2px",
+                backgroundColor: "currentColor",
+                position: "relative",
+              }}
             >
-              <path
-                d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"
-                fill="currentColor"
+              <span
+                style={{
+                  position: "absolute",
+                  width: "18px",
+                  height: "2px",
+                  backgroundColor: "currentColor",
+                  top: "-6px",
+                  left: 0,
+                }}
               />
-            </svg>
-          </button>
-
-          <button
-            onClick={handleLogout}
-            style={{
-              backgroundColor: "transparent",
-              color: colors.primary,
-              padding: "0.75rem 1.5rem",
-              border: `1px solid ${colors.primary}`,
-              borderRadius: "8px",
-              cursor: "pointer",
-              fontWeight: "600",
-              fontSize: "0.9rem",
-              transition: "all 0.2s ease",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = colors.primary;
-              e.currentTarget.style.color = colors.text;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "transparent";
-              e.currentTarget.style.color = colors.primary;
-            }}
-          >
-            Logout
+              <span
+                style={{
+                  position: "absolute",
+                  width: "18px",
+                  height: "2px",
+                  backgroundColor: "currentColor",
+                  top: "6px",
+                  left: 0,
+                }}
+              />
+            </div>
           </button>
         </div>
       </header>
@@ -818,7 +864,7 @@ const AdminHome = () => {
                     <div>
                       {realtimeAppointments.map((appt, index) => (
                         <div
-                          key={appt.id}
+                          key={`${appt.id || "realtime"}-${appt.preferred_time}-${index}`}
                           style={{
                             padding: "1.5rem",
                             borderBottom:
@@ -957,7 +1003,7 @@ const AdminHome = () => {
                   <div style={{ maxHeight: "500px", overflowY: "auto" }}>
                     {weekAppointments.map((appt, index) => (
                       <div
-                        key={appt.id}
+                        key={`${appt.id || "weekly"}-${appt.preferred_date}-${index}`}
                         style={{
                           padding: "1.5rem",
                           borderBottom:
@@ -1177,6 +1223,176 @@ const AdminHome = () => {
           </div>
         </div>
       </div>
+
+      {isSidebarOpen && ( // Sidebar Menu
+        <div
+          style={{
+            position: "fixed",
+            top: "0",
+            right: "0",
+            height: "100vh",
+            width: "260px",
+            backgroundColor: "rgba(0,0,0,0.96)",
+            borderLeft: `1px solid ${colors.border}`,
+            boxShadow: "-10px 0 30px rgba(0,0,0,0.6)",
+            zIndex: 55,
+            display: "flex",
+            flexDirection: "column",
+            padding: "1.5rem 1rem",
+            transform: "translateX(0)",
+            transition: "transform 0.25s ease",
+          }}
+          onMouseLeave={() => setIsSidebarOpen(false)} // Auto close when mouse leaves
+        >
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "0.5rem",
+              marginBottom: "1.5rem",
+            }}
+          >
+            <div
+              style={{
+                width: "80px",
+                height: "80px",
+                borderRadius: "50%",
+                backgroundColor: "#ff6b35",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "2rem",
+                color: "black",
+                border: `3px solid ${colors.primary}`,
+                boxShadow: "0 8px 20px rgba(0,0,0,0.5)",
+                overflow: "hidden",
+              }}
+              onClick={handleProfile}
+              title="View admin profile"
+            >
+              {adminAvatarUrl ? (
+                <img
+                  src={adminAvatarUrl}
+                  alt="Admin avatar"
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              ) : (
+                <span>👤</span>
+              )}
+            </div>
+            <div
+              style={{
+                color: colors.primary,
+                fontWeight: 600,
+                fontSize: "0.95rem",
+                textAlign: "center",
+              }}
+            >
+              {adminProfile?.full_name || "Admin"}
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.75rem",
+            }}
+          >
+            <button // Profile button
+              onClick={handleProfile}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.75rem",
+                width: "100%",
+                padding: "0.75rem 1rem",
+                borderRadius: "8px",
+                border: `1px solid ${colors.border}`,
+                backgroundColor: "transparent",
+                color: "white",
+                cursor: "pointer",
+                fontSize: "0.9rem",
+                fontWeight: 500,
+                transition: "all 0.2s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = colors.surfaceLight;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = colors.surface;
+              }}
+              title="Admin Profile"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"
+                  fill="currentColor"
+                />
+              </svg>
+              <span>Profile</span>
+            </button>
+
+            <button // Settings button
+              onClick={handleSettings}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.75rem",
+                width: "100%",
+                padding: "0.75rem 1rem",
+                borderRadius: "8px",
+                border: `1px solid ${colors.border}`,
+                backgroundColor: "transparent",
+                color: "white",
+                cursor: "pointer",
+                fontSize: "0.9rem",
+                fontWeight: 500,
+                transition: "all 0.2s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = colors.surfaceLight;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = colors.surface;
+              }}
+            >
+              <span style={{ fontSize: "1.2rem" }}>⚙️</span>
+              <span>Settings</span>
+            </button>
+
+            <button // Logout button
+              onClick={handleLogout}
+              style={{
+                backgroundColor: "transparent",
+                color: "white",
+                padding: "0.75rem 1.5rem",
+                border: `1px solid ${colors.primary}`,
+                borderRadius: "8px",
+                cursor: "pointer",
+                fontWeight: "600",
+                fontSize: "0.9rem",
+                transition: "all 0.2s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = colors.surfaceLight;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = colors.surface;
+              }}
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      )}
 
       <style jsx>{`
         @keyframes spin {

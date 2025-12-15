@@ -733,7 +733,6 @@ const Services = () => {
               No services found
             </h3>
             <p style={{ 
-              margin: 0, 
               fontSize: '1.1rem', 
               color: colors.textSecondary,
               maxWidth: '400px',
