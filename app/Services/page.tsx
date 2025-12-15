@@ -1,8 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { Canvas, useFrame, useLoader } from '@react-three/fiber';
+import { Environment, Html } from '@react-three/drei';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import * as THREE from 'three';
 
 interface Service {
   id: string;
@@ -16,6 +20,42 @@ interface Service {
   created_at: string;
 }
 
+// 3D Car Model Component
+const CarModel = () => {
+  const gltf = useLoader(GLTFLoader, '/car.glb');
+  const meshRef = useRef<THREE.Group>(null);
+  
+  // Continuous slow rotation
+  useFrame(() => {
+    if (meshRef.current) {
+      meshRef.current.rotation.y += 0.003; // Slow, steady rotation
+    }
+  });
+
+  // Traverse and optimize the model - Make it brighter
+  React.useEffect(() => {
+    gltf.scene.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+        // Optimize material and make it brighter
+        if (child.material) {
+          child.material.metalness = 0.5;
+          child.material.roughness = 0.3;
+          child.material.envMapIntensity = 2.5; // Increased brightness
+          // Increase emissive for additional brightness
+          if (child.material.color) {
+            child.material.emissive = child.material.color.clone();
+            child.material.emissiveIntensity = 0.3;
+          }
+        }
+      }
+    });
+  }, [gltf]);
+
+  return <primitive ref={meshRef} object={gltf.scene} scale={2.2} position={[0, -0.5, 0]} />;
+};
+
 const Services = () => {
   const router = useRouter();
   const supabase = createClientComponentClient();
@@ -24,6 +64,7 @@ const Services = () => {
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
+  const [is3DLoading, setIs3DLoading] = useState(true);
 
   // Orange color scheme matching About page
   const colors = {
@@ -128,6 +169,65 @@ const Services = () => {
       position: 'relative',
       overflow: 'hidden'
     }}>
+      {/* 3D Car Model Background - Fixed Position */}
+      <div style={{
+        position: 'fixed',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: '100vw',
+        height: '100vh',
+        zIndex: 0,
+        opacity: 0.25,
+        pointerEvents: 'none'
+      }}>
+        <Canvas
+          shadows
+          camera={{ position: [3.5, 1.5, 3.5], fov: 50 }}
+          style={{ width: '100%', height: '100%' }}
+          onCreated={() => setIs3DLoading(false)}
+        >
+          <ambientLight intensity={1.2} />
+          <spotLight
+            position={[10, 10, 10]}
+            angle={0.3}
+            penumbra={1}
+            intensity={2.5}
+            castShadow
+          />
+          <spotLight
+            position={[-10, 10, -10]}
+            angle={0.3}
+            penumbra={1}
+            intensity={2.0}
+          />
+          <pointLight position={[-10, 5, -10]} intensity={1.5} color={colors.primary} />
+          <pointLight position={[10, 5, 10]} intensity={1.2} color="#ffffff" />
+          <pointLight position={[0, 10, 0]} intensity={1.0} color="#ffffff" />
+          
+          <CarModel />
+          
+          <Environment preset="city" />
+          
+          {/* Loading indicator */}
+          {is3DLoading && (
+            <Html center>
+              <div style={{
+                color: colors.primary,
+                fontSize: '1.2rem',
+                fontWeight: '600',
+                background: 'rgba(0, 0, 0, 0.7)',
+                padding: '1rem 2rem',
+                borderRadius: '12px',
+                border: `1px solid ${colors.primary}30`
+              }}>
+                Loading 3D Model...
+              </div>
+            </Html>
+          )}
+        </Canvas>
+      </div>
+
       {/* Animated background elements */}
       <div style={{
         position: 'fixed',
@@ -636,7 +736,8 @@ const Services = () => {
               fontSize: '1.1rem', 
               color: colors.textSecondary,
               maxWidth: '400px',
-              
+              marginLeft: 'auto',
+              marginRight: 'auto'
             }}>
               Try adjusting your search or filter criteria
             </p>

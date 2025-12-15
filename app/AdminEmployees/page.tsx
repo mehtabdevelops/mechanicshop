@@ -63,6 +63,7 @@ const AdminEmployees = () => {
     info: "#3b82f6",
     border: "rgba(255, 255, 255, 0.1)",
     borderLight: "rgba(255, 255, 255, 0.2)",
+ 
   };
 
   // Fetch employees from Supabase

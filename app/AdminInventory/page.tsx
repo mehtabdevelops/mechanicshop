@@ -44,6 +44,8 @@ const AdminInventory = () => {
     primary: "#FF8C00",
     primaryLight: "#FFA500",
     primaryDark: "#FF7F00",
+
+
     background: "#0a0a0a",
     surface: "rgba(255, 255, 255, 0.05)",
     surfaceLight: "rgba(255, 255, 255, 0.08)",
@@ -57,6 +59,7 @@ const AdminInventory = () => {
     info: "#3b82f6",
     border: "rgba(255, 255, 255, 0.1)",
     borderLight: "rgba(255, 255, 255, 0.2)",
+
   };
 
   // Fetch inventory from Supabase
