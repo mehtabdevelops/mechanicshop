@@ -3,9 +3,8 @@
 import React, { useState, useEffect, Suspense, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { Canvas, useFrame, useLoader } from '@react-three/fiber';
-import { Environment, Html } from '@react-three/drei';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { Environment, Html, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 
 interface Service {
@@ -22,7 +21,7 @@ interface Service {
 
 // 3D Car Model Component
 const CarModel = () => {
-  const gltf = useLoader(GLTFLoader, '/ap.glb');
+  const { scene } = useGLTF('/ap.glb');
   const meshRef = useRef<THREE.Group>(null);
   
   // Continuous slow rotation
@@ -34,16 +33,19 @@ const CarModel = () => {
 
   // Traverse and keep natural colors
   React.useEffect(() => {
-    gltf.scene.traverse((child) => {
+    scene.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         child.castShadow = true;
         child.receiveShadow = true;
       }
     });
-  }, [gltf]);
+  }, [scene]);
 
-  return <primitive ref={meshRef} object={gltf.scene} scale={1.6} position={[0, -0.5, 0]} />;
+  return <primitive ref={meshRef} object={scene} scale={1.6} position={[0, -0.5, 0]} />;
 };
+
+// Preload the model for better performance
+useGLTF.preload('/ap.glb');
 
 // Separate component that uses useSearchParams
 function AppointmentForm() {

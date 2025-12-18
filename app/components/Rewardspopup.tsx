@@ -48,10 +48,13 @@ const RewardsPopup: React.FC = () => {
         { scale: 1, opacity: 1, y: 0, duration: 0.5, ease: "back.out(1.7)" }
       );
 
-      gsap.fromTo(contentRef.current?.children,
-        { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 0.4, stagger: 0.1, delay: 0.2 }
-      );
+      // Fix: Check if contentRef.current exists and convert children to array
+      if (contentRef.current?.children) {
+        gsap.fromTo(Array.from(contentRef.current.children),
+          { opacity: 0, y: 20 },
+          { opacity: 1, y: 0, duration: 0.4, stagger: 0.1, delay: 0.2 }
+        );
+      }
     } else {
       document.body.style.overflow = 'unset';
     }
@@ -119,26 +122,27 @@ const RewardsPopup: React.FC = () => {
       />
 
       {/* Popup */}
-      <div
-        ref={popupRef}
-        style={{
-          position: 'fixed',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: '95%',
-          maxWidth: '1000px',
-          maxHeight: '80vh',
-          backgroundColor: '#0a0a0a',
-          borderRadius: '24px',
-          border: `2px solid ${ORANGE}40`,
-          boxShadow: `0 0 60px ${ORANGE}20, 0 25px 50px rgba(0, 0, 0, 0.8)`,
-          zIndex: 9999,
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
+<div
+  ref={popupRef}
+  style={{
+    position: 'fixed',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: '95%',
+    maxWidth: '1000px',
+    maxHeight: '85vh',
+    backgroundColor: '#0a0a0a',
+    borderRadius: '24px',
+    border: `2px solid ${ORANGE}40`,
+    boxShadow: `0 0 60px ${ORANGE}20, 0 25px 50px rgba(0, 0, 0, 0.8)`,
+    zIndex: 9999,
+    overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column',
+    marginTop: '-2vh',
+  }}
+>
         {/* Header with Gradient */}
         <div style={{
           background: `linear-gradient(135deg, ${ORANGE}20 0%, transparent 50%, ${ORANGE}10 100%)`,
@@ -641,7 +645,7 @@ const RewardsPopup: React.FC = () => {
                         <p>No transactions yet. Start earning points!</p>
                       </div>
                     ) : (
-                      userRewards.transactions.map((transaction, index) => {
+                      userRewards.transactions.map((transaction) => {
                         const isPositive = transaction.points > 0;
                         const typeColors: Record<string, string> = {
                           earn: '#10b981',
